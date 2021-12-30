@@ -1,0 +1,21 @@
+﻿---
+SortIncludes: false
+BreakBeforeBraces: Allman
+ColumnLimit: 120
+IndentCaseLabels: true
+IndentWidth: 4
+UseTab: Never
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortLoopsOnASingleLine: false
+PointerAlignment: Right
+AccessModifierOffset: -4
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AlignAfterOpenBracket: AlwaysBreak
+PenaltyReturnTypeOnItsOwnLine: 1000
+...

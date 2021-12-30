@@ -1,0 +1,9 @@
+*.user
+Makefile
+Makefile.Debug
+Makefile.Release
+qrc_*
+.directory
+build/*
+.vscode/*
+dev/*
