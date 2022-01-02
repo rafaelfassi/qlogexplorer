@@ -4,6 +4,7 @@
 #include <memory>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 
 AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
     : QObject(parent),
@@ -14,10 +15,8 @@ AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
 
 AbstractLogModel::~AbstractLogModel()
 {
-    if (m_watching)
-    {
-        stopWatch();
-    }
+    stopWatch();
+    stopSearch();
 
     if (m_ifs.is_open())
     {
@@ -42,17 +41,85 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
 
     if (row < m_rowCount)
     {
-        if (loadChunkRowsByRow(row))
+        if (!m_cachedChunkRows.contains(row))
         {
-            if (m_cachedChunkRows.contains(row))
+            loadChunkRowsByRow(row, m_cachedChunkRows);
+            if (!m_cachedChunkRows.contains(row))
             {
-                return parseRow(m_cachedChunkRows.get(row), rowData);
+                qCritical() << "Row" << row << "not found in the cache";
+                return false;
             }
-            qCritical() << "Row" << row << "not found in the cache";
         }
+
+        return parseRow(m_cachedChunkRows.get(row), rowData);
     }
 
     return false;
+}
+
+void AbstractLogModel::startSearch(const std::string &text)
+{
+    stopSearch();
+    m_searching = true;
+    m_searchThread = std::thread(&AbstractLogModel::doSearch, this, text);
+}
+
+void AbstractLogModel::stopSearch()
+{
+    m_searching = false;
+    if (m_searchThread.joinable())
+    {
+        m_searchThread.join();
+    }
+}
+
+void AbstractLogModel::doSearch(std::string text)
+{
+    search(text);
+    m_searching = false;
+}
+
+void AbstractLogModel::search(const std::string &text)
+{
+    qDebug() << "Starting to search for" << text.c_str();
+    QElapsedTimer timer;
+    timer.start();
+
+    ChunkRows chunkRows;
+    std::vector<std::string> rowData;
+
+    for (std::size_t row = 0; (row < m_rowCount && m_searching); ++row)
+    {
+        {
+            const std::lock_guard<std::mutex> lock(m_ifsMutex);
+            if (!loadChunkRowsByRow(row, chunkRows))
+            {
+                break;
+            }
+        }
+
+        for (const auto &[currRow, rawText] : chunkRows.data())
+        {
+            parseRow(rawText, rowData);
+            if (!rowData.empty())
+            {
+                if (rowData[0] == text)
+                {
+                    qDebug() << "Found at row" << currRow << " - " << rowData[0].c_str();
+                    emit valueFound(currRow);
+                }
+            }
+            rowData.clear();
+            row = currRow;
+
+            if (!m_searching)
+            {
+                break;
+            }
+        }
+    }
+
+    qDebug() << "Searching finished after" << timer.elapsed() / 1000 << "seconds";
 }
 
 std::size_t AbstractLogModel::columnCount() const
@@ -72,22 +139,17 @@ bool AbstractLogModel::isWatching() const
 
 void AbstractLogModel::startWatch()
 {
-    if (!m_watching)
-    {
-        m_watching = true;
-        m_watchThread = std::thread(&AbstractLogModel::keepWatching, this);
-    }
+    stopWatch();
+    m_watching = true;
+    m_watchThread = std::thread(&AbstractLogModel::keepWatching, this);
 }
 
 void AbstractLogModel::stopWatch()
 {
-    if (m_watching)
+    m_watching = false;
+    if (m_watchThread.joinable())
     {
-        m_watching = false;
-        if (m_watchThread.joinable())
-        {
-            m_watchThread.join();
-        }
+        m_watchThread.join();
     }
 }
 
@@ -121,7 +183,7 @@ void AbstractLogModel::keepWatching()
                 break;
             default:
                 qCritical() << "Unknown WatchingResult";
-                return;
+                break;
         }
 
         if (m_watching)
@@ -173,8 +235,8 @@ WatchingResult AbstractLogModel::watchFile()
         }
         else
         {
-
             const std::lock_guard<std::mutex> lock(m_ifsMutex);
+
             m_ifs.clear();
             m_ifs.seekg(0, std::ios::end);
             auto fileSize = m_ifs.tellg();
@@ -283,7 +345,7 @@ void AbstractLogModel::loadChunks()
     timer.start();
 
     ssize_t fileSize(0);
-    size_t lastRow(0);
+    size_t nextRow(0);
     size_t chunkCount(0);
 
     {
@@ -297,7 +359,7 @@ void AbstractLogModel::loadChunks()
         chunkCount = m_chunks.size();
         if (!m_chunks.empty())
         {
-            lastRow = m_chunks.back().getLastRow() + 1;
+            nextRow = m_chunks.back().getLastRow() + 1;
         }
     }
 
@@ -308,7 +370,7 @@ void AbstractLogModel::loadChunks()
     {
         std::ifstream ifs(m_fileName);
         moveFilePos(ifs, m_lastParsedPos);
-        lastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, lastRow, fileSize);
+        lastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, nextRow, fileSize);
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
         m_ifs = std::move(ifs);
@@ -325,44 +387,32 @@ void AbstractLogModel::loadChunks()
             size_t rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
             if (rowCount != m_rowCount)
             {
-                lastRow = rowCount - 1;
+                nextRow = rowCount;
                 m_rowCount = rowCount;
                 emit countChanged();
             }
         }
 
-    } while (lastParsedPos < fileSize);
+    } while (m_watching && (lastParsedPos < fileSize));
 
     chunkCount = m_chunks.size() - chunkCount;
     qDebug() << chunkCount << "chunks parsed in" << timer.elapsed() / 1000 << "seconds";
 }
 
-bool AbstractLogModel::loadChunkRowsByRow(size_t row) const
+bool AbstractLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
 {
-    if (m_cachedChunkRows.contains(row))
+    const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
+    if ((chunk != m_chunks.end()) && chunk->countainRow(row))
     {
+        ChunkRows tmpChunkRows(*chunk);
+        loadChunkRows(m_ifs, tmpChunkRows);
+        if (tmpChunkRows.rowCount() != chunk->getRowCount())
+        {
+            qCritical() << "The cached chunk rows" << tmpChunkRows.rowCount() << "does not match the chunk info"
+                        << chunk->getRowCount();
+        }
+        chunkRows = std::move(tmpChunkRows);
         return true;
     }
-
-    // qDebug() << "Loading chunk";
-
-    for (const auto &chunk : m_chunks)
-    {
-        if (row >= chunk.getFistRow() && row <= chunk.getLastRow())
-        {
-            ChunkRows chunkRows(chunk);
-            loadChunkRows(m_ifs, chunkRows);
-            if (chunkRows.rowCount() != chunk.getRowCount())
-            {
-                qCritical() << "The cached chunk rows" << chunkRows.rowCount() << "does not match the chunk info"
-                            << chunk.getRowCount();
-            }
-            m_cachedChunkRows = std::move(chunkRows);
-            // qDebug() << "Chunk loaded";
-            return true;
-        }
-    }
-
-    qCritical() << "Cannot find a chunk containing the row" << row;
     return false;
 }

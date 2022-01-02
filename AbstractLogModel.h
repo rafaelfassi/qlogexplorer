@@ -33,6 +33,9 @@ public:
     size_t getFistRow() const { return m_rowRange.first; }
     size_t getLastRow() const { return m_rowRange.second; }
 
+    bool countainRow(const size_t &row) const { return ((row >= getFistRow()) && (row <= getLastRow())); }
+    static bool compareRows(const Chunk &c, const size_t &row) { return (c.getLastRow() < row); }
+
 private:
     std::pair<size_t, size_t> m_posRange;
     std::pair<size_t, size_t> m_rowRange;
@@ -41,17 +44,33 @@ private:
 class ChunkRows
 {
 public:
+    using RowsData = std::pair<size_t, std::string>;
+
     ChunkRows(const Chunk &chunk) : m_chunk(&chunk) {}
     ChunkRows() = default;
-    void add(size_t row, const std::string &content) { m_rows.emplace(row, content); }
-    const std::string &get(size_t row) const { return m_rows.at(row); }
-    bool contains(size_t row) const { return (m_rows.find(row) != m_rows.end()); }
-    size_t rowCount() { return m_rows.size(); }
+    void add(size_t row, const std::string &content) { m_rows.emplace_back(row, content); }
+    void reserve(size_t size) { m_rows.reserve(size); }
+    const std::string &get(size_t row) const
+    {
+        const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
+        if ((it != m_rows.end()) && (row == it->first))
+            return it->second;
+        throw std::runtime_error("Row not found");
+    }
+    bool contains(size_t row) const
+    {
+        const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
+        return (it != m_rows.end() && row == it->first);
+    }
+    size_t rowCount() const { return m_rows.size(); }
     const Chunk *getChunk() { return m_chunk; }
+    const std::vector<RowsData> &data() { return m_rows; }
+
+    static bool compareRows(const RowsData &rowData, const size_t &row) { return (rowData.first < row); }
 
 private:
     const Chunk *m_chunk = nullptr;
-    std::map<size_t, std::string> m_rows;
+    std::vector<RowsData> m_rows;
 };
 
 class AbstractLogModel : public QObject
@@ -64,6 +83,8 @@ public:
     void loadFile();
     const std::string &getFileName() const;
     bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
+    void startSearch(const std::string &text);
+    void stopSearch();
     std::size_t columnCount() const;
     std::size_t rowCount() const;
     bool isWatching() const;
@@ -74,6 +95,7 @@ public:
 signals:
     void countChanged();
     void parsingProgress(char progress);
+    void valueFound(ssize_t row) const;
 
 public slots:
     void setFollowing(bool following);
@@ -84,7 +106,7 @@ protected:
         std::istream &is,
         std::vector<Chunk> &chunks,
         std::size_t fromPos,
-        std::size_t lastRow,
+        std::size_t nextRow,
         std::size_t fileSize) = 0;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
 
@@ -97,15 +119,19 @@ protected:
 
 private:
     void loadChunks();
-    bool loadChunkRowsByRow(size_t row) const;
+    bool loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const;
     void keepWatching();
     WatchingResult watchFile();
+    void doSearch(std::string text);
+    void search(const std::string &text);
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
     std::vector<Chunk> m_chunks;
     std::string m_fileName;
+    std::thread m_searchThread;
     std::thread m_watchThread;
+    std::atomic_bool m_searching = false;
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = false;
     std::atomic_size_t m_lastParsedPos = 0;

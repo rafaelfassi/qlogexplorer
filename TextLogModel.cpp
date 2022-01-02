@@ -1,4 +1,5 @@
 #include "TextLogModel.h"
+#include <QDebug>
 
 constexpr size_t g_maxChunksPerParse(500);
 
@@ -17,7 +18,7 @@ std::size_t TextLogModel::parseChunks(
     std::istream &is,
     std::vector<Chunk> &chunks,
     std::size_t fromPos,
-    std::size_t lastRow,
+    std::size_t nextRow,
     std::size_t fileSize)
 {
     std::string buffer;
@@ -28,8 +29,8 @@ std::size_t TextLogModel::parseChunks(
 
     size_t lastPos(0);
     size_t lastLineBreakPos(fromPos);
-    size_t nextFirstChunkRow(lastRow);
-    size_t currentRowCount(lastRow);
+    size_t nextFirstChunkRow(nextRow);
+    size_t currentRowCount(nextRow);
 
     while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
     {
@@ -87,6 +88,8 @@ void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
 
     const auto lastRow = chunkRows.getChunk()->getLastRow();
     auto curentRow = chunkRows.getChunk()->getFistRow();
+
+    chunkRows.reserve(lastRow - curentRow + 1);
 
     std::string line;
     while ((curentRow <= lastRow) && std::getline(is, line))

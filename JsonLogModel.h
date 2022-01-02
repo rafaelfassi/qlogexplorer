@@ -15,7 +15,7 @@ protected:
         std::istream &is,
         std::vector<Chunk> &chunks,
         std::size_t fromPos,
-        std::size_t lastRow,
+        std::size_t nextRow,
         std::size_t fileSize) override;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const override;
 };

@@ -123,7 +123,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         }
 
         QRect lineRect(textWidth - hScrollOffset, rY, m_textAreaRect.width(), m_textAreaRect.height());
-        devicePainter.drawText(lineRect, Qt::AlignTop | Qt::AlignLeft, QString::number(row));
+        devicePainter.drawText(lineRect, Qt::AlignTop | Qt::AlignLeft, std::to_string(row).c_str());
         textWidth += leftMargin + lineNumberWidth;
 
         for (const auto &col : rowData)
