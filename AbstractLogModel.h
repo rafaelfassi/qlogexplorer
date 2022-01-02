@@ -70,23 +70,29 @@ public:
     void startWatch();
     void stopWatch();
     bool isFollowing() const;
-    void setFollowing(bool following);
 
 signals:
     void countChanged();
     void parsingProgress(char progress);
 
+public slots:
+    void setFollowing(bool following);
+
 protected:
     virtual bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const = 0;
-    virtual std::size_t parseChunks(std::size_t fromPos, std::size_t fileSize) = 0;
-    virtual void loadChunkRows(ChunkRows &chunkRows) const = 0;
+    virtual std::size_t parseChunks(
+        std::istream &is,
+        std::vector<Chunk> &chunks,
+        std::size_t fromPos,
+        std::size_t lastRow,
+        std::size_t fileSize) = 0;
+    virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
 
-    std::istream &getFileStream() const;
-    std::size_t getFilePos() const;
-    bool isEndOfFile() const;
-    bool moveFilePos(std::size_t pos) const;
-    ssize_t readFile(std::string &buffer, std::size_t bytes);
-    std::vector<Chunk> m_chunks;
+    static ssize_t getFileSize(std::istream &is);
+    static ssize_t getFilePos(std::istream &is);
+    static bool isEndOfFile(std::istream &is);
+    static bool moveFilePos(std::istream &is, std::size_t pos);
+    static ssize_t readFile(std::istream &is, std::string &buffer, std::size_t bytes);
     std::vector<std::string> m_columns;
 
 private:
@@ -97,10 +103,11 @@ private:
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
+    std::vector<Chunk> m_chunks;
     std::string m_fileName;
     std::thread m_watchThread;
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = false;
     std::atomic_size_t m_lastParsedPos = 0;
-    std::size_t m_rowCount = 0;
+    std::atomic_size_t m_rowCount = 0;
 };

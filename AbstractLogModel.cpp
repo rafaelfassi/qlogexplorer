@@ -164,6 +164,8 @@ WatchingResult AbstractLogModel::watchFile()
 
     while (m_watching)
     {
+        bool mustLoadChunks(false);
+
         if (!std::filesystem::exists(m_fileName))
         {
             qDebug() << "File does not exist: " << m_fileName.c_str();
@@ -171,8 +173,8 @@ WatchingResult AbstractLogModel::watchFile()
         }
         else
         {
-            const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
+            const std::lock_guard<std::mutex> lock(m_ifsMutex);
             m_ifs.clear();
             m_ifs.seekg(0, std::ios::end);
             auto fileSize = m_ifs.tellg();
@@ -197,10 +199,15 @@ WatchingResult AbstractLogModel::watchFile()
                 {
                     if (!m_ifs.eof())
                     {
-                        loadChunks();
+                        mustLoadChunks = true;
                     }
                 }
             }
+        }
+
+        if (mustLoadChunks)
+        {
+            loadChunks();
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -209,35 +216,64 @@ WatchingResult AbstractLogModel::watchFile()
     return WatchingResult::NormalExit;
 }
 
-std::istream &AbstractLogModel::getFileStream() const
+ssize_t AbstractLogModel::getFileSize(std::istream &is)
 {
-    return m_ifs;
-}
+    ssize_t fileSize(0);
+    ssize_t oriPos(0);
+    const bool eof(is.eof());
 
-std::size_t AbstractLogModel::getFilePos() const
-{
-    return m_ifs.tellg();
-}
-
-bool AbstractLogModel::isEndOfFile() const
-{
-    return m_ifs.eof();
-}
-
-bool AbstractLogModel::moveFilePos(std::size_t pos) const
-{
-    if (m_ifs.eof())
+    if (eof)
     {
-        m_ifs.clear(std::ios::eofbit);
+        is.clear(std::ios::eofbit);
     }
-    m_ifs.seekg(pos, std::ios::beg);
-    return m_ifs.good();
+    else
+    {
+        oriPos = is.tellg();
+    }
+
+    is.seekg(0, std::ios::end);
+
+    if (is.good())
+    {
+        fileSize = is.tellg();
+        if (eof)
+        {
+            // Back to eof
+            is.get();
+        }
+        else
+        {
+            is.seekg(oriPos, std::ios::beg);
+        }
+    }
+
+    return fileSize < 0 ? 0 : fileSize;
 }
 
-ssize_t AbstractLogModel::readFile(std::string &buffer, std::size_t bytes)
+ssize_t AbstractLogModel::getFilePos(std::istream &is)
 {
-    m_ifs.read(buffer.data(), bytes);
-    return m_ifs.gcount();
+    return is.tellg();
+}
+
+bool AbstractLogModel::isEndOfFile(std::istream &is)
+{
+    return is.eof();
+}
+
+bool AbstractLogModel::moveFilePos(std::istream &is, std::size_t pos)
+{
+    if (is.eof())
+    {
+        is.clear(std::ios::eofbit);
+    }
+    is.seekg(pos, std::ios::beg);
+    return is.good();
+}
+
+ssize_t AbstractLogModel::readFile(std::istream &is, std::string &buffer, std::size_t bytes)
+{
+    is.read(buffer.data(), bytes);
+    return is.gcount();
 }
 
 void AbstractLogModel::loadChunks()
@@ -245,36 +281,57 @@ void AbstractLogModel::loadChunks()
     qDebug() << "Starting to parse chunks for" << m_fileName.c_str();
     QElapsedTimer timer;
     timer.start();
-    auto chunkCount = m_chunks.size();
 
-    if (!m_ifs.good())
+    ssize_t fileSize(0);
+    size_t lastRow(0);
+    size_t chunkCount(0);
+
     {
-        qCritical() << "The ifstream is not good";
-        return;
-    }
-
-    m_ifs.seekg(0, std::ios::end);
-    const size_t fileSize = m_ifs.tellg();
-    m_ifs.seekg(m_lastParsedPos, std::ios::beg);
-
-    auto lastParsedPos = parseChunks(m_lastParsedPos, fileSize);
-    if (lastParsedPos < fileSize)
-    {
-        qWarning() << "Expecting lastParsedPos" << lastParsedPos << "to be >= fileSize" << fileSize;
-        lastParsedPos = fileSize;
-    }
-
-    if (lastParsedPos > m_lastParsedPos)
-    {
-        m_lastParsedPos = lastParsedPos;
-
-        size_t rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
-        if (rowCount != m_rowCount)
+        const std::lock_guard<std::mutex> lock(m_ifsMutex);
+        if (!m_ifs.good())
         {
-            m_rowCount = rowCount;
-            emit countChanged();
+            qCritical() << "The ifstream is not good";
+            return;
+        }
+        fileSize = getFileSize(m_ifs);
+        chunkCount = m_chunks.size();
+        if (!m_chunks.empty())
+        {
+            lastRow = m_chunks.back().getLastRow() + 1;
         }
     }
+
+    std::vector<Chunk> chunks;
+    ssize_t lastParsedPos(0);
+
+    do
+    {
+        std::ifstream ifs(m_fileName);
+        moveFilePos(ifs, m_lastParsedPos);
+        lastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, lastRow, fileSize);
+        const std::lock_guard<std::mutex> lock(m_ifsMutex);
+
+        m_ifs = std::move(ifs);
+        if (!chunks.empty())
+        {
+            m_chunks.reserve(m_chunks.size() + chunks.size());
+            std::move(std::begin(chunks), std::end(chunks), std::back_inserter(m_chunks));
+            chunks.clear();
+        }
+        if (lastParsedPos > m_lastParsedPos)
+        {
+            m_lastParsedPos = lastParsedPos;
+
+            size_t rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
+            if (rowCount != m_rowCount)
+            {
+                lastRow = rowCount - 1;
+                m_rowCount = rowCount;
+                emit countChanged();
+            }
+        }
+
+    } while (lastParsedPos < fileSize);
 
     chunkCount = m_chunks.size() - chunkCount;
     qDebug() << chunkCount << "chunks parsed in" << timer.elapsed() / 1000 << "seconds";
@@ -294,7 +351,7 @@ bool AbstractLogModel::loadChunkRowsByRow(size_t row) const
         if (row >= chunk.getFistRow() && row <= chunk.getLastRow())
         {
             ChunkRows chunkRows(chunk);
-            loadChunkRows(chunkRows);
+            loadChunkRows(m_ifs, chunkRows);
             if (chunkRows.rowCount() != chunk.getRowCount())
             {
                 qCritical() << "The cached chunk rows" << chunkRows.rowCount() << "does not match the chunk info"
