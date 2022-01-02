@@ -62,12 +62,15 @@ public:
     AbstractLogModel(const std::string &fileName, QObject *parent = 0);
     virtual ~AbstractLogModel();
     void loadFile();
-    const std::string& getFileName() const;
+    const std::string &getFileName() const;
     bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
     std::size_t columnCount() const;
     std::size_t rowCount() const;
+    bool isWatching() const;
     void startWatch();
     void stopWatch();
+    bool isFollowing() const;
+    void setFollowing(bool following);
 
 signals:
     void countChanged();
@@ -97,6 +100,7 @@ private:
     std::string m_fileName;
     std::thread m_watchThread;
     std::atomic_bool m_watching = false;
+    std::atomic_bool m_following = false;
     std::atomic_size_t m_lastParsedPos = 0;
     std::size_t m_rowCount = 0;
 };

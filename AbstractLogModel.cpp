@@ -31,7 +31,7 @@ void AbstractLogModel::loadFile()
     loadChunks();
 }
 
-const std::string& AbstractLogModel::getFileName() const
+const std::string &AbstractLogModel::getFileName() const
 {
     return m_fileName;
 }
@@ -65,6 +65,11 @@ std::size_t AbstractLogModel::rowCount() const
     return m_rowCount;
 }
 
+bool AbstractLogModel::isWatching() const
+{
+    return m_watching;
+}
+
 void AbstractLogModel::startWatch()
 {
     if (!m_watching)
@@ -83,6 +88,19 @@ void AbstractLogModel::stopWatch()
         {
             m_watchThread.join();
         }
+    }
+}
+
+bool AbstractLogModel::isFollowing() const
+{
+    return m_following;
+}
+
+void AbstractLogModel::setFollowing(bool following)
+{
+    if (m_following != following)
+    {
+        m_following = following;
     }
 }
 
@@ -121,7 +139,7 @@ void AbstractLogModel::keepWatching()
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
 
-            if(m_watching)
+            if (m_watching)
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
                 m_ifs.close();
@@ -175,9 +193,12 @@ WatchingResult AbstractLogModel::watchFile()
                     return WatchingResult::UnknownFailure;
                 }
 
-                if (!m_ifs.eof())
+                if (m_following || (m_lastParsedPos == 0))
                 {
-                    loadChunks();
+                    if (!m_ifs.eof())
+                    {
+                        loadChunks();
+                    }
                 }
             }
         }

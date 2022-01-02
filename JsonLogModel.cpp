@@ -4,6 +4,14 @@
 #include <rapidjson/writer.h>
 #include <rapidjson/istreamwrapper.h>
 
+void parse(rapidjson::IStreamWrapper& isw)
+{
+    rapidjson::BaseReaderHandler handler;
+    rapidjson::Reader reader;
+    reader.Parse<rapidjson::kParseStopWhenDoneFlag>(isw, handler);
+}
+
+
 std::string toString(const rapidjson::Value &json)
 {
     rapidjson::StringBuffer buffer;
@@ -109,6 +117,56 @@ bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string>
 //     return std::max(last_pos, fileSize);
 // }
 
+//std::size_t JsonLogModel::parseChunks(std::size_t fromPos, std::size_t fileSize)
+//{
+//    std::string buffer;
+//    buffer.resize(g_chunkSize);
+
+//    const size_t totalChunks(std::max<size_t>(fileSize / g_chunkSize, 1));
+//    m_chunks.reserve(totalChunks);
+
+//    size_t nextFirstChunkRow(0);
+//    size_t currentRowCount(0);
+
+//    if (!m_chunks.empty())
+//    {
+//        currentRowCount = m_chunks.back().getLastRow() + 1;
+//        nextFirstChunkRow = currentRowCount;
+//    }
+
+//    rapidjson::IStreamWrapper isw(getFileStream());
+
+//    size_t chunkStartPos = getFilePos();
+//    size_t last_pos = chunkStartPos;
+
+//    while (!isEndOfFile())
+//    {
+//        rapidjson::Document d;
+//        d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
+
+//        bool mustAddRowsToChunk(false);
+//        if (!d.HasParseError())
+//        {
+//            ++currentRowCount;
+//            last_pos = getFilePos();
+//            mustAddRowsToChunk = (g_chunkSize < (last_pos - chunkStartPos));
+//        }
+//        else if (currentRowCount > nextFirstChunkRow)
+//        {
+//            mustAddRowsToChunk = (currentRowCount > nextFirstChunkRow);
+//        }
+
+//        if (mustAddRowsToChunk)
+//        {
+//            m_chunks.emplace_back(chunkStartPos, last_pos, nextFirstChunkRow, currentRowCount - 1);
+//            nextFirstChunkRow = currentRowCount;
+//            chunkStartPos = last_pos;
+//        }
+//    }
+
+//    return std::max(last_pos, fileSize);
+//}
+
 std::size_t JsonLogModel::parseChunks(std::size_t fromPos, std::size_t fileSize)
 {
     std::string buffer;
@@ -126,6 +184,8 @@ std::size_t JsonLogModel::parseChunks(std::size_t fromPos, std::size_t fileSize)
         nextFirstChunkRow = currentRowCount;
     }
 
+    rapidjson::Reader reader;
+    rapidjson::BaseReaderHandler handler;
     rapidjson::IStreamWrapper isw(getFileStream());
 
     size_t chunkStartPos = getFilePos();
@@ -133,17 +193,16 @@ std::size_t JsonLogModel::parseChunks(std::size_t fromPos, std::size_t fileSize)
 
     while (!isEndOfFile())
     {
-        rapidjson::Document d;
-        d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
+        const auto res = reader.Parse<rapidjson::kParseStopWhenDoneFlag>(isw, handler);
 
         bool mustAddRowsToChunk(false);
-        if (!d.HasParseError())
+        if (!res.IsError())
         {
             ++currentRowCount;
             last_pos = getFilePos();
             mustAddRowsToChunk = (g_chunkSize < (last_pos - chunkStartPos));
         }
-        else if (currentRowCount > nextFirstChunkRow)
+        else
         {
             mustAddRowsToChunk = (currentRowCount > nextFirstChunkRow);
         }

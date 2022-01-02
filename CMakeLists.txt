@@ -23,7 +23,8 @@ set(PROJECT_HEADERS
     AbstractLogModel.h
     TextLogModel.h
     JsonLogModel.h
-    LogView.h
+    LongScrollBar.h
+    LogViewWidget.h
 )
 
 set(PROJECT_SOURCES
@@ -33,7 +34,8 @@ set(PROJECT_SOURCES
     AbstractLogModel.cpp
     TextLogModel.cpp
     JsonLogModel.cpp
-    LogView.cpp
+    LongScrollBar.cpp
+    LogViewWidget.cpp
 )
 
 add_executable(qlogviewer

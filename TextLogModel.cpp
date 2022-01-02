@@ -76,7 +76,7 @@ std::size_t TextLogModel::parseChunks(std::size_t fromPos, std::size_t fileSize)
         nextFirstChunkRow = currentRowCount;
     }
 
-    return std::max(lastPos, fileSize);
+    return lastPos;
 }
 
 void TextLogModel::loadChunkRows(ChunkRows &chunkRows) const
