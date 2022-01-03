@@ -5,6 +5,7 @@
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
+#include <regex>
 
 AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
     : QObject(parent),
@@ -57,11 +58,12 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
     return false;
 }
 
-void AbstractLogModel::startSearch(const std::string &text)
+void AbstractLogModel::startSearch(const SearchParamLst &params)
 {
     stopSearch();
+    m_searchParams = params;
     m_searching = true;
-    m_searchThread = std::thread(&AbstractLogModel::doSearch, this, text);
+    m_searchThread = std::thread(&AbstractLogModel::search, this);
 }
 
 void AbstractLogModel::stopSearch()
@@ -73,49 +75,146 @@ void AbstractLogModel::stopSearch()
     }
 }
 
-void AbstractLogModel::doSearch(std::string text)
+void AbstractLogModel::restartSearch()
 {
-    search(text);
-    m_searching = false;
+    if (m_searching)
+    {
+        stopSearch();
+        startSearch(m_searchParams);
+    }
 }
 
-void AbstractLogModel::search(const std::string &text)
+std::string toLower(const std::string &str)
 {
-    qDebug() << "Starting to search for" << text.c_str();
+    std::string lower;
+    lower.resize(str.size());
+
+    for (size_t i = 0; i < str.length(); i++)
+    {
+        lower[i] = std::tolower(str[i]);
+    }
+
+    return lower;
+}
+
+bool matchText(const std::string &text, const std::string &sub, bool machCase)
+{
+    if (machCase)
+    {
+        return (text.find(sub) != std::string::npos);
+    }
+    else
+    {
+        const auto it = std::search(
+            text.begin(),
+            text.end(),
+            sub.begin(),
+            sub.end(),
+            [](char c1, char c2) { return std::tolower(c1) == std::tolower(c2); });
+        return (it != text.end());
+    }
+}
+
+bool matchRegex(const std::string &text, const std::string &pattern, bool machCase)
+{
+    std::smatch m;
+    std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
+    if (!machCase)
+    {
+        opts |= std::regex::icase;
+    }
+    std::regex rx(pattern, opts);
+    return std::regex_search(text, m, rx);
+}
+
+bool match(const std::string &text, const std::string &exp, bool machCase, bool isRegex)
+{
+    if (isRegex)
+        return matchRegex(text, exp, machCase);
+    else
+        return matchText(text, exp, machCase);
+}
+
+bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::string> &rowData)
+{
+    std::uint32_t cnt(0);
+    for (const auto &param : params)
+    {
+        if (param.column.has_value())
+        {
+            if (*param.column < rowData.size())
+            {
+                if (match(rowData[*param.column], param.exp, param.matchCase, param.isRegex))
+                {
+                    if (++cnt == params.size())
+                        return true;
+                }
+            }
+            else
+            {
+                qCritical() << "Filter column is bigger than row columns";
+            }
+        }
+        else
+        {
+            for (const auto &columnData : rowData)
+            {
+                if (match(columnData, param.exp, param.matchCase, param.isRegex))
+                {
+                    if (++cnt == params.size())
+                        return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+void AbstractLogModel::search()
+{
+    qDebug() << "Starting to search";
     QElapsedTimer timer;
     timer.start();
 
     ChunkRows chunkRows;
     std::vector<std::string> rowData;
+    std::size_t row(0);
 
-    for (std::size_t row = 0; (row < m_rowCount && m_searching); ++row)
+    while (m_searching)
     {
+        for (; m_searching && (row < m_rowCount); ++row)
         {
-            const std::lock_guard<std::mutex> lock(m_ifsMutex);
-            if (!loadChunkRowsByRow(row, chunkRows))
             {
-                break;
+                const std::lock_guard<std::mutex> lock(m_ifsMutex);
+                if (!loadChunkRowsByRow(row, chunkRows))
+                {
+                    break;
+                }
+            }
+
+            for (const auto &[currRow, rawText] : chunkRows.data())
+            {
+                parseRow(rawText, rowData);
+                if (searchParamsInRow(m_searchParams, rowData))
+                {
+                    qDebug() << "Found at row" << currRow;
+                    emit valueFound(currRow);
+                }
+
+                rowData.clear();
+                row = currRow;
+
+                if (!m_searching)
+                {
+                    break;
+                }
             }
         }
 
-        for (const auto &[currRow, rawText] : chunkRows.data())
+        if (m_watching)
         {
-            parseRow(rawText, rowData);
-            if (!rowData.empty())
-            {
-                if (rowData[0] == text)
-                {
-                    qDebug() << "Found at row" << currRow << " - " << rowData[0].c_str();
-                    emit valueFound(currRow);
-                }
-            }
-            rowData.clear();
-            row = currRow;
-
-            if (!m_searching)
-            {
-                break;
-            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
@@ -272,7 +371,8 @@ WatchingResult AbstractLogModel::watchFile()
             loadChunks();
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        if (m_watching)
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     return WatchingResult::NormalExit;

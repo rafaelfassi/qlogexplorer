@@ -18,6 +18,7 @@ public:
 public slots:
     void updateDisplaySize();
     void modelCountChanged();
+    void goToRow(ssize_t row);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

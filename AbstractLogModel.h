@@ -73,6 +73,15 @@ private:
     std::vector<RowsData> m_rows;
 };
 
+struct SearchParam
+{
+    bool isRegex = false;
+    bool matchCase = true;
+    std::string exp;
+    std::optional<std::size_t> column;
+};
+using SearchParamLst = std::vector<SearchParam>;
+
 class AbstractLogModel : public QObject
 {
     Q_OBJECT
@@ -83,8 +92,9 @@ public:
     void loadFile();
     const std::string &getFileName() const;
     bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
-    void startSearch(const std::string &text);
+    void startSearch(const SearchParamLst &params);
     void stopSearch();
+    void restartSearch();
     std::size_t columnCount() const;
     std::size_t rowCount() const;
     bool isWatching() const;
@@ -122,13 +132,13 @@ private:
     bool loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const;
     void keepWatching();
     WatchingResult watchFile();
-    void doSearch(std::string text);
-    void search(const std::string &text);
+    void search();
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
     std::vector<Chunk> m_chunks;
     std::string m_fileName;
+    SearchParamLst m_searchParams;
     std::thread m_searchThread;
     std::thread m_watchThread;
     std::atomic_bool m_searching = false;

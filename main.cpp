@@ -4,6 +4,7 @@
 
 int main(int argc, char *argv[])
 {
+    qRegisterMetaType<ssize_t>("ssize_t");
     QApplication a(argc, argv);
     MainWindow w;
     w.show();

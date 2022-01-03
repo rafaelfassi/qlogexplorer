@@ -3,6 +3,7 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/istreamwrapper.h>
+#include <QDebug>
 
 constexpr size_t g_maxChunksPerParse(50);
 
@@ -37,6 +38,10 @@ bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string>
         if (i != d.MemberEnd())
         {
             rowData.emplace_back(i->value.GetString());
+        }
+        else
+        {
+            rowData.emplace_back(std::string());
         }
     }
     return false;
@@ -193,18 +198,22 @@ std::size_t JsonLogModel::parseChunks(
 
     while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
     {
-        const auto res = reader.Parse<rapidjson::kParseStopWhenDoneFlag>(isw, handler);
-
         bool mustAddRowsToChunk(false);
+        const auto res = reader.Parse<rapidjson::kParseStopWhenDoneFlag>(isw, handler);
         if (!res.IsError())
         {
             ++currentRowCount;
             last_pos = getFilePos(is);
             mustAddRowsToChunk = (g_chunkSize < (last_pos - chunkStartPos));
         }
+        else if (currentRowCount > nextFirstChunkRow)
+        {
+            mustAddRowsToChunk = true;
+        }
         else
         {
-            mustAddRowsToChunk = (currentRowCount > nextFirstChunkRow);
+            qCritical() << "Error parsing json file at pos" << res.Offset();
+            return std::max(last_pos, fileSize);
         }
 
         if (mustAddRowsToChunk)

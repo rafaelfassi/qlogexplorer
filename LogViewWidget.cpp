@@ -56,12 +56,23 @@ void LogViewWidget::setLogModel(AbstractLogModel *logModel)
     m_logModel = logModel;
     modelCountChanged();
     connect(logModel, &AbstractLogModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
+    connect(logModel, &AbstractLogModel::valueFound, this, &LogViewWidget::goToRow, Qt::UniqueConnection);
 }
 
 void LogViewWidget::modelCountChanged()
 {
     updateDisplaySize();
     update();
+}
+
+void LogViewWidget::goToRow(ssize_t row)
+{
+    if ((m_logModel != nullptr) && (row > 0) && (row < m_logModel->rowCount()))
+    {
+        m_vScrollBar->setPos(row);
+        m_currentRow = row;
+        update();
+    }
 }
 
 void LogViewWidget::updateDisplaySize()
