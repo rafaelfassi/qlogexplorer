@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     setCentralWidget(mainLog);
 
-    model->startWatch();
+    model->start();
 
     connect(m_toggeFollowing, &QAction::toggled, model, &AbstractLogModel::setFollowing);
     connect(
@@ -111,16 +111,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
             SearchParam param1;
             param1.isRegex = true;
+            param1.wholeText = false;
             param1.exp = "99a042c6-7b1b-4340-81c8-532a1c74a5bc";
-            param1.column = 1;
+            param1.column = 6;
             param1.matchCase = false;
             params.push_back(std::move(param1));
 
             SearchParam param2;
             param2.isRegex = false;
-            param2.exp = "INFO";
+            param2.wholeText = false;
+            param2.exp = "TeS";
             param2.column = 0;
-            param2.matchCase = true;
+            param2.matchCase = false;
             params.push_back(std::move(param2));
 
             model->startSearch(params);

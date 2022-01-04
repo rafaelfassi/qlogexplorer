@@ -10,6 +10,7 @@ public:
     JsonLogModel(const std::string &fileName, QObject *parent = 0);
 
 protected:
+    void configure(std::istream &is) override;
     bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const override;
     virtual std::size_t parseChunks(
         std::istream &is,

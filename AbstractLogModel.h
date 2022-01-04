@@ -77,6 +77,7 @@ struct SearchParam
 {
     bool isRegex = false;
     bool matchCase = true;
+    bool wholeText = false;
     std::string exp;
     std::optional<std::size_t> column;
 };
@@ -89,17 +90,16 @@ class AbstractLogModel : public QObject
 public:
     AbstractLogModel(const std::string &fileName, QObject *parent = 0);
     virtual ~AbstractLogModel();
-    void loadFile();
     const std::string &getFileName() const;
     bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
+    const std::vector<std::string>& getColumns() const;
     void startSearch(const SearchParamLst &params);
     void stopSearch();
-    void restartSearch();
     std::size_t columnCount() const;
     std::size_t rowCount() const;
     bool isWatching() const;
-    void startWatch();
-    void stopWatch();
+    void start();
+    void stop();
     bool isFollowing() const;
 
 signals:
@@ -111,6 +111,7 @@ public slots:
     void setFollowing(bool following);
 
 protected:
+    virtual void configure(std::istream &is) = 0;
     virtual bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const = 0;
     virtual std::size_t parseChunks(
         std::istream &is,
@@ -120,12 +121,13 @@ protected:
         std::size_t fileSize) = 0;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
 
+    void addColumn(const std::string& name);
+
     static ssize_t getFileSize(std::istream &is);
     static ssize_t getFilePos(std::istream &is);
     static bool isEndOfFile(std::istream &is);
     static bool moveFilePos(std::istream &is, std::size_t pos);
     static ssize_t readFile(std::istream &is, std::string &buffer, std::size_t bytes);
-    std::vector<std::string> m_columns;
 
 private:
     void loadChunks();
@@ -133,11 +135,12 @@ private:
     void keepWatching();
     WatchingResult watchFile();
     void search();
+    std::string m_fileName;
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
+    std::vector<std::string> m_columns;
     std::vector<Chunk> m_chunks;
-    std::string m_fileName;
     SearchParamLst m_searchParams;
     std::thread m_searchThread;
     std::thread m_watchThread;

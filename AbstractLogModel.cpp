@@ -16,19 +16,12 @@ AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
 
 AbstractLogModel::~AbstractLogModel()
 {
-    stopWatch();
-    stopSearch();
+    stop();
 
     if (m_ifs.is_open())
     {
         m_ifs.close();
     }
-}
-
-void AbstractLogModel::loadFile()
-{
-    const std::lock_guard<std::mutex> lock(m_ifsMutex);
-    loadChunks();
 }
 
 const std::string &AbstractLogModel::getFileName() const
@@ -58,11 +51,16 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
     return false;
 }
 
+const std::vector<std::string>& AbstractLogModel::getColumns() const
+{
+    return m_columns;
+}
+
 void AbstractLogModel::startSearch(const SearchParamLst &params)
 {
     stopSearch();
     m_searchParams = params;
-    m_searching = true;
+    m_searching.store(true);
     m_searchThread = std::thread(&AbstractLogModel::search, this);
 }
 
@@ -75,64 +73,65 @@ void AbstractLogModel::stopSearch()
     }
 }
 
-void AbstractLogModel::restartSearch()
+bool matchParam(const std::string &text, const SearchParam &param)
 {
-    if (m_searching)
+    if (param.isRegex)
     {
-        stopSearch();
-        startSearch(m_searchParams);
-    }
-}
+        std::smatch m;
+        std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
+        if (!param.matchCase)
+        {
+            opts |= std::regex::icase;
+        }
 
-std::string toLower(const std::string &str)
-{
-    std::string lower;
-    lower.resize(str.size());
+        std::regex rx(param.exp, opts);
 
-    for (size_t i = 0; i < str.length(); i++)
-    {
-        lower[i] = std::tolower(str[i]);
-    }
-
-    return lower;
-}
-
-bool matchText(const std::string &text, const std::string &sub, bool machCase)
-{
-    if (machCase)
-    {
-        return (text.find(sub) != std::string::npos);
+        if (param.wholeText)
+        {
+            return std::regex_match(text, m, rx);
+        }
+        else
+        {
+            return std::regex_search(text, m, rx);
+        }
     }
     else
     {
-        const auto it = std::search(
-            text.begin(),
-            text.end(),
-            sub.begin(),
-            sub.end(),
-            [](char c1, char c2) { return std::tolower(c1) == std::tolower(c2); });
-        return (it != text.end());
-    }
-}
+        if (param.wholeText && (text.size() != param.exp.size()))
+        {
+            return false;
+        }
 
-bool matchRegex(const std::string &text, const std::string &pattern, bool machCase)
-{
-    std::smatch m;
-    std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
-    if (!machCase)
-    {
-        opts |= std::regex::icase;
-    }
-    std::regex rx(pattern, opts);
-    return std::regex_search(text, m, rx);
-}
+        if (param.matchCase)
+        {
+            if (param.wholeText)
+            {
+                return (text == param.exp);
+            }
+            else
+            {
+                return (text.find(param.exp) != std::string::npos);
+            }
+        }
+        else
+        {
+            const auto it = std::search(
+                text.begin(),
+                text.end(),
+                param.exp.begin(),
+                param.exp.end(),
+                [](const char c1, const char c2) { return std::tolower(c1) == std::tolower(c2); });
 
-bool match(const std::string &text, const std::string &exp, bool machCase, bool isRegex)
-{
-    if (isRegex)
-        return matchRegex(text, exp, machCase);
-    else
-        return matchText(text, exp, machCase);
+            if (param.wholeText)
+            {
+                return (it == text.begin());
+            }
+            else
+            {
+                return (it != text.end());
+            }
+        }
+    }
 }
 
 bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::string> &rowData)
@@ -144,7 +143,7 @@ bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::stri
         {
             if (*param.column < rowData.size())
             {
-                if (match(rowData[*param.column], param.exp, param.matchCase, param.isRegex))
+                if (matchParam(rowData[*param.column], param))
                 {
                     if (++cnt == params.size())
                         return true;
@@ -159,7 +158,7 @@ bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::stri
         {
             for (const auto &columnData : rowData)
             {
-                if (match(columnData, param.exp, param.matchCase, param.isRegex))
+                if (matchParam(columnData, param))
                 {
                     if (++cnt == params.size())
                         return true;
@@ -236,20 +235,25 @@ bool AbstractLogModel::isWatching() const
     return m_watching;
 }
 
-void AbstractLogModel::startWatch()
+void AbstractLogModel::start()
 {
-    stopWatch();
+    stop();
+    if (m_columns.empty())
+    {
+        configure(m_ifs);
+    }
     m_watching = true;
     m_watchThread = std::thread(&AbstractLogModel::keepWatching, this);
 }
 
-void AbstractLogModel::stopWatch()
+void AbstractLogModel::stop()
 {
     m_watching = false;
     if (m_watchThread.joinable())
     {
         m_watchThread.join();
     }
+    stopSearch();
 }
 
 bool AbstractLogModel::isFollowing() const
@@ -376,6 +380,11 @@ WatchingResult AbstractLogModel::watchFile()
     }
 
     return WatchingResult::NormalExit;
+}
+
+void AbstractLogModel::addColumn(const std::string& name)
+{
+    m_columns.push_back(name);
 }
 
 ssize_t AbstractLogModel::getFileSize(std::istream &is)
