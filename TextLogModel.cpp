@@ -7,6 +7,11 @@ TextLogModel::TextLogModel(const std::string &fileName, QObject *parent) : Abstr
 {
 }
 
+TextLogModel::~TextLogModel()
+{
+    stop();
+}
+
 void TextLogModel::configure(std::istream &is)
 {
     addColumn(std::string());

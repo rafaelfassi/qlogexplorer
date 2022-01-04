@@ -20,6 +20,11 @@ JsonLogModel::JsonLogModel(const std::string &fileName, QObject *parent) : Abstr
 {
 }
 
+JsonLogModel::~JsonLogModel()
+{
+    stop();
+}
+
 void JsonLogModel::configure(std::istream &is)
 {
     rapidjson::IStreamWrapper isw(is);

@@ -92,7 +92,7 @@ public:
     virtual ~AbstractLogModel();
     const std::string &getFileName() const;
     bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
-    const std::vector<std::string>& getColumns() const;
+    const std::vector<std::string> &getColumns() const;
     void startSearch(const SearchParamLst &params);
     void stopSearch();
     std::size_t columnCount() const;
@@ -121,7 +121,7 @@ protected:
         std::size_t fileSize) = 0;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
 
-    void addColumn(const std::string& name);
+    void addColumn(const std::string &name);
 
     static ssize_t getFileSize(std::istream &is);
     static ssize_t getFilePos(std::istream &is);
@@ -147,6 +147,7 @@ private:
     std::atomic_bool m_searching = false;
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = false;
-    std::atomic_size_t m_lastParsedPos = 0;
     std::atomic_size_t m_rowCount = 0;
+    // Accessed only by m_watchThread
+    std::size_t m_lastParsedPos = 0;
 };

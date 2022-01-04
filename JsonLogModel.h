@@ -8,6 +8,7 @@ class JsonLogModel : public AbstractLogModel
 
 public:
     JsonLogModel(const std::string &fileName, QObject *parent = 0);
+    ~JsonLogModel();
 
 protected:
     void configure(std::istream &is) override;

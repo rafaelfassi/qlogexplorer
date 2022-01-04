@@ -18,6 +18,6 @@ public:
 
 private:
     QAction *m_toggeFollowing;
-    QAction *m_find;
+    QAction *m_startSearch;
+    QAction *m_stopSearch;
 };
-

@@ -86,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     // echo '{"LogLevel":"TEST","DateTime":"28-12-2021 18:04:02.00205"}' >> /home/rafael/Dev/QLogViewer/log.json
     // echo '[T]: 28-12-2021 18:26:01.191 [test/cpp]: Test' >> /home/rafael/Dev/QLogViewer/log.txt
 
-    AbstractLogModel *model = new JsonLogModel("/home/rafael/Dev/QLogViewer/log.json", this);
+    AbstractLogModel *model = new TextLogModel("/home/rafael/Dev/QLogViewer/biglog.txt", this);
     LogViewWidget *mainLog = new LogViewWidget(this);
     mainLog->setMinimumSize(400, 200);
     mainLog->setLogModel(model);
@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     connect(m_toggeFollowing, &QAction::toggled, model, &AbstractLogModel::setFollowing);
     connect(
-        m_find,
+        m_startSearch,
         &QAction::triggered,
         model,
         [model](bool)
@@ -110,23 +110,25 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
             SearchParamLst params;
 
             SearchParam param1;
-            param1.isRegex = true;
-            param1.wholeText = false;
-            param1.exp = "99a042c6-7b1b-4340-81c8-532a1c74a5bc";
-            param1.column = 6;
-            param1.matchCase = false;
+            param1.isRegex = false;
+            param1.wholeText = true;
+            param1.exp = "555433422";
+            // param1.column = 6;
+            param1.matchCase = true;
             params.push_back(std::move(param1));
 
-            SearchParam param2;
-            param2.isRegex = false;
-            param2.wholeText = false;
-            param2.exp = "TeS";
-            param2.column = 0;
-            param2.matchCase = false;
-            params.push_back(std::move(param2));
+            // SearchParam param2;
+            // param2.isRegex = false;
+            // param2.wholeText = false;
+            // param2.exp = "TeS";
+            // param2.column = 0;
+            // param2.matchCase = false;
+            // params.push_back(std::move(param2));
 
             model->startSearch(params);
         });
+
+    connect(m_stopSearch, &QAction::triggered, model, [model](bool) { model->stopSearch(); });
 
     // LongScrollBar *lScrollBar = new LongScrollBar(Qt::Vertical, this);
     // lScrollBar->setMax(2147483647L*1000L);
@@ -143,7 +145,8 @@ void MainWindow::createActions()
     m_toggeFollowing = new QAction(tr("Follow..."), this);
     m_toggeFollowing->setCheckable(true);
 
-    m_find = new QAction(tr("Find"), this);
+    m_startSearch = new QAction(tr("Start Search"), this);
+    m_stopSearch = new QAction(tr("Stop Search"), this);
     // addAction(m_toggeFollowing);
 }
 
@@ -151,7 +154,8 @@ void MainWindow::createMenus()
 {
     auto fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(m_toggeFollowing);
-    fileMenu->addAction(m_find);
+    fileMenu->addAction(m_startSearch);
+    fileMenu->addAction(m_stopSearch);
 }
 
 void MainWindow::createToolBars()

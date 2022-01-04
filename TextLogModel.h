@@ -8,6 +8,7 @@ class TextLogModel : public AbstractLogModel
 
 public:
     TextLogModel(const std::string &fileName, QObject *parent = 0);
+    ~TextLogModel();
 
 protected:
     void configure(std::istream &is) override;

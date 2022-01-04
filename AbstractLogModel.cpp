@@ -16,7 +16,11 @@ AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
 
 AbstractLogModel::~AbstractLogModel()
 {
-    stop();
+    if (m_watching.load())
+    {
+        qCritical() << "stop() must be called on the derivated class destructor";
+        stop();
+    }
 
     if (m_ifs.is_open())
     {
@@ -33,7 +37,7 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
 {
     const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
-    if (row < m_rowCount)
+    if (row < m_rowCount.load())
     {
         if (!m_cachedChunkRows.contains(row))
         {
@@ -51,7 +55,7 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
     return false;
 }
 
-const std::vector<std::string>& AbstractLogModel::getColumns() const
+const std::vector<std::string> &AbstractLogModel::getColumns() const
 {
     return m_columns;
 }
@@ -66,7 +70,7 @@ void AbstractLogModel::startSearch(const SearchParamLst &params)
 
 void AbstractLogModel::stopSearch()
 {
-    m_searching = false;
+    m_searching.store(false);
     if (m_searchThread.joinable())
     {
         m_searchThread.join();
@@ -180,9 +184,9 @@ void AbstractLogModel::search()
     std::vector<std::string> rowData;
     std::size_t row(0);
 
-    while (m_searching)
+    while (m_searching.load(std::memory_order_relaxed))
     {
-        for (; m_searching && (row < m_rowCount); ++row)
+        for (; m_searching.load(std::memory_order_relaxed) && (row < m_rowCount.load()); ++row)
         {
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
@@ -204,14 +208,14 @@ void AbstractLogModel::search()
                 rowData.clear();
                 row = currRow;
 
-                if (!m_searching)
+                if (!m_searching.load(std::memory_order_relaxed))
                 {
                     break;
                 }
             }
         }
 
-        if (m_watching)
+        if (m_searching.load(std::memory_order_relaxed))
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
@@ -227,12 +231,12 @@ std::size_t AbstractLogModel::columnCount() const
 
 std::size_t AbstractLogModel::rowCount() const
 {
-    return m_rowCount;
+    return m_rowCount.load();
 }
 
 bool AbstractLogModel::isWatching() const
 {
-    return m_watching;
+    return m_watching.load();
 }
 
 void AbstractLogModel::start()
@@ -242,13 +246,13 @@ void AbstractLogModel::start()
     {
         configure(m_ifs);
     }
-    m_watching = true;
+    m_watching.store(true);
     m_watchThread = std::thread(&AbstractLogModel::keepWatching, this);
 }
 
 void AbstractLogModel::stop()
 {
-    m_watching = false;
+    m_watching.store(false);
     if (m_watchThread.joinable())
     {
         m_watchThread.join();
@@ -258,20 +262,17 @@ void AbstractLogModel::stop()
 
 bool AbstractLogModel::isFollowing() const
 {
-    return m_following;
+    return m_following.load();
 }
 
 void AbstractLogModel::setFollowing(bool following)
 {
-    if (m_following != following)
-    {
-        m_following = following;
-    }
+    m_following.store(following);
 }
 
 void AbstractLogModel::keepWatching()
 {
-    while (m_watching)
+    while (m_watching.load(std::memory_order_relaxed))
     {
         const auto result = watchFile();
 
@@ -289,11 +290,11 @@ void AbstractLogModel::keepWatching()
                 break;
         }
 
-        if (m_watching)
+        if (m_watching.load(std::memory_order_relaxed))
         {
             std::ifstream newIfs;
 
-            while (m_watching)
+            while (m_watching.load(std::memory_order_relaxed))
             {
                 newIfs.open(m_fileName, std::ifstream::in);
                 if (newIfs.good())
@@ -304,13 +305,13 @@ void AbstractLogModel::keepWatching()
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
 
-            if (m_watching)
+            if (m_watching.load(std::memory_order_relaxed))
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
                 m_ifs.close();
                 m_ifs = std::move(newIfs);
 
-                m_rowCount = 0;
+                m_rowCount.store(0);
                 m_lastParsedPos = 0;
                 m_cachedChunkRows = ChunkRows();
                 m_chunks.clear();
@@ -327,7 +328,7 @@ WatchingResult AbstractLogModel::watchFile()
         return WatchingResult::FileClosed;
     }
 
-    while (m_watching)
+    while (m_watching.load(std::memory_order_relaxed))
     {
         bool mustLoadChunks(false);
 
@@ -360,7 +361,7 @@ WatchingResult AbstractLogModel::watchFile()
                     return WatchingResult::UnknownFailure;
                 }
 
-                if (m_following || (m_lastParsedPos == 0))
+                if (m_following.load() || (m_lastParsedPos == 0))
                 {
                     if (!m_ifs.eof())
                     {
@@ -375,14 +376,16 @@ WatchingResult AbstractLogModel::watchFile()
             loadChunks();
         }
 
-        if (m_watching)
+        if (m_watching.load(std::memory_order_relaxed))
+        {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
     }
 
     return WatchingResult::NormalExit;
 }
 
-void AbstractLogModel::addColumn(const std::string& name)
+void AbstractLogModel::addColumn(const std::string &name)
 {
     m_columns.push_back(name);
 }
@@ -473,13 +476,13 @@ void AbstractLogModel::loadChunks()
     }
 
     std::vector<Chunk> chunks;
-    ssize_t lastParsedPos(0);
+    ssize_t newLastParsedPos(0);
 
     do
     {
         std::ifstream ifs(m_fileName);
         moveFilePos(ifs, m_lastParsedPos);
-        lastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, nextRow, fileSize);
+        newLastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, nextRow, fileSize);
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
         m_ifs = std::move(ifs);
@@ -489,20 +492,20 @@ void AbstractLogModel::loadChunks()
             std::move(std::begin(chunks), std::end(chunks), std::back_inserter(m_chunks));
             chunks.clear();
         }
-        if (lastParsedPos > m_lastParsedPos)
+        if (newLastParsedPos > m_lastParsedPos)
         {
-            m_lastParsedPos = lastParsedPos;
+            m_lastParsedPos = newLastParsedPos;
 
             size_t rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
-            if (rowCount != m_rowCount)
+            if (rowCount != m_rowCount.load())
             {
                 nextRow = rowCount;
-                m_rowCount = rowCount;
+                m_rowCount.store(rowCount);
                 emit countChanged();
             }
         }
 
-    } while (m_watching && (lastParsedPos < fileSize));
+    } while (m_watching.load(std::memory_order_relaxed) && (newLastParsedPos < fileSize));
 
     chunkCount = m_chunks.size() - chunkCount;
     qDebug() << chunkCount << "chunks parsed in" << timer.elapsed() / 1000 << "seconds";
