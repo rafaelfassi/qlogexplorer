@@ -123,6 +123,7 @@ protected:
 
     void addColumn(const std::string &name);
 
+    // Helping funtions to operate over istream.
     static ssize_t getFileSize(std::istream &is);
     static ssize_t getFilePos(std::istream &is);
     static bool isEndOfFile(std::istream &is);
@@ -144,10 +145,12 @@ private:
     SearchParamLst m_searchParams;
     std::thread m_searchThread;
     std::thread m_watchThread;
+    // Control flags that are set in the main thread and read by other threads.
     std::atomic_bool m_searching = false;
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = false;
+    // Set by m_watchThread and read by main and m_searchThread threads.
     std::atomic_size_t m_rowCount = 0;
-    // Accessed only by m_watchThread
+    // Accessed only by m_watchThread.
     std::size_t m_lastParsedPos = 0;
 };

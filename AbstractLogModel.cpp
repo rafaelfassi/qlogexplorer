@@ -184,9 +184,11 @@ void AbstractLogModel::search()
     std::vector<std::string> rowData;
     std::size_t row(0);
 
-    while (m_searching.load(std::memory_order_relaxed))
+    while (m_searching.load())
     {
-        for (; m_searching.load(std::memory_order_relaxed) && (row < m_rowCount.load()); ++row)
+        std::size_t startingRow(row);
+
+        while((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
         {
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
@@ -206,7 +208,7 @@ void AbstractLogModel::search()
                 }
 
                 rowData.clear();
-                row = currRow;
+                row = currRow + 1;
 
                 if (!m_searching.load(std::memory_order_relaxed))
                 {
@@ -215,13 +217,16 @@ void AbstractLogModel::search()
             }
         }
 
-        if (m_searching.load(std::memory_order_relaxed))
+        if (row > startingRow)
+        {
+            qDebug() << "Searching finished after" << timer.elapsed() / 1000 << "seconds";
+        }
+
+        if (m_searching.load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
-
-    qDebug() << "Searching finished after" << timer.elapsed() / 1000 << "seconds";
 }
 
 std::size_t AbstractLogModel::columnCount() const
@@ -272,7 +277,7 @@ void AbstractLogModel::setFollowing(bool following)
 
 void AbstractLogModel::keepWatching()
 {
-    while (m_watching.load(std::memory_order_relaxed))
+    while (m_watching.load())
     {
         const auto result = watchFile();
 
@@ -290,7 +295,7 @@ void AbstractLogModel::keepWatching()
                 break;
         }
 
-        if (m_watching.load(std::memory_order_relaxed))
+        if (m_watching.load())
         {
             std::ifstream newIfs;
 
@@ -305,7 +310,7 @@ void AbstractLogModel::keepWatching()
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             }
 
-            if (m_watching.load(std::memory_order_relaxed))
+            if (m_watching.load())
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
                 m_ifs.close();
@@ -328,7 +333,7 @@ WatchingResult AbstractLogModel::watchFile()
         return WatchingResult::FileClosed;
     }
 
-    while (m_watching.load(std::memory_order_relaxed))
+    while (m_watching.load())
     {
         bool mustLoadChunks(false);
 
@@ -361,10 +366,11 @@ WatchingResult AbstractLogModel::watchFile()
                     return WatchingResult::UnknownFailure;
                 }
 
-                if (m_following.load() || (m_lastParsedPos == 0))
+                if ((m_lastParsedPos == 0) || m_following.load())
                 {
                     if (!m_ifs.eof())
                     {
+                        // mutex needs to be released belore starting to load chunks.
                         mustLoadChunks = true;
                     }
                 }
@@ -376,7 +382,7 @@ WatchingResult AbstractLogModel::watchFile()
             loadChunks();
         }
 
-        if (m_watching.load(std::memory_order_relaxed))
+        if (m_watching.load())
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
