@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/case_sensitive_icon.png</file>
+        <file>images/delete_icon.png</file>
+        <file>images/regex_icon.png</file>
+        <file>images/search_icon.png</file>
+        <file>images/whole_text_icon.png</file>
+        <file>images/clear_icon.png</file>
+        <file>images/add_icon.png</file>
+        <file>images/merge_icon.png</file>
+        <file>images/or_icon.png</file>
+        <file>images/filter_off_icon.png</file>
+    </qresource>
+</RCC>

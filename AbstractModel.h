@@ -1,37 +1,20 @@
-#ifndef ABSTRACTMODEL_H
-#define ABSTRACTMODEL_H
+#pragma once
 
-#include <QAbstractTableModel>
-#include <fstream>
+#include <QObject>
 
-class AbstractModel : public QAbstractTableModel
+class AbstractModel : public QObject
 {
     Q_OBJECT
 
-    typedef QHash<int, QByteArray> RolesList;
 public:
-
-    AbstractModel(const std::string& file_name, QObject *parent = 0);
-    QHash<int, QByteArray> roleNames() const override;
-    void addRoleName(int id, const QString &name);
-    QString getRoleName(const int id) const;
-    int getRole(const QString &roleName) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    void updateData();
-    std::string parseRow(size_t row) const;
-
+    AbstractModel(QObject *parent = 0) : QObject(parent) {}
+    virtual ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const = 0;
+    virtual const std::vector<std::string> &getColumns() const = 0;
+    virtual std::size_t columnCount() const = 0;
+    virtual std::size_t rowCount() const = 0;
+    virtual ssize_t getRowNum(ssize_t row) const = 0;
 
 signals:
     void countChanged();
-    void updateFinished();
-    void changesSubmitted();
-
-protected:
-    RolesList m_rolesList;
-    mutable std::ifstream m_ifs;
-    std::vector<std::size_t> m_lines;
 };
 
-#endif // ABSTRACTMODEL_H

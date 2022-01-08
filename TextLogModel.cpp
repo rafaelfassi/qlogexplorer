@@ -3,7 +3,7 @@
 
 constexpr size_t g_maxChunksPerParse(500);
 
-TextLogModel::TextLogModel(const std::string &fileName, QObject *parent) : AbstractLogModel(fileName, parent)
+TextLogModel::TextLogModel(const std::string &fileName, QObject *parent) : BaseLogModel(fileName, parent)
 {
 }
 

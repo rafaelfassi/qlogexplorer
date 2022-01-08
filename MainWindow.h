@@ -16,6 +16,10 @@ public:
     void createToolBars();
     void createConnections();
 
+    void testLogWidget();
+    void testScrollBar();
+    void testFile();
+
 private:
     QAction *m_toggeFollowing;
     QAction *m_startSearch;

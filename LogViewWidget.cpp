@@ -1,6 +1,6 @@
 #include "LogViewWidget.h"
 #include "LongScrollBar.h"
-#include "AbstractLogModel.h"
+#include "AbstractModel.h"
 #include <QScrollBar>
 #include <QPaintEvent>
 #include <QPainter>
@@ -51,12 +51,11 @@ LogViewWidget::~LogViewWidget()
 {
 }
 
-void LogViewWidget::setLogModel(AbstractLogModel *logModel)
+void LogViewWidget::setLogModel(AbstractModel *logModel)
 {
     m_logModel = logModel;
     modelCountChanged();
-    connect(logModel, &AbstractLogModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
-    connect(logModel, &AbstractLogModel::valueFound, this, &LogViewWidget::goToRow, Qt::UniqueConnection);
+    connect(logModel, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
 }
 
 void LogViewWidget::modelCountChanged()
@@ -67,7 +66,7 @@ void LogViewWidget::modelCountChanged()
 
 void LogViewWidget::goToRow(ssize_t row)
 {
-    if ((m_logModel != nullptr) && (row > 0) && (row < m_logModel->rowCount()))
+    if ((m_logModel != nullptr) && (row >= 0) && (row < m_logModel->rowCount()))
     {
         m_vScrollBar->setPos(row);
         m_currentRow = row;
@@ -92,6 +91,12 @@ void LogViewWidget::updateDisplaySize()
     }
 }
 
+void LogViewWidget::updateView()
+{
+    updateDisplaySize();
+    update();
+}
+
 void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
     m_textAreaRect.setHeight(height() - gScrollBarThickness);
@@ -113,11 +118,14 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
 
     int leftMargin(10);
 
-    int lineNumberWidth = m_fm.horizontalAdvance(QString::number(m_logModel->rowCount()));
+    ssize_t modelRowCount = m_logModel->rowCount();
+
+    const std::string lastLineNumberStr(std::to_string(m_logModel->getRowNum(modelRowCount - 1L) + 1L));
+    int lineNumberWidth = m_fm.horizontalAdvance(lastLineNumberStr.c_str());
 
     ssize_t hScrollOffset(m_hScrollBar->getPos());
 
-    ssize_t rowsToRender = std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount());
+    ssize_t rowsToRender = std::min<ssize_t>(m_itemsPerPage, modelRowCount);
 
     m_biggerTextWidthInPage = 0;
 
@@ -126,15 +134,20 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         ssize_t row = i + m_vScrollBar->getPos();
         int rY = m_rowHeight * i;
         rowData.clear();
-        m_logModel->getRow(row, rowData);
+        ssize_t rowNumb = m_logModel->getRow(row, rowData);
         int textWidth(leftMargin);
         if (m_currentRow.has_value() && m_currentRow.value() == row)
         {
-            devicePainter.fillRect(0, rY, width(), m_fm.height(), QColor("blue"));
+            devicePainter.fillRect(0, rY, width(), m_fm.height(), QColor("#4169e1"));
+            devicePainter.setPen(Qt::white);
+        }
+        else
+        {
+            devicePainter.setPen(Qt::black);
         }
 
         QRect lineRect(textWidth - hScrollOffset, rY, m_textAreaRect.width(), m_textAreaRect.height());
-        devicePainter.drawText(lineRect, Qt::AlignTop | Qt::AlignLeft, std::to_string(row).c_str());
+        devicePainter.drawText(lineRect, Qt::AlignTop | Qt::AlignLeft, std::to_string(rowNumb).c_str());
         textWidth += leftMargin + lineNumberWidth;
 
         for (const auto &col : rowData)
@@ -144,7 +157,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                 rY,
                 m_textAreaRect.width() + hScrollOffset,
                 m_textAreaRect.height());
-            const auto &colText = QString::fromStdString(col);
+            const auto &colText = QString::fromStdString(col).simplified();
             // devicePainter.drawText(textWidth, rY, colText);
             devicePainter.drawText(lineRect, Qt::AlignTop | Qt::AlignLeft, colText);
             textWidth += leftMargin + m_fm.horizontalAdvance(colText);
@@ -170,6 +183,7 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
     {
         m_currentRow = row;
         update();
+        emit rowSelected(m_logModel->getRowNum(row));
     }
 }
 

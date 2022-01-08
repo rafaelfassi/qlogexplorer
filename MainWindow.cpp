@@ -3,6 +3,8 @@
 #include "TextLogModel.h"
 #include "JsonLogModel.h"
 #include "LongScrollBar.h"
+#include "LogSearchWidget.h"
+#include "LogTabWidget.h"
 #include <QTableView>
 #include <QDebug>
 #include <QVBoxLayout>
@@ -16,7 +18,116 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    LogTabWidget *logTabWidget = new LogTabWidget(this);
+    setCentralWidget(logTabWidget);
+}
 
+MainWindow::~MainWindow()
+{
+}
+
+void MainWindow::createActions()
+{
+    m_toggeFollowing = new QAction(tr("Follow..."), this);
+    m_toggeFollowing->setCheckable(true);
+
+    m_startSearch = new QAction(tr("Start Search"), this);
+    m_stopSearch = new QAction(tr("Stop Search"), this);
+    // addAction(m_toggeFollowing);
+}
+
+void MainWindow::createMenus()
+{
+    auto fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(m_toggeFollowing);
+    fileMenu->addAction(m_startSearch);
+    fileMenu->addAction(m_stopSearch);
+}
+
+void MainWindow::createToolBars()
+{
+    // auto fileToolBar = addToolBar(tr("&File"));
+    // fileToolBar->addAction(m_toggeFollowing);
+}
+
+void MainWindow::createConnections()
+{
+    // connect(m_comboTestUnit, SIGNAL(currentIndexChanged(QString)), this, SLOT(selectTestUnit(QString)));
+}
+
+void MainWindow::testLogWidget()
+{
+    // TextLogModel
+    // log.txt
+    // biglog.txt
+    // smalllog.txt
+
+    // JsonLogModel
+    // log.json
+    // biglog.json
+    // smalllog.json
+
+    // echo '{"LogLevel":"TEST","DateTime":"28-12-2021 18:04:02.00205"}' >> /home/rafael/Dev/QLogViewer/log.json
+    // echo '[T]: 28-12-2021 18:26:01.191 [test/cpp]: Test' >> /home/rafael/Dev/QLogViewer/log.txt
+
+    // LogSearchWidget *lsw = new LogSearchWidget(this);
+    // setCentralWidget(lsw);
+
+    // BaseLogModel *model = new TextLogModel("/home/rafael/Dev/QLogViewer/log.txt", this);
+    // LogViewWidget *mainLog = new LogViewWidget(this);
+    // mainLog->setMinimumSize(400, 200);
+    // mainLog->setLogModel(model);
+
+    // createActions();
+    // createMenus();
+    // // createToolBars();
+    // createConnections();
+
+    // setCentralWidget(mainLog);
+
+    // model->start();
+
+    // connect(m_toggeFollowing, &QAction::toggled, model, &BaseLogModel::setFollowing);
+    // connect(
+    //     m_startSearch,
+    //     &QAction::triggered,
+    //     model,
+    //     [model](bool)
+    //     {
+    //         SearchParamLst params;
+
+    //         SearchParam param1;
+    //         param1.isRegex = false;
+    //         param1.wholeText = true;
+    //         param1.exp = "555433422";
+    //         // param1.column = 6;
+    //         param1.matchCase = true;
+    //         params.push_back(std::move(param1));
+
+    //         // SearchParam param2;
+    //         // param2.isRegex = false;    AbstractModel.cpp
+    //         // param2.wholeText = false;
+    //         // param2.exp = "TeS";
+    //         // param2.column = 0;
+    //         // param2.matchCase = false;
+    //         // params.push_back(std::move(param2));
+
+    //         model->startSearch(params);
+    //     });
+
+    // connect(m_stopSearch, &QAction::triggered, model, [model](bool) { model->stopSearch(); });
+}
+
+void MainWindow::testScrollBar()
+{
+    // LongScrollBar *lScrollBar = new LongScrollBar(Qt::Vertical, this);
+    // lScrollBar->setMax(2147483647L*1000L);
+    // //lScrollBar->setPos(2147483647/2);
+    // setCentralWidget(lScrollBar);
+}
+
+void MainWindow::testFile()
+{
     //    std::ofstream ofs("/home/rafael/Dev/QLogViewer/biglog.txt", std::ofstream::out | std::ofstream::app);
     //    ofs << "First Line" << std::endl;
     //    constexpr int64_t totalToWrite(2147483647L + 100L);
@@ -29,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     //        {
     //            percentage += notyfyPercentage;
     //            qDebug() << percentage << "%";
-    //        }
+    //        }    
     //        ofs << i << std::endl;
     //    }
     //    ofs << "Last Line" << std::endl;
@@ -72,99 +183,4 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     // pos = s.tellg();
     // qDebug() << pos;
-
-    // TextLogModel
-    // log.txt
-    // biglog.txt
-    // smalllog.txt
-
-    // JsonLogModel
-    // log.json
-    // biglog.json
-    // smalllog.json
-
-    // echo '{"LogLevel":"TEST","DateTime":"28-12-2021 18:04:02.00205"}' >> /home/rafael/Dev/QLogViewer/log.json
-    // echo '[T]: 28-12-2021 18:26:01.191 [test/cpp]: Test' >> /home/rafael/Dev/QLogViewer/log.txt
-
-    AbstractLogModel *model = new TextLogModel("/home/rafael/Dev/QLogViewer/biglog.txt", this);
-    LogViewWidget *mainLog = new LogViewWidget(this);
-    mainLog->setMinimumSize(400, 200);
-    mainLog->setLogModel(model);
-
-    createActions();
-    createMenus();
-    // createToolBars();
-    createConnections();
-
-    setCentralWidget(mainLog);
-
-    model->start();
-
-    connect(m_toggeFollowing, &QAction::toggled, model, &AbstractLogModel::setFollowing);
-    connect(
-        m_startSearch,
-        &QAction::triggered,
-        model,
-        [model](bool)
-        {
-            SearchParamLst params;
-
-            SearchParam param1;
-            param1.isRegex = false;
-            param1.wholeText = true;
-            param1.exp = "555433422";
-            // param1.column = 6;
-            param1.matchCase = true;
-            params.push_back(std::move(param1));
-
-            // SearchParam param2;
-            // param2.isRegex = false;
-            // param2.wholeText = false;
-            // param2.exp = "TeS";
-            // param2.column = 0;
-            // param2.matchCase = false;
-            // params.push_back(std::move(param2));
-
-            model->startSearch(params);
-        });
-
-    connect(m_stopSearch, &QAction::triggered, model, [model](bool) { model->stopSearch(); });
-
-    // LongScrollBar *lScrollBar = new LongScrollBar(Qt::Vertical, this);
-    // lScrollBar->setMax(2147483647L*1000L);
-    // //lScrollBar->setPos(2147483647/2);
-    // setCentralWidget(lScrollBar);
-}
-
-MainWindow::~MainWindow()
-{
-}
-
-void MainWindow::createActions()
-{
-    m_toggeFollowing = new QAction(tr("Follow..."), this);
-    m_toggeFollowing->setCheckable(true);
-
-    m_startSearch = new QAction(tr("Start Search"), this);
-    m_stopSearch = new QAction(tr("Stop Search"), this);
-    // addAction(m_toggeFollowing);
-}
-
-void MainWindow::createMenus()
-{
-    auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(m_toggeFollowing);
-    fileMenu->addAction(m_startSearch);
-    fileMenu->addAction(m_stopSearch);
-}
-
-void MainWindow::createToolBars()
-{
-    // auto fileToolBar = addToolBar(tr("&File"));
-    // fileToolBar->addAction(m_toggeFollowing);
-}
-
-void MainWindow::createConnections()
-{
-    // connect(m_comboTestUnit, SIGNAL(currentIndexChanged(QString)), this, SLOT(selectTestUnit(QString)));
 }

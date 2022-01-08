@@ -1,4 +1,4 @@
-#include "AbstractLogModel.h"
+#include "BaseLogModel.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <memory>
@@ -7,14 +7,14 @@
 #include <algorithm>
 #include <regex>
 
-AbstractLogModel::AbstractLogModel(const std::string &fileName, QObject *parent)
-    : QObject(parent),
+BaseLogModel::BaseLogModel(const std::string &fileName, QObject *parent)
+    : AbstractModel(parent),
       m_fileName(fileName),
       m_ifs(fileName)
 {
 }
 
-AbstractLogModel::~AbstractLogModel()
+BaseLogModel::~BaseLogModel()
 {
     if (m_watching.load())
     {
@@ -28,12 +28,12 @@ AbstractLogModel::~AbstractLogModel()
     }
 }
 
-const std::string &AbstractLogModel::getFileName() const
+const std::string &BaseLogModel::getFileName() const
 {
     return m_fileName;
 }
 
-bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
+ssize_t BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
 {
     const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
@@ -45,36 +45,45 @@ bool AbstractLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDa
             if (!m_cachedChunkRows.contains(row))
             {
                 qCritical() << "Row" << row << "not found in the cache";
-                return false;
+                return -1;
             }
         }
 
-        return parseRow(m_cachedChunkRows.get(row), rowData);
+        if (parseRow(m_cachedChunkRows.get(row), rowData))
+        {
+            return row;
+        }
     }
 
-    return false;
+    return -1;
 }
 
-const std::vector<std::string> &AbstractLogModel::getColumns() const
+const std::vector<std::string> &BaseLogModel::getColumns() const
 {
     return m_columns;
 }
 
-void AbstractLogModel::startSearch(const SearchParamLst &params)
+void BaseLogModel::startSearch(const SearchParamLst &params, bool orOp)
 {
     stopSearch();
     m_searchParams = params;
+    m_searchWithOrOperator = orOp;
     m_searching.store(true);
-    m_searchThread = std::thread(&AbstractLogModel::search, this);
+    m_searchThread = std::thread(&BaseLogModel::search, this);
 }
 
-void AbstractLogModel::stopSearch()
+void BaseLogModel::stopSearch()
 {
     m_searching.store(false);
     if (m_searchThread.joinable())
     {
         m_searchThread.join();
     }
+}
+
+bool BaseLogModel::isSearching() const
+{
+    return m_searching.load();
 }
 
 bool matchParam(const std::string &text, const SearchParam &param)
@@ -138,7 +147,7 @@ bool matchParam(const std::string &text, const SearchParam &param)
     }
 }
 
-bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::string> &rowData)
+bool searchParamsInRow(const SearchParamLst &params, bool orOp, const std::vector<std::string> &rowData)
 {
     std::uint32_t cnt(0);
     for (const auto &param : params)
@@ -149,7 +158,7 @@ bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::stri
             {
                 if (matchParam(rowData[*param.column], param))
                 {
-                    if (++cnt == params.size())
+                    if ((++cnt == params.size()) || orOp)
                         return true;
                 }
             }
@@ -164,7 +173,7 @@ bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::stri
             {
                 if (matchParam(columnData, param))
                 {
-                    if (++cnt == params.size())
+                    if ((++cnt == params.size()) || orOp)
                         return true;
                 }
             }
@@ -174,7 +183,7 @@ bool searchParamsInRow(const SearchParamLst &params, const std::vector<std::stri
     return false;
 }
 
-void AbstractLogModel::search()
+void BaseLogModel::search()
 {
     qDebug() << "Starting to search";
     QElapsedTimer timer;
@@ -188,7 +197,7 @@ void AbstractLogModel::search()
     {
         std::size_t startingRow(row);
 
-        while((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
+        while ((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
         {
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
@@ -201,9 +210,8 @@ void AbstractLogModel::search()
             for (const auto &[currRow, rawText] : chunkRows.data())
             {
                 parseRow(rawText, rowData);
-                if (searchParamsInRow(m_searchParams, rowData))
+                if (searchParamsInRow(m_searchParams, m_searchWithOrOperator, rowData))
                 {
-                    qDebug() << "Found at row" << currRow;
                     emit valueFound(currRow);
                 }
 
@@ -229,33 +237,39 @@ void AbstractLogModel::search()
     }
 }
 
-std::size_t AbstractLogModel::columnCount() const
+std::size_t BaseLogModel::columnCount() const
 {
     return m_columns.size();
 }
 
-std::size_t AbstractLogModel::rowCount() const
+std::size_t BaseLogModel::rowCount() const
 {
     return m_rowCount.load();
 }
 
-bool AbstractLogModel::isWatching() const
+ssize_t BaseLogModel::getRowNum(ssize_t row) const
+{
+    return row;
+}
+
+bool BaseLogModel::isWatching() const
 {
     return m_watching.load();
 }
 
-void AbstractLogModel::start()
+void BaseLogModel::start()
 {
     stop();
     if (m_columns.empty())
     {
         configure(m_ifs);
+        emit modelConfigured();
     }
     m_watching.store(true);
-    m_watchThread = std::thread(&AbstractLogModel::keepWatching, this);
+    m_watchThread = std::thread(&BaseLogModel::keepWatching, this);
 }
 
-void AbstractLogModel::stop()
+void BaseLogModel::stop()
 {
     m_watching.store(false);
     if (m_watchThread.joinable())
@@ -265,17 +279,17 @@ void AbstractLogModel::stop()
     stopSearch();
 }
 
-bool AbstractLogModel::isFollowing() const
+bool BaseLogModel::isFollowing() const
 {
     return m_following.load();
 }
 
-void AbstractLogModel::setFollowing(bool following)
+void BaseLogModel::setFollowing(bool following)
 {
     m_following.store(following);
 }
 
-void AbstractLogModel::keepWatching()
+void BaseLogModel::keepWatching()
 {
     while (m_watching.load())
     {
@@ -299,7 +313,7 @@ void AbstractLogModel::keepWatching()
         {
             std::ifstream newIfs;
 
-            while (m_watching.load(std::memory_order_relaxed))
+            do
             {
                 newIfs.open(m_fileName, std::ifstream::in);
                 if (newIfs.good())
@@ -308,7 +322,7 @@ void AbstractLogModel::keepWatching()
                 }
                 newIfs.close();
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
-            }
+            } while (m_watching.load(std::memory_order_relaxed));
 
             if (m_watching.load())
             {
@@ -325,7 +339,7 @@ void AbstractLogModel::keepWatching()
     }
 }
 
-WatchingResult AbstractLogModel::watchFile()
+WatchingResult BaseLogModel::watchFile()
 {
     if (!m_ifs.is_open())
     {
@@ -391,12 +405,12 @@ WatchingResult AbstractLogModel::watchFile()
     return WatchingResult::NormalExit;
 }
 
-void AbstractLogModel::addColumn(const std::string &name)
+void BaseLogModel::addColumn(const std::string &name)
 {
     m_columns.push_back(name);
 }
 
-ssize_t AbstractLogModel::getFileSize(std::istream &is)
+ssize_t BaseLogModel::getFileSize(std::istream &is)
 {
     ssize_t fileSize(0);
     ssize_t oriPos(0);
@@ -430,17 +444,17 @@ ssize_t AbstractLogModel::getFileSize(std::istream &is)
     return fileSize < 0 ? 0 : fileSize;
 }
 
-ssize_t AbstractLogModel::getFilePos(std::istream &is)
+ssize_t BaseLogModel::getFilePos(std::istream &is)
 {
     return is.tellg();
 }
 
-bool AbstractLogModel::isEndOfFile(std::istream &is)
+bool BaseLogModel::isEndOfFile(std::istream &is)
 {
     return is.eof();
 }
 
-bool AbstractLogModel::moveFilePos(std::istream &is, std::size_t pos)
+bool BaseLogModel::moveFilePos(std::istream &is, std::size_t pos)
 {
     if (is.eof())
     {
@@ -450,13 +464,13 @@ bool AbstractLogModel::moveFilePos(std::istream &is, std::size_t pos)
     return is.good();
 }
 
-ssize_t AbstractLogModel::readFile(std::istream &is, std::string &buffer, std::size_t bytes)
+ssize_t BaseLogModel::readFile(std::istream &is, std::string &buffer, std::size_t bytes)
 {
     is.read(buffer.data(), bytes);
     return is.gcount();
 }
 
-void AbstractLogModel::loadChunks()
+void BaseLogModel::loadChunks()
 {
     qDebug() << "Starting to parse chunks for" << m_fileName.c_str();
     QElapsedTimer timer;
@@ -517,7 +531,7 @@ void AbstractLogModel::loadChunks()
     qDebug() << chunkCount << "chunks parsed in" << timer.elapsed() / 1000 << "seconds";
 }
 
-bool AbstractLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
+bool BaseLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
 {
     const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
     if ((chunk != m_chunks.end()) && chunk->countainRow(row))

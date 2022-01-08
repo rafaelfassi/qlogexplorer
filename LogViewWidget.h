@@ -2,7 +2,7 @@
 
 #include <QWidget>
 
-class AbstractLogModel;
+class AbstractModel;
 class LongScrollBar;
 
 class LogViewWidget : public QWidget
@@ -13,9 +13,13 @@ public:
     LogViewWidget(QWidget *parent = nullptr);
     ~LogViewWidget();
 
-    void setLogModel(AbstractLogModel *logModel);
+    void setLogModel(AbstractModel *logModel);
+
+signals:
+    void rowSelected(ssize_t row);
 
 public slots:
+    void updateView();
     void updateDisplaySize();
     void modelCountChanged();
     void goToRow(ssize_t row);
@@ -27,7 +31,7 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 
 private:
-    AbstractLogModel *m_logModel = nullptr;
+    AbstractModel *m_logModel = nullptr;
     LongScrollBar *m_vScrollBar = nullptr;
     LongScrollBar *m_hScrollBar = nullptr;
     QFont m_font;

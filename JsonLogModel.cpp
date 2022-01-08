@@ -16,7 +16,7 @@ std::string toString(const rapidjson::Value &json)
     return buffer.GetString();
 }
 
-JsonLogModel::JsonLogModel(const std::string &fileName, QObject *parent) : AbstractLogModel(fileName, parent)
+JsonLogModel::JsonLogModel(const std::string &fileName, QObject *parent) : BaseLogModel(fileName, parent)
 {
 }
 
@@ -75,7 +75,7 @@ bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string>
         }
         rowData.emplace_back(std::move(colText));
     }
-    return false;
+    return true;
 }
 
 std::size_t JsonLogModel::parseChunks(

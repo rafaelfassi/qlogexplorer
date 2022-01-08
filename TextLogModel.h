@@ -1,8 +1,8 @@
 #pragma once
 
-#include "AbstractLogModel.h"
+#include "BaseLogModel.h"
 
-class TextLogModel : public AbstractLogModel
+class TextLogModel : public BaseLogModel
 {
     Q_OBJECT
 

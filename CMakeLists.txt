@@ -20,22 +20,30 @@ add_definitions(-fPIC)
 set(PROJECT_HEADERS
     MainWindow.h
     AbstractModel.h
-    AbstractLogModel.h
+    BaseLogModel.h
     TextLogModel.h
     JsonLogModel.h
     LongScrollBar.h
     LogViewWidget.h
+    SearchParamWidget.h
+    LogSearchWidget.h
+    LogTabWidget.h
+    ProxyModel.h
 )
 
 set(PROJECT_SOURCES
+    qlogviewer.qrc
     main.cpp
     MainWindow.cpp
-    AbstractModel.cpp
-    AbstractLogModel.cpp
+    BaseLogModel.cpp
     TextLogModel.cpp
     JsonLogModel.cpp
     LongScrollBar.cpp
     LogViewWidget.cpp
+    SearchParamWidget.cpp
+    LogSearchWidget.cpp
+    LogTabWidget.cpp
+    ProxyModel.cpp
 )
 
 add_executable(qlogviewer

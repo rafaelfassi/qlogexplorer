@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QObject>
+#include "AbstractModel.h"
 #include <fstream>
 #include <thread>
 #include <deque>
@@ -83,27 +83,29 @@ struct SearchParam
 };
 using SearchParamLst = std::vector<SearchParam>;
 
-class AbstractLogModel : public QObject
+class BaseLogModel : public AbstractModel
 {
     Q_OBJECT
 
 public:
-    AbstractLogModel(const std::string &fileName, QObject *parent = 0);
-    virtual ~AbstractLogModel();
+    BaseLogModel(const std::string &fileName, QObject *parent = 0);
+    virtual ~BaseLogModel();
     const std::string &getFileName() const;
-    bool getRow(std::uint64_t row, std::vector<std::string> &rowData) const;
-    const std::vector<std::string> &getColumns() const;
-    void startSearch(const SearchParamLst &params);
+    ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
+    const std::vector<std::string> &getColumns() const override final;
+    std::size_t columnCount() const override final;
+    std::size_t rowCount() const override final;
+    ssize_t getRowNum(ssize_t row) const override final;
+    void startSearch(const SearchParamLst &params, bool orOp);
     void stopSearch();
-    std::size_t columnCount() const;
-    std::size_t rowCount() const;
+    bool isSearching() const;
     bool isWatching() const;
     void start();
     void stop();
     bool isFollowing() const;
 
 signals:
-    void countChanged();
+    void modelConfigured() const;
     void parsingProgress(char progress);
     void valueFound(ssize_t row) const;
 
@@ -143,12 +145,13 @@ private:
     std::vector<std::string> m_columns;
     std::vector<Chunk> m_chunks;
     SearchParamLst m_searchParams;
+    bool m_searchWithOrOperator;
     std::thread m_searchThread;
     std::thread m_watchThread;
     // Control flags that are set in the main thread and read by other threads.
     std::atomic_bool m_searching = false;
     std::atomic_bool m_watching = false;
-    std::atomic_bool m_following = false;
+    std::atomic_bool m_following = true;
     // Set by m_watchThread and read by main and m_searchThread threads.
     std::atomic_size_t m_rowCount = 0;
     // Accessed only by m_watchThread.
