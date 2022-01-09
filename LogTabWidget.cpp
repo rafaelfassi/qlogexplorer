@@ -52,7 +52,6 @@ LogTabWidget::~LogTabWidget()
 
 void LogTabWidget::createActions()
 {
-
 }
 
 void LogTabWidget::createConnections()

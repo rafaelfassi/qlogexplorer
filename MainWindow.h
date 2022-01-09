@@ -16,6 +16,7 @@ public:
     void createToolBars();
     void createConnections();
 
+    void testHeaderView();
     void testLogWidget();
     void testScrollBar();
     void testFile();

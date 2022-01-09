@@ -29,6 +29,7 @@ set(PROJECT_HEADERS
     LogSearchWidget.h
     LogTabWidget.h
     ProxyModel.h
+    HeaderView.h
 )
 
 set(PROJECT_SOURCES
@@ -44,6 +45,7 @@ set(PROJECT_SOURCES
     LogSearchWidget.cpp
     LogTabWidget.cpp
     ProxyModel.cpp
+    HeaderView.cpp
 )
 
 add_executable(qlogviewer

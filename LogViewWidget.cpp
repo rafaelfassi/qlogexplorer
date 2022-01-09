@@ -1,3 +1,4 @@
+#include "HeaderView.h"
 #include "LogViewWidget.h"
 #include "LongScrollBar.h"
 #include "AbstractModel.h"
@@ -5,6 +6,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QTimer>
+#include <QPushButton>
 #include <QDebug>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -17,6 +19,13 @@ constexpr ssize_t gDefaultMarging(10);
 
 LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times", 14), m_fm(m_font)
 {
+    m_header = new HeaderView(this);
+    m_header->setFont(&m_font);
+    m_header->setMaximumHeight(m_fm.height());
+    m_header->setFixedHeight(m_header->maximumHeight());
+    m_header->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
+    m_header->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
+
     m_vScrollBar = new LongScrollBar(Qt::Vertical, this);
     m_vScrollBar->setFixedWidth(gScrollBarThickness);
     m_vScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Expanding);
@@ -28,16 +37,34 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     m_hScrollBar->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
     m_hScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
 
-    m_hScrollBarLayout = new QVBoxLayout;
+    m_btnExpandColumns = new QPushButton(this);
+    m_btnExpandColumns->setFocusPolicy(Qt::NoFocus);
+    m_btnExpandColumns->setIcon(QIcon(":/images/expand_icon.png"));
+    m_btnExpandColumns->setToolTip("Expand All Columns");
+    m_btnExpandColumns->setFlat(true);
+    m_btnExpandColumns->setFixedHeight(m_header->maximumHeight());
+    m_btnExpandColumns->setFixedWidth(gScrollBarThickness);
+
+    m_btnFitColumns = new QPushButton(this);
+    m_btnFitColumns->setFocusPolicy(Qt::NoFocus);
+    m_btnFitColumns->setIcon(QIcon(":/images/fit_icon.png"));
+    m_btnFitColumns->setToolTip("Adjust Columns to Fit");
+    m_btnFitColumns->setFlat(true);
+    m_btnFitColumns->setFixedHeight(gScrollBarThickness);
+    m_btnFitColumns->setFixedWidth(gScrollBarThickness);
+
+    m_hScrollBarLayout = new QVBoxLayout();
     m_hScrollBarLayout->setMargin(0);
+    m_hScrollBarLayout->addWidget(m_header, 0, Qt::AlignTop);
     m_hScrollBarLayout->addWidget(m_hScrollBar, 0, Qt::AlignBottom);
 
-    m_vScrollBarLayout = new QVBoxLayout;
+    m_vScrollBarLayout = new QVBoxLayout();
     m_vScrollBarLayout->setMargin(0);
+    m_vScrollBarLayout->addWidget(m_btnExpandColumns, 0, Qt::AlignTop);
     m_vScrollBarLayout->addWidget(m_vScrollBar, 1, Qt::AlignRight);
-    m_vScrollBarLayout->addSpacing(gScrollBarThickness);
+    m_vScrollBarLayout->addWidget(m_btnFitColumns);
 
-    QHBoxLayout *hLayout = new QHBoxLayout;
+    QHBoxLayout *hLayout = new QHBoxLayout();
     hLayout->setMargin(0);
     hLayout->setSpacing(0);
     hLayout->addLayout(m_hScrollBarLayout, 1);
@@ -46,10 +73,19 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     setLayout(hLayout);
 
     m_updateTimer = new QTimer(this);
+    m_updateTimer->setInterval(200);
 
-    connect(m_vScrollBar, &LongScrollBar::posChanged, this, qOverload<>(&QWidget::update));
-    connect(m_hScrollBar, &LongScrollBar::posChanged, this, qOverload<>(&QWidget::update));
-    connect(m_updateTimer, &QTimer::timeout, this, qOverload<>(&LogViewWidget::updateView));
+    connect(m_vScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::vScrollBarPosChanged);
+    connect(m_hScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::hScrollBarPosChanged);
+    connect(m_updateTimer, &QTimer::timeout, this, &LogViewWidget::updateRowWidth);
+    connect(m_header, &QHeaderView::geometriesChanged, this, &LogViewWidget::headerChanged);
+    connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
+    connect(m_header, &QHeaderView::sectionMoved, this, [this](int, int, int) { this->headerChanged(); });
+    connect(m_header, &HeaderView::expandToContent, this, &LogViewWidget::expandColumnToContent);
+    connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
+    connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
+    connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
+    connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
 }
 
 LogViewWidget::~LogViewWidget()
@@ -61,6 +97,43 @@ void LogViewWidget::setLogModel(AbstractModel *logModel)
     m_logModel = logModel;
     modelCountChanged();
     connect(logModel, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
+}
+
+void LogViewWidget::headerChanged()
+{
+    updateView();
+    m_updateTimer->start();
+}
+
+void LogViewWidget::updateRowWidth()
+{
+    m_updateTimer->stop();
+    disconnect(m_header, &QHeaderView::sectionResized, nullptr, nullptr);
+
+    if (m_header->isVisible())
+    {
+        ssize_t totalWidth(0);
+        for (size_t visualIdx = 0; visualIdx < m_header->count(); ++visualIdx)
+        {
+            const ssize_t logicalIdx = m_header->logicalIndex(visualIdx);
+            totalWidth += m_header->sectionSize(logicalIdx);
+        }
+        m_rowWidth = totalWidth;
+    }
+
+    m_hScrollBar->setMax(m_rowWidth - m_textAreaRect.width());
+    connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
+}
+
+void LogViewWidget::vScrollBarPosChanged()
+{
+    update();
+}
+
+void LogViewWidget::hScrollBarPosChanged()
+{
+    m_header->setOffset(m_hScrollBar->getPos());
+    update();
 }
 
 void LogViewWidget::modelCountChanged()
@@ -93,7 +166,9 @@ void LogViewWidget::updateDisplaySize()
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
-        m_hScrollBar->setMax(m_totalWidthInPage - m_textAreaRect.width());
+
+        // qDebug() << "     width" << m_textAreaRect.width();
+        // qDebug() << "m_rowWidth" << m_rowWidth;
 
         const std::string lastLineNumberStr(std::to_string(m_logModel->getRowNum(rowCount - 1L) + 1L));
         m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + gDefaultMarging);
@@ -114,8 +189,14 @@ void LogViewWidget::updateView()
 
 void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
+    if (m_header->isVisible())
+    {
+        m_textAreaRect.setTop(m_header->height());
+    }
+
     m_textAreaRect.setHeight(height() - gScrollBarThickness - m_textAreaRect.top());
     m_textAreaRect.setWidth(width() - gScrollBarThickness - m_textAreaRect.left());
+    updateRowWidth();
     updateDisplaySize();
 }
 
@@ -125,8 +206,6 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     if (invalidRect.isEmpty() || (m_logModel == nullptr))
         return;
 
-    m_updateTimer->stop();
-
     QPainter devicePainter(this);
     devicePainter.setFont(m_font);
     devicePainter.eraseRect(rect());
@@ -134,22 +213,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     const ssize_t modelRowCount(m_logModel->rowCount());
     ssize_t hScrollOffset(m_hScrollBar->getPos());
     ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, modelRowCount));
-
-    // Draw Header
-    {
-        QRect rect(m_textAreaRect.left(), 0, m_textAreaRect.width(), m_textAreaRect.top());
-        devicePainter.setClipRect(rect);
-        rect.moveLeft(m_textAreaRect.left() - hScrollOffset);
-        rect.setWidth(m_textAreaRect.width() + hScrollOffset);
-        devicePainter.fillRect(rect, QColor("#5f9ea0"));
-        for (auto &column : m_columns)
-        {
-            rect.setWidth(column.width);
-            devicePainter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, column.name.c_str());
-            rect.moveLeft(rect.left() + rect.width() + gDefaultMarging);
-            column.maxWidth = getTextWidth(column.name);
-        }
-    }
+    ssize_t maxRowWidth(0);
 
     std::vector<std::string> rowData;
     for (ssize_t i = 0; i < rowsToRender; ++i)
@@ -181,42 +245,44 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                 devicePainter.setPen(Qt::white);
             }
 
-            for (auto &column : m_columns)
+            if (m_header->isVisible())
             {
-                rect.setWidth(column.width);
-                if (column.modelIdx < rowData.size())
+                for (size_t visualIdx = 0; visualIdx < m_header->count(); ++visualIdx)
                 {
-                    QString colText;
-                    ssize_t txtWidth = getTextWidth(rowData[column.modelIdx], &colText);
-                    column.maxWidth = std::max<ssize_t>(column.maxWidth, txtWidth);
-                    devicePainter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, colText);
+                    const ssize_t logicalIdx = m_header->logicalIndex(visualIdx);
+                    const ssize_t colWidth = m_header->sectionSize(logicalIdx);
+                    rect.setWidth(colWidth);
+                    if (logicalIdx < rowData.size())
+                    {
+                        const QString &colText(getElidedText(rowData[logicalIdx], colWidth - gDefaultMarging, true));
+                        devicePainter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, colText);
+                    }
+                    rect.moveLeft(rect.left() + rect.width());
                 }
-                rect.setLeft(rect.left() + column.width + gDefaultMarging);
+            }
+            else
+            {
+                ssize_t rowWidth(0);
+                for (const auto &colText : rowData)
+                {
+                    const ssize_t colWidth = getTextWidth(colText) + gDefaultMarging;
+                    rect.setWidth(colWidth);
+                    devicePainter.drawText(
+                        rect,
+                        Qt::AlignTop | Qt::AlignLeft,
+                        QString::fromStdString(colText).simplified());
+                    rect.moveLeft(rect.left() + rect.width());
+                    rowWidth += colWidth;
+                }
+                maxRowWidth = std::max(maxRowWidth, rowWidth);
             }
         }
     }
 
-    bool mustUpdate(false);
-    ssize_t totalWidthInPage(0);
-    for (auto &column : m_columns)
+    if (!m_header->isVisible() && (maxRowWidth != m_rowWidth))
     {
-        if (!column.fixedSize && (column.width != column.maxWidth))
-        {
-            column.width = column.maxWidth;
-            mustUpdate = true;
-        }
-        totalWidthInPage += column.width + gDefaultMarging;
-    }
-
-    if (m_totalWidthInPage != totalWidthInPage)
-    {
-        m_totalWidthInPage = totalWidthInPage;
-        mustUpdate = true;
-    }
-
-    if (mustUpdate)
-    {
-        m_updateTimer->start(200);
+        m_rowWidth = maxRowWidth;
+        m_updateTimer->start();
     }
 }
 
@@ -229,8 +295,15 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
 
     if (event->pos().y() <= m_textAreaRect.top())
     {
-        std::swap(m_columns[0], m_columns[1]);
-        qDebug() << "Header clicked";
+        if (event->modifiers() == Qt::ShiftModifier)
+        {
+            m_header->hideSection(1);
+            m_header->hideSection(4);
+        }
+        else
+        {
+            adjustColumns(ColumnsFit::Content);
+        }
         return;
     }
 
@@ -241,6 +314,10 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         update();
         emit rowSelected(m_logModel->getRowNum(row));
     }
+}
+
+void LogViewWidget::mouseReleaseEvent(QMouseEvent *event)
+{
 }
 
 void LogViewWidget::wheelEvent(QWheelEvent *event)
@@ -255,42 +332,141 @@ void LogViewWidget::wheelEvent(QWheelEvent *event)
     }
 }
 
-ssize_t LogViewWidget::getTextWidth(const std::string &text, QString *qStrText)
+ssize_t LogViewWidget::getTextWidth(const std::string &text, bool simplified)
 {
-    QString tmpStr;
-    if (qStrText == nullptr)
-    {
-        qStrText = &tmpStr;
-    }
+    QString qStr(QString::fromStdString(text));
+    return m_fm.horizontalAdvance(simplified ? qStr.simplified() : qStr);
+}
 
-    *qStrText = QString::fromStdString(text).simplified();
-    return m_fm.horizontalAdvance(*qStrText);
+QString LogViewWidget::getElidedText(const std::string &text, ssize_t width, bool simplified)
+{
+    QString qStr(QString::fromStdString(text));
+    return m_fm.elidedText(simplified ? qStr.simplified() : qStr, Qt::ElideRight, width);
 }
 
 void LogViewWidget::fillColumns()
 {
-    if (m_columns.empty() && (m_logModel != nullptr) && !m_logModel->getColumns().empty())
+    if ((m_header->count() == 0) && !m_logModel->getColumns().empty())
     {
-        ssize_t defColWidth(m_textAreaRect.width() / m_logModel->getColumns().size());
-        ssize_t colIdx(0);
-        for (const auto &columnName : m_logModel->getColumns())
+        m_header->setColumns(m_logModel->getColumns());
+        if (m_logModel->getColumns().front().empty())
         {
-            TableColumn tbCol;
-            tbCol.modelIdx = colIdx++;
-            tbCol.name = columnName;
-            tbCol.width = std::max<ssize_t>(getTextWidth(columnName) + gDefaultMarging, defColWidth);
-            tbCol.maxWidth = tbCol.maxWidth;
-            m_columns.emplace_back(std::move(tbCol));
+            m_header->setVisible(false);
+            m_btnExpandColumns->setVisible(false);
+            m_btnFitColumns->setEnabled(false);
+            m_btnFitColumns->setIcon(QIcon());
+            m_btnFitColumns->setToolTip("");
+        }
+    }
+}
+
+void LogViewWidget::adjustColumnsToHeader(std::map<ssize_t, ssize_t> &columnSizesMap)
+{
+    ssize_t remainingWidth(m_textAreaRect.width());
+    ssize_t remainingColumns(m_header->count() - m_header->hiddenSectionCount());
+    ssize_t maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+
+    for (size_t idx = 0; idx < m_header->count(); ++idx)
+    {
+        if (!m_header->isSectionHidden(idx))
+        {
+            const std::string &headerText = m_header->getColumns().at(idx);
+            const ssize_t headerTextWidth = getTextWidth(headerText) + gDefaultMarging;
+            const auto colSize = std::min(maxWidthPerCol, headerTextWidth);
+            columnSizesMap[idx] = colSize;
+            remainingWidth -= colSize;
+            --remainingColumns;
+            maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+        }
+    }
+}
+
+void LogViewWidget::adjustColumnsToContent(std::map<ssize_t, ssize_t> &columnSizesMap)
+{
+    adjustColumnsToHeader(columnSizesMap);
+
+    ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
+    const ssize_t elideWith(getTextWidth("..."));
+    std::vector<std::string> rowData;
+
+    for (ssize_t i = 0; i < rowsInPage; ++i)
+    {
+        ssize_t row = i + m_vScrollBar->getPos();
+        rowData.clear();
+        m_logModel->getRow(row, rowData);
+
+        for (auto &[idx, columnWidth] : columnSizesMap)
+        {
+            const ssize_t textWidth = getTextWidth(rowData[idx], true) + elideWith + gDefaultMarging;
+            columnWidth = std::max(columnWidth, textWidth);
+        }
+    }
+}
+
+void LogViewWidget::adjustColumnsToScreen(std::map<ssize_t, ssize_t> &columnSizesMap)
+{
+    adjustColumnsToContent(columnSizesMap);
+
+    std::map<ssize_t, ssize_t> columnsMap;
+    ssize_t remainingWidth(m_textAreaRect.width());
+    ssize_t remainingColumns(columnSizesMap.size());
+    ssize_t maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+    std::pair<ssize_t, ssize_t> biggerColumn{0, 0};
+
+    for (auto &[idx, columnWidth] : columnSizesMap)
+    {
+        if (columnWidth > biggerColumn.second)
+        {
+            biggerColumn.first = idx;
+            biggerColumn.second = columnWidth;
         }
 
-        if ((m_logModel->getColumns().size() > 0) && !m_logModel->getColumns().front().empty())
-        {
-            m_textAreaRect.setTop(m_fm.height());
-            m_vScrollBarLayout->setContentsMargins(0, m_textAreaRect.top(), 0, 0);
-        }
-        else
-        {
-            m_textAreaRect.setTop(0);
-        }
+        columnWidth = std::min(maxWidthPerCol, columnWidth);
+        remainingWidth -= columnWidth;
+        --remainingColumns;
+        maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+    }
+
+    if (!columnSizesMap.empty() && remainingWidth > 0 && biggerColumn.second > 0)
+    {
+        columnSizesMap[biggerColumn.first] += remainingWidth;
+    }
+}
+
+void LogViewWidget::adjustColumns(ColumnsFit fit)
+{
+    std::map<ssize_t, ssize_t> columnSizesMap;
+
+    switch (fit)
+    {
+        case ColumnsFit::Headers:
+            adjustColumnsToHeader(columnSizesMap);
+            break;
+        case ColumnsFit::Content:
+            adjustColumnsToContent(columnSizesMap);
+            break;
+        case ColumnsFit::Screen:
+            adjustColumnsToScreen(columnSizesMap);
+            break;
+        default:
+            break;
+    }
+
+    for (const auto &[idx, columnWidth] : columnSizesMap)
+    {
+        m_header->resizeSection(idx, columnWidth);
+    }
+
+    m_updateTimer->start();
+}
+
+void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
+{
+    std::map<ssize_t, ssize_t> columnSizesMap;
+    adjustColumnsToContent(columnSizesMap);
+    const auto it = columnSizesMap.find(columnIdx);
+    if (it != columnSizesMap.end())
+    {
+        m_header->resizeSection(it->first, it->second);
     }
 }

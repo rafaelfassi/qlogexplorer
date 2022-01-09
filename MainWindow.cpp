@@ -5,6 +5,7 @@
 #include "LongScrollBar.h"
 #include "LogSearchWidget.h"
 #include "LogTabWidget.h"
+#include "HeaderView.h"
 #include <QTableView>
 #include <QDebug>
 #include <QVBoxLayout>
@@ -19,7 +20,10 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     LogTabWidget *logTabWidget = new LogTabWidget(this);
+    logTabWidget->setMinimumSize(600, 600);
     setCentralWidget(logTabWidget);
+
+    //testHeaderView();
 }
 
 MainWindow::~MainWindow()
@@ -53,6 +57,12 @@ void MainWindow::createToolBars()
 void MainWindow::createConnections()
 {
     // connect(m_comboTestUnit, SIGNAL(currentIndexChanged(QString)), this, SLOT(selectTestUnit(QString)));
+}
+
+void MainWindow::testHeaderView()
+{
+    HeaderView *headerView = new HeaderView(this);
+    setCentralWidget(headerView);
 }
 
 void MainWindow::testLogWidget()

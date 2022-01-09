@@ -3,21 +3,21 @@
 #include <QWidget>
 
 class AbstractModel;
+class HeaderView;
 class LongScrollBar;
+class QPushButton;
 class QVBoxLayout;
+
+enum class ColumnsFit
+{
+    Headers,
+    Content,
+    Screen
+};
 
 class LogViewWidget : public QWidget
 {
     Q_OBJECT
-
-    struct TableColumn
-    {
-        ssize_t modelIdx;
-        std::string name;
-        ssize_t width;
-        ssize_t maxWidth;
-        bool fixedSize = false;
-    };
 
 public:
     LogViewWidget(QWidget *parent = nullptr);
@@ -30,33 +30,48 @@ signals:
 
 public slots:
     void updateView();
+    void goToRow(ssize_t row);
+
+protected slots:
     void updateDisplaySize();
     void modelCountChanged();
-    void goToRow(ssize_t row);
+    void headerChanged();
+    void vScrollBarPosChanged();
+    void hScrollBarPosChanged();
+    void updateRowWidth();
+    void expandColumnToContent(ssize_t columnIdx);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
-    ssize_t getTextWidth(const std::string& text, QString *qStrText = nullptr);
+    ssize_t getTextWidth(const std::string &text, bool simplified = false);
+    QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
+
     void fillColumns();
+    void adjustColumnsToHeader(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void adjustColumnsToContent(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void adjustColumnsToScreen(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void adjustColumns(ColumnsFit fit);
 
 private:
     AbstractModel *m_logModel = nullptr;
+    HeaderView *m_header = nullptr;
     LongScrollBar *m_vScrollBar = nullptr;
     LongScrollBar *m_hScrollBar = nullptr;
     QVBoxLayout *m_vScrollBarLayout = nullptr;
     QVBoxLayout *m_hScrollBarLayout = nullptr;
+    QPushButton *m_btnExpandColumns = nullptr;
+    QPushButton *m_btnFitColumns = nullptr;
     QTimer *m_updateTimer;
     QFont m_font;
     QFontMetrics m_fm;
     ssize_t m_rowHeight = 0;
+    ssize_t m_rowWidth = 0;
     ssize_t m_itemsPerPage = 0;
-    ssize_t m_headerHeight = 0;
-    ssize_t m_totalWidthInPage = 0;
     QRect m_textAreaRect;
     std::optional<ssize_t> m_currentRow;
-    std::vector<TableColumn> m_columns;
 };

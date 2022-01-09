@@ -10,5 +10,7 @@
         <file>images/merge_icon.png</file>
         <file>images/or_icon.png</file>
         <file>images/filter_off_icon.png</file>
+        <file>images/fit_icon.png</file>
+        <file>images/expand_icon.png</file>
     </qresource>
 </RCC>
