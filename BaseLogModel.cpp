@@ -186,8 +186,6 @@ bool searchParamsInRow(const SearchParamLst &params, bool orOp, const std::vecto
 void BaseLogModel::search()
 {
     qDebug() << "Starting to search";
-    QElapsedTimer timer;
-    timer.start();
 
     ChunkRows chunkRows;
     std::vector<std::string> rowData;
@@ -195,6 +193,9 @@ void BaseLogModel::search()
 
     while (m_searching.load())
     {
+        QElapsedTimer timer;
+        timer.start();
+
         std::size_t startingRow(row);
 
         while ((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
