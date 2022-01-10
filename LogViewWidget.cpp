@@ -82,10 +82,10 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
     connect(m_header, &QHeaderView::sectionMoved, this, [this](int, int, int) { this->headerChanged(); });
     connect(m_header, &HeaderView::expandToContent, this, &LogViewWidget::expandColumnToContent);
-    connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
-    connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
-    connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
-    connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
+    connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
+    connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
+    connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
+    connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
 }
 
 LogViewWidget::~LogViewWidget()
@@ -121,7 +121,15 @@ void LogViewWidget::updateRowWidth()
         m_rowWidth = totalWidth;
     }
 
-    m_hScrollBar->setMax(m_rowWidth - m_textAreaRect.width());
+    if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
+    {
+        m_hScrollBar->setMax(m_rowWidth - m_textAreaRect.width());
+    }
+    else
+    {
+        m_updateTimer->start();
+    }
+
     connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
 }
 
@@ -161,7 +169,7 @@ void LogViewWidget::updateDisplaySize()
     if (m_logModel)
     {
         ssize_t rowCount(m_logModel->rowCount());
-        fillColumns();
+        configureColumns();
         m_rowHeight = m_fm.height();
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
@@ -302,7 +310,7 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         }
         else
         {
-            adjustColumns(ColumnsFit::Content);
+            adjustColumns(ColumnsSize::Content);
         }
         return;
     }
@@ -344,7 +352,7 @@ QString LogViewWidget::getElidedText(const std::string &text, ssize_t width, boo
     return m_fm.elidedText(simplified ? qStr.simplified() : qStr, Qt::ElideRight, width);
 }
 
-void LogViewWidget::fillColumns()
+void LogViewWidget::configureColumns()
 {
     if ((m_header->count() == 0) && !m_logModel->getColumns().empty())
     {
@@ -357,10 +365,14 @@ void LogViewWidget::fillColumns()
             m_btnFitColumns->setIcon(QIcon());
             m_btnFitColumns->setToolTip("");
         }
+        else
+        {
+            adjustColumns(ColumnsSize::Screen);
+        }
     }
 }
 
-void LogViewWidget::adjustColumnsToHeader(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSizesMap)
 {
     ssize_t remainingWidth(m_textAreaRect.width());
     ssize_t remainingColumns(m_header->count() - m_header->hiddenSectionCount());
@@ -381,9 +393,9 @@ void LogViewWidget::adjustColumnsToHeader(std::map<ssize_t, ssize_t> &columnSize
     }
 }
 
-void LogViewWidget::adjustColumnsToContent(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSizesMap)
 {
-    adjustColumnsToHeader(columnSizesMap);
+    getColumnsSizeToHeader(columnSizesMap);
 
     ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
     const ssize_t elideWith(getTextWidth("..."));
@@ -403,9 +415,9 @@ void LogViewWidget::adjustColumnsToContent(std::map<ssize_t, ssize_t> &columnSiz
     }
 }
 
-void LogViewWidget::adjustColumnsToScreen(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToScreen(std::map<ssize_t, ssize_t> &columnSizesMap)
 {
-    adjustColumnsToContent(columnSizesMap);
+    getColumnsSizeToContent(columnSizesMap);
 
     std::map<ssize_t, ssize_t> columnsMap;
     ssize_t remainingWidth(m_textAreaRect.width());
@@ -433,20 +445,20 @@ void LogViewWidget::adjustColumnsToScreen(std::map<ssize_t, ssize_t> &columnSize
     }
 }
 
-void LogViewWidget::adjustColumns(ColumnsFit fit)
+void LogViewWidget::adjustColumns(ColumnsSize size)
 {
     std::map<ssize_t, ssize_t> columnSizesMap;
 
-    switch (fit)
+    switch (size)
     {
-        case ColumnsFit::Headers:
-            adjustColumnsToHeader(columnSizesMap);
+        case ColumnsSize::Headers:
+            getColumnsSizeToHeader(columnSizesMap);
             break;
-        case ColumnsFit::Content:
-            adjustColumnsToContent(columnSizesMap);
+        case ColumnsSize::Content:
+            getColumnsSizeToContent(columnSizesMap);
             break;
-        case ColumnsFit::Screen:
-            adjustColumnsToScreen(columnSizesMap);
+        case ColumnsSize::Screen:
+            getColumnsSizeToScreen(columnSizesMap);
             break;
         default:
             break;
@@ -463,7 +475,7 @@ void LogViewWidget::adjustColumns(ColumnsFit fit)
 void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
 {
     std::map<ssize_t, ssize_t> columnSizesMap;
-    adjustColumnsToContent(columnSizesMap);
+    getColumnsSizeToContent(columnSizesMap);
     const auto it = columnSizesMap.find(columnIdx);
     if (it != columnSizesMap.end())
     {

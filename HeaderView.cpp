@@ -186,11 +186,6 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
 
     if (canMoveLeft || canMoveRight)
     {
-        qDebug() << "------------------";
-        qDebug() << "idx" << idx;
-        qDebug() << "colPos" << colPos;
-        qDebug() << "visiblePos" << visiblePos;
-
         QMenu *moveMenu = menu.addMenu("Move");
         if (canMoveLeft)
         {

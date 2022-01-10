@@ -14,6 +14,7 @@ public:
     void setPos(ssize_t pos);
     ssize_t getPos() const;
     void setPosPerStep(int positions);
+    bool isKnobGrabbed();
     void wheelEvent(QWheelEvent *event) override;
 
 signals:

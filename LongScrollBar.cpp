@@ -20,11 +20,22 @@ void LongScrollBar::setMax(ssize_t max)
 {
     if (max != m_max)
     {
+        const auto pos(m_pos);
         changeMax(max);
+
         if (m_max > 0)
         {
             updateDisplaySize();
             updateKnob();
+        }
+        else
+        {
+            update();
+        }
+
+        if (pos != m_pos)
+        {
+            emit posChanged();
         }
     }
 }
@@ -51,6 +62,11 @@ ssize_t LongScrollBar::getPos() const
 void LongScrollBar::setPosPerStep(int positions)
 {
     m_posPerStep = positions;
+}
+
+bool LongScrollBar::isKnobGrabbed()
+{
+    return m_knobGrabbed.has_value();
 }
 
 void LongScrollBar::updateDisplaySize()
@@ -167,15 +183,15 @@ void LongScrollBar::mouseMoveEvent(QMouseEvent *event)
         ssize_t newPos(0);
         if (m_orientation == Qt::Vertical)
         {
-            const int newY =
+            const ssize_t newY =
                 std::min(std::max(event->pos().y() - m_knobGrabbed.value(), 0), height() - m_knobRect.height());
-            newPos = newY / m_sizePerPos;
+            newPos = std::round(newY / m_sizePerPos);
         }
         else
         {
-            const int newX =
+            const ssize_t newX =
                 std::min(std::max(event->pos().x() - m_knobGrabbed.value(), 0), width() - m_knobRect.width());
-            newPos = newX / m_sizePerPos;
+            newPos = std::round(newX / m_sizePerPos);
         }
 
         changePos(std::min<ssize_t>(newPos, m_max));

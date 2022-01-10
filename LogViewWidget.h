@@ -8,7 +8,7 @@ class LongScrollBar;
 class QPushButton;
 class QVBoxLayout;
 
-enum class ColumnsFit
+enum class ColumnsSize
 {
     Headers,
     Content,
@@ -31,6 +31,7 @@ signals:
 public slots:
     void updateView();
     void goToRow(ssize_t row);
+    void adjustColumns(ColumnsSize size);
 
 protected slots:
     void updateDisplaySize();
@@ -51,11 +52,10 @@ protected:
     ssize_t getTextWidth(const std::string &text, bool simplified = false);
     QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
 
-    void fillColumns();
-    void adjustColumnsToHeader(std::map<ssize_t, ssize_t> &columnSizesMap);
-    void adjustColumnsToContent(std::map<ssize_t, ssize_t> &columnSizesMap);
-    void adjustColumnsToScreen(std::map<ssize_t, ssize_t> &columnSizesMap);
-    void adjustColumns(ColumnsFit fit);
+    void configureColumns();
+    void getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void getColumnsSizeToScreen(std::map<ssize_t, ssize_t> &columnSizesMap);
 
 private:
     AbstractModel *m_logModel = nullptr;
