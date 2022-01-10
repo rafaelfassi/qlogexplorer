@@ -175,9 +175,6 @@ void LogViewWidget::updateDisplaySize()
 
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
 
-        // qDebug() << "     width" << m_textAreaRect.width();
-        // qDebug() << "m_rowWidth" << m_rowWidth;
-
         const std::string lastLineNumberStr(std::to_string(m_logModel->getRowNum(rowCount - 1L) + 1L));
         m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + gDefaultMarging);
         m_hScrollBarLayout->setContentsMargins(m_textAreaRect.left(), 0, 0, 0);
@@ -197,11 +194,6 @@ void LogViewWidget::updateView()
 
 void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
-    if (m_header->isVisible())
-    {
-        m_textAreaRect.setTop(m_header->height());
-    }
-
     m_textAreaRect.setHeight(height() - gScrollBarThickness - m_textAreaRect.top());
     m_textAreaRect.setWidth(width() - gScrollBarThickness - m_textAreaRect.left());
     updateRowWidth();
@@ -367,8 +359,10 @@ void LogViewWidget::configureColumns()
         }
         else
         {
-            adjustColumns(ColumnsSize::Screen);
+            m_textAreaRect.setTop(m_header->height());
+            adjustColumns(ColumnsSize::Headers);
         }
+        updateView();
     }
 }
 

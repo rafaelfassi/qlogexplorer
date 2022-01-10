@@ -1,8 +1,10 @@
 #pragma once
 
 #include <QMainWindow>
+#include "LogTabWidget.h"
 
 class QAction;
+class QTabWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -16,13 +18,19 @@ public:
     void createToolBars();
     void createConnections();
 
+public slots:
+    void openFile(FileType type);
+    void closeTab(int index);
+
+private:
     void testHeaderView();
     void testLogWidget();
     void testScrollBar();
     void testFile();
 
 private:
-    QAction *m_toggeFollowing;
-    QAction *m_startSearch;
-    QAction *m_stopSearch;
+    QAction *m_openFile;
+    QAction *m_openFileAsText;
+    QAction *m_openFileAsJson;
+    QTabWidget *m_tabViews;
 };

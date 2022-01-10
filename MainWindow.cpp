@@ -4,26 +4,32 @@
 #include "JsonLogModel.h"
 #include "LongScrollBar.h"
 #include "LogSearchWidget.h"
-#include "LogTabWidget.h"
 #include "HeaderView.h"
 #include <QTableView>
 #include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QTabWidget>
 #include <QAction>
 #include <QToolBar>
 #include <QMenuBar>
+#include <QFileDialog>
+#include <QFileInfo>
 
 #include <fstream>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    LogTabWidget *logTabWidget = new LogTabWidget(this);
-    logTabWidget->setMinimumSize(600, 600);
-    setCentralWidget(logTabWidget);
+    setMinimumSize(600, 600);
+    createActions();
+    createMenus();
 
-    //testHeaderView();
+    m_tabViews = new QTabWidget(this);
+    m_tabViews->setTabsClosable(true);
+    setCentralWidget(m_tabViews);
+
+    createConnections();
 }
 
 MainWindow::~MainWindow()
@@ -32,20 +38,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::createActions()
 {
-    m_toggeFollowing = new QAction(tr("Follow..."), this);
-    m_toggeFollowing->setCheckable(true);
-
-    m_startSearch = new QAction(tr("Start Search"), this);
-    m_stopSearch = new QAction(tr("Stop Search"), this);
-    // addAction(m_toggeFollowing);
+    m_openFile = new QAction(tr("Open"), this);
+    m_openFileAsText = new QAction(tr("Text File"), this);
+    m_openFileAsJson = new QAction(tr("Json Log File"), this);
 }
 
 void MainWindow::createMenus()
 {
     auto fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(m_toggeFollowing);
-    fileMenu->addAction(m_startSearch);
-    fileMenu->addAction(m_stopSearch);
+    fileMenu->addAction(m_openFile);
+
+    auto openAsMenu = fileMenu->addMenu(tr("Open As..."));
+    openAsMenu->addAction(m_openFileAsText);
+    openAsMenu->addAction(m_openFileAsJson);
 }
 
 void MainWindow::createToolBars()
@@ -56,7 +61,39 @@ void MainWindow::createToolBars()
 
 void MainWindow::createConnections()
 {
-    // connect(m_comboTestUnit, SIGNAL(currentIndexChanged(QString)), this, SLOT(selectTestUnit(QString)));
+    connect(m_openFile, &QAction::triggered, this, [this]() { openFile(FileType::Text); });
+    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFile(FileType::Text); });
+    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFile(FileType::Json); });
+    connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
+}
+
+void MainWindow::openFile(FileType type)
+{
+    const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
+    if (fileName.isEmpty())
+    {
+        return;
+    }
+
+    QFileInfo fileInfo(fileName);
+    if (!fileInfo.exists() || !fileInfo.isFile())
+    {
+        return;
+    }
+
+    LogTabWidget *logTabWidget = new LogTabWidget(fileInfo.filePath(), type, this);
+    int newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
+    m_tabViews->setCurrentIndex(newTabIdx);
+}
+
+void MainWindow::closeTab(int index)
+{
+    LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
+    if (tab)
+    {
+        m_tabViews->removeTab(index);
+        delete tab;
+    }
 }
 
 void MainWindow::testHeaderView()
@@ -150,7 +187,7 @@ void MainWindow::testFile()
     //        {
     //            percentage += notyfyPercentage;
     //            qDebug() << percentage << "%";
-    //        }    
+    //        }
     //        ofs << i << std::endl;
     //    }
     //    ofs << "Last Line" << std::endl;

@@ -18,11 +18,20 @@
 
 #include <fstream>
 
-LogTabWidget::LogTabWidget(QWidget *parent) : QWidget(parent)
+LogTabWidget::LogTabWidget(const QString &fileName, FileType type, QWidget *parent) : QWidget(parent)
 {
     createActions();
 
-    m_logModel = new JsonLogModel("/home/rafael/Dev/QLogViewer/log.json", this);
+    switch (type)
+    {
+        case FileType::Text:
+            m_logModel = new TextLogModel(fileName.toStdString(), this);
+            break;
+        case FileType::Json:
+            m_logModel = new JsonLogModel(fileName.toStdString(), this);
+            break;
+    }
+
     m_logViewWidget = new LogViewWidget(this);
     m_logViewWidget->setMinimumSize(400, 200);
     m_logViewWidget->setLogModel(m_logModel);
