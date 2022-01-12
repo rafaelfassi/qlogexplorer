@@ -20,6 +20,7 @@ public:
 
 public slots:
     void openFile(FileType type);
+    void openFile(const QString &fileName, FileType type);
     void closeTab(int index);
 
 private:

@@ -21,7 +21,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    setMinimumSize(600, 600);
+    setMinimumSize(1200, 800);
     createActions();
     createMenus();
 
@@ -30,6 +30,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(m_tabViews);
 
     createConnections();
+
+    openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Json);
+    openFile("/home/rafael/Dev/QLogViewer/log.txt", FileType::Text);
 }
 
 MainWindow::~MainWindow()
@@ -75,6 +78,11 @@ void MainWindow::openFile(FileType type)
         return;
     }
 
+    openFile(fileName, type);
+}
+
+void MainWindow::openFile(const QString &fileName, FileType type)
+{
     QFileInfo fileInfo(fileName);
     if (!fileInfo.exists() || !fileInfo.isFile())
     {

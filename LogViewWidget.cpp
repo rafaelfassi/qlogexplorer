@@ -7,6 +7,9 @@
 #include <QPainter>
 #include <QTimer>
 #include <QPushButton>
+#include <QGuiApplication>
+#include <QClipboard>
+#include <QMenu>
 #include <QDebug>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -75,6 +78,13 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     m_updateTimer = new QTimer(this);
     m_updateTimer->setInterval(200);
 
+    m_actCopy = new QAction("Copy", this);
+    m_actCopy->setShortcut(QKeySequence::Copy);
+    m_actCopy->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actCopy);
+    setFocusPolicy(Qt::StrongFocus);
+    setFocus();
+
     connect(m_vScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::vScrollBarPosChanged);
     connect(m_hScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::hScrollBarPosChanged);
     connect(m_updateTimer, &QTimer::timeout, this, &LogViewWidget::updateRowWidth);
@@ -86,6 +96,7 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
     connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
     connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
+    connect(m_actCopy, &QAction::triggered, this, &LogViewWidget::copySelected);
 }
 
 LogViewWidget::~LogViewWidget()
@@ -110,24 +121,18 @@ void LogViewWidget::updateRowWidth()
     m_updateTimer->stop();
     disconnect(m_header, &QHeaderView::sectionResized, nullptr, nullptr);
 
-    if (m_header->isVisible())
+    ssize_t maxRowWidth = getMaxRowWidth();
+    const auto newHScrollMax(maxRowWidth - m_textAreaRect.width());
+    if (m_hScrollBar->getMax() != newHScrollMax)
     {
-        ssize_t totalWidth(0);
-        for (size_t visualIdx = 0; visualIdx < m_header->count(); ++visualIdx)
+        if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
         {
-            const ssize_t logicalIdx = m_header->logicalIndex(visualIdx);
-            totalWidth += m_header->sectionSize(logicalIdx);
+            m_hScrollBar->setMax(newHScrollMax);
         }
-        m_rowWidth = totalWidth;
-    }
-
-    if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
-    {
-        m_hScrollBar->setMax(m_rowWidth - m_textAreaRect.width());
-    }
-    else
-    {
-        m_updateTimer->start();
+        else
+        {
+            m_updateTimer->start();
+        }
     }
 
     connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
@@ -160,6 +165,13 @@ void LogViewWidget::goToRow(ssize_t row)
         }
 
         m_currentRow = row;
+
+        if (m_startSelect.has_value() || m_currentSelec.has_value())
+        {
+            m_startSelect = std::nullopt;
+            m_currentSelec = std::nullopt;
+        }
+
         update();
     }
 }
@@ -196,8 +208,8 @@ void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
     m_textAreaRect.setHeight(height() - gScrollBarThickness - m_textAreaRect.top());
     m_textAreaRect.setWidth(width() - gScrollBarThickness - m_textAreaRect.left());
-    updateRowWidth();
     updateDisplaySize();
+    updateRowWidth();
 }
 
 void LogViewWidget::paintEvent(QPaintEvent *event)
@@ -206,84 +218,54 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     if (invalidRect.isEmpty() || (m_logModel == nullptr))
         return;
 
+    const auto dataRect(m_textAreaRect);
+
     QPainter devicePainter(this);
     devicePainter.setFont(m_font);
     devicePainter.eraseRect(rect());
+    devicePainter.setClipRect(dataRect);
 
-    const ssize_t modelRowCount(m_logModel->rowCount());
-    ssize_t hScrollOffset(m_hScrollBar->getPos());
-    ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, modelRowCount));
-    ssize_t maxRowWidth(0);
-
-    std::vector<std::string> rowData;
-    for (ssize_t i = 0; i < rowsToRender; ++i)
-    {
-        ssize_t row = i + m_vScrollBar->getPos();
-        int rY = m_textAreaRect.top() + (m_rowHeight * i);
-        rowData.clear();
-        ssize_t rowNumb = m_logModel->getRow(row, rowData);
-
-        devicePainter.setPen(Qt::black);
-
-        // Draw Line Number
+    forEachVisualRow(
+        [&devicePainter, &dataRect](VisualRowData &vrData)
         {
+            devicePainter.setPen(Qt::black);
+
+            // Draw Line Number
             devicePainter.setClipping(false);
-            QRect rect(0, rY, m_textAreaRect.left(), m_rowHeight);
-            devicePainter.fillRect(rect, QColor("#ffebcd"));
-            devicePainter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, std::to_string(rowNumb).c_str());
-        }
+            devicePainter.fillRect(vrData.numberRect, QColor("#ffebcd"));
+            devicePainter.drawText(
+                vrData.numberRect,
+                Qt::AlignTop | Qt::AlignLeft,
+                std::to_string(vrData.number).c_str());
 
-        // Draw Row Data
-        {
-            devicePainter.setClipRect(m_textAreaRect);
-            QRect rect(m_textAreaRect.left() - hScrollOffset, rY, m_textAreaRect.width() + hScrollOffset, m_rowHeight);
+            devicePainter.setClipping(true);
 
-            // Highlight if selected
-            if (m_currentRow.has_value() && m_currentRow.value() == row)
+            if (vrData.selected)
             {
-                devicePainter.fillRect(rect, QColor("#4169e1"));
+                devicePainter.fillRect(vrData.rect, QColor("#4169e1"));
                 devicePainter.setPen(Qt::white);
             }
 
-            if (m_header->isVisible())
+            // Draw Row Data
+            for (const auto &colData : vrData.columns)
             {
-                for (size_t visualIdx = 0; visualIdx < m_header->count(); ++visualIdx)
-                {
-                    const ssize_t logicalIdx = m_header->logicalIndex(visualIdx);
-                    const ssize_t colWidth = m_header->sectionSize(logicalIdx);
-                    rect.setWidth(colWidth);
-                    if (logicalIdx < rowData.size())
-                    {
-                        const QString &colText(getElidedText(rowData[logicalIdx], colWidth - gDefaultMarging, true));
-                        devicePainter.drawText(rect, Qt::AlignTop | Qt::AlignLeft, colText);
-                    }
-                    rect.moveLeft(rect.left() + rect.width());
-                }
-            }
-            else
-            {
-                ssize_t rowWidth(0);
-                for (const auto &colText : rowData)
-                {
-                    const ssize_t colWidth = getTextWidth(colText) + gDefaultMarging;
-                    rect.setWidth(colWidth);
-                    devicePainter.drawText(
-                        rect,
-                        Qt::AlignTop | Qt::AlignLeft,
-                        QString::fromStdString(colText).simplified());
-                    rect.moveLeft(rect.left() + rect.width());
-                    rowWidth += colWidth;
-                }
-                maxRowWidth = std::max(maxRowWidth, rowWidth);
-            }
-        }
-    }
+                devicePainter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
 
-    if (!m_header->isVisible() && (maxRowWidth != m_rowWidth))
-    {
-        m_rowWidth = maxRowWidth;
-        m_updateTimer->start();
-    }
+                if (colData.selection.has_value())
+                {
+                    const auto &[selRect, selText] = colData.selection.value();
+                    devicePainter.setClipRect(selRect.intersected(dataRect));
+                    devicePainter.fillRect(selRect, QColor("#4169e1"));
+                    devicePainter.setPen(Qt::white);
+                    devicePainter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+                    devicePainter.setPen(Qt::black);
+                    devicePainter.setClipRect(dataRect);
+                }
+            }
+            return true;
+        });
+
+    m_updateTimer->start();
 }
 
 void LogViewWidget::mousePressEvent(QMouseEvent *event)
@@ -293,31 +275,105 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         return;
     }
 
-    if (event->pos().y() <= m_textAreaRect.top())
+    if (event->button() == Qt::LeftButton)
     {
-        if (event->modifiers() == Qt::ShiftModifier)
-        {
-            m_header->hideSection(1);
-            m_header->hideSection(4);
-        }
-        else
-        {
-            adjustColumns(ColumnsSize::Content);
-        }
-        return;
+        const ssize_t row = getRowByScreenPos(event->pos().y());
+        m_startSelect = std::make_pair(row, event->pos().x() + m_hScrollBar->getPos());
+        m_currentSelec = std::nullopt;
     }
-
-    const auto row = m_vScrollBar->getPos() + ((event->pos().y() - m_textAreaRect.top()) / m_rowHeight);
-    if (row >= 0 && (row < m_logModel->rowCount()))
+    else
     {
-        m_currentRow = row;
-        update();
-        emit rowSelected(m_logModel->getRowNum(row));
+        m_actCopy->setEnabled(canCopy());
+
+        QMenu menu(this);
+        menu.addAction(m_actCopy);
+        menu.exec(event->globalPos());
+
+        // Let the action enabled for the shortcuts
+        m_actCopy->setEnabled(true);
     }
 }
 
 void LogViewWidget::mouseReleaseEvent(QMouseEvent *event)
 {
+    if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
+    {
+        const ssize_t row = getRowByScreenPos(event->pos().y());
+        if (row >= 0 && (row < m_logModel->rowCount()))
+        {
+            m_currentRow = row;
+            update();
+            emit rowSelected(m_logModel->getRowNum(row));
+        }
+    }
+}
+
+void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (m_startSelect.has_value())
+    {
+        const ssize_t row = getRowByScreenPos(event->pos().y());
+        const ssize_t xPos = event->pos().x();
+
+        if (xPos > m_textAreaRect.right())
+        {
+            const ssize_t offset = m_textAreaRect.right() - xPos;
+            m_hScrollBar->setPos(m_hScrollBar->getPos() - offset);
+        }
+        else if (xPos < m_textAreaRect.left())
+        {
+            const ssize_t offset = xPos - m_textAreaRect.left();
+            m_hScrollBar->setPos(m_hScrollBar->getPos() + offset);
+        }
+
+        m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
+        update();
+    }
+    else if (m_currentSelec.has_value())
+    {
+        m_currentSelec = std::nullopt;
+    }
+}
+
+void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    const int yPos(event->pos().y());
+    const int xPos(event->pos().x());
+    const ssize_t row = getRowByScreenPos(yPos);
+    const ssize_t relativeRow = row - m_vScrollBar->getPos();
+
+    VisualRowData vrData;
+    getVisualData(relativeRow, vrData);
+
+    const auto isSeparator = [](const QChar &c)
+    { return !c.isLetterOrNumber() && (c.category() != QChar::Punctuation_Connector); };
+
+    for (const auto &col : vrData.columns)
+    {
+        if (!col.rect.contains(event->pos()))
+            continue;
+
+        const int textXPos = xPos - col.rect.left();
+        const int chPos = getStrStartPos(col.text, textXPos);
+        const auto wS = std::find_if(col.text.rbegin() + col.text.size() - chPos, col.text.rend(), isSeparator);
+        const auto wE = std::find_if(col.text.begin() + chPos, col.text.end(), isSeparator);
+        const auto sPos = std::distance(col.text.begin(), wS.base());
+        const auto ePos = std::distance(col.text.begin(), wE);
+
+        QString selText = col.text.mid(sPos, ePos - sPos);
+        if (selText.isEmpty())
+            break;
+
+        const int selSize = m_fm.horizontalAdvance(selText);
+        const int prevTextSize = m_fm.horizontalAdvance(col.text.mid(0, sPos));
+        const int lMarging = (m_fm.horizontalAdvance(selText.front()) / 2) + m_hScrollBar->getPos();
+        const int rMarging = (m_fm.horizontalAdvance(selText.back()) / 3) - m_hScrollBar->getPos();
+
+        m_startSelect = std::make_pair(row, prevTextSize + col.rect.left() + lMarging);
+        m_currentSelec = std::make_pair(row, prevTextSize + selSize + col.rect.left() - rMarging);
+        update();
+        break;
+    }
 }
 
 void LogViewWidget::wheelEvent(QWheelEvent *event)
@@ -330,6 +386,135 @@ void LogViewWidget::wheelEvent(QWheelEvent *event)
     {
         m_vScrollBar->wheelEvent(event);
     }
+}
+
+void LogViewWidget::getVisualData(ssize_t relativeRow, VisualRowData &vrData)
+{
+    std::vector<std::string> rowData;
+    const ssize_t hScrollOffset(m_hScrollBar->getPos());
+    const ssize_t row = relativeRow + m_vScrollBar->getPos();
+    const ssize_t rY = m_textAreaRect.top() + (m_rowHeight * relativeRow);
+
+    vrData.row = row;
+    vrData.number = m_logModel->getRow(row, rowData);
+
+    QRect rect(m_textAreaRect.left(), rY, m_textAreaRect.width(), m_rowHeight);
+    vrData.rect = rect;
+    rect.translate(-hScrollOffset, 0);
+
+    vrData.numberRect = QRect(0, rY, m_textAreaRect.left(), m_rowHeight);
+
+    std::optional<QRect> selectText;
+    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    {
+        const auto &[sRow, sPos] = m_startSelect.value();
+        const auto &[eRow, ePos] = m_currentSelec.value();
+        const auto fRow = std::min(sRow, eRow);
+        const auto lRow = std::max(sRow, eRow);
+        if (row >= fRow && row <= lRow)
+        {
+            if (sRow != eRow)
+            {
+                vrData.selected = true;
+            }
+            else if (sPos != ePos)
+            {
+                QRect selRect(rect);
+                selRect.setLeft(std::min(sPos, ePos));
+                selRect.setRight(std::max(sPos, ePos));
+                selRect.translate(-hScrollOffset, 0);
+                selectText = selRect;
+            }
+        }
+    }
+    else if (m_currentRow.has_value() && m_currentRow.value() == row)
+    {
+        vrData.selected = true;
+    }
+
+    if (m_header->isVisible())
+    {
+        for (size_t vIdx = 0; vIdx < m_header->count(); ++vIdx)
+        {
+            VisualColData vcData;
+            const ssize_t idx = m_header->logicalIndex(vIdx);
+            const ssize_t colWidth = m_header->sectionSize(idx);
+            rect.setWidth(colWidth);
+            if (idx < rowData.size())
+            {
+                vcData.text = getElidedText(rowData[idx], colWidth - gDefaultMarging, true);
+                if (selectText.has_value() && rect.contains(selectText.value()))
+                {
+                    QRect selRect;
+                    const auto &selText = getSelectedText(vcData.text, rect, selectText.value(), selRect);
+                    if (!selText.isEmpty() && selRect.isValid())
+                    {
+                        vcData.selection = std::make_pair(selRect, selText);
+                    }
+                }
+            }
+            vcData.rect = rect;
+            vrData.columns.emplace_back(std::move(vcData));
+            rect.moveLeft(rect.left() + rect.width());
+        }
+    }
+    else
+    {
+        for (const auto &colText : rowData)
+        {
+            VisualColData vcData;
+            const ssize_t colWidth = getTextWidth(colText) + gDefaultMarging;
+            rect.setWidth(colWidth);
+            vcData.text = QString::fromStdString(colText);
+            if (selectText.has_value() && rect.contains(selectText.value()))
+            {
+                QRect selRect;
+                const auto &selText = getSelectedText(vcData.text, rect, selectText.value(), selRect);
+                if (!selText.isEmpty() && selRect.isValid())
+                {
+                    vcData.selection = std::make_pair(selRect, selText);
+                }
+            }
+            vcData.rect = rect;
+            vrData.columns.emplace_back(std::move(vcData));
+            rect.moveLeft(rect.left() + rect.width());
+        }
+    }
+}
+
+void LogViewWidget::forEachVisualRow(const std::function<bool(VisualRowData &)> &callback)
+{
+    ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
+    for (ssize_t i = 0; i < rowsToRender; ++i)
+    {
+        VisualRowData vrData;
+        getVisualData(i, vrData);
+        if (!callback(vrData))
+        {
+            break;
+        }
+    }
+}
+
+ssize_t LogViewWidget::getMaxRowWidth()
+{
+    ssize_t maxRowWidth(0);
+    const auto offset(m_hScrollBar->getPos());
+    forEachVisualRow(
+        [&maxRowWidth, offset](VisualRowData &vrData)
+        {
+            for (const auto &col : vrData.columns)
+            {
+                maxRowWidth = std::max<ssize_t>(maxRowWidth, col.rect.right() - vrData.numberRect.right() + offset);
+            }
+            return true;
+        });
+    return maxRowWidth;
+}
+
+ssize_t LogViewWidget::getRowByScreenPos(int yPos) const
+{
+    return m_vScrollBar->getPos() + ((yPos - m_textAreaRect.top()) / m_rowHeight);
 }
 
 ssize_t LogViewWidget::getTextWidth(const std::string &text, bool simplified)
@@ -474,5 +659,144 @@ void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
     if (it != columnSizesMap.end())
     {
         m_header->resizeSection(it->first, it->second);
+    }
+}
+
+int LogViewWidget::getStrStartPos(const QString &text, int left, int *newLeft)
+{
+    int sX(0);
+    int eX(m_fm.horizontalAdvance(text));
+    int sPos(0);
+    int x(sX);
+    int p(sPos);
+    QString tmpStr(text);
+
+    while (x < left && !tmpStr.isEmpty())
+    {
+        sX = x;
+        sPos = p;
+        tmpStr = text.mid(++p);
+        x = eX - m_fm.horizontalAdvance(tmpStr);
+    }
+
+    if (newLeft)
+        *newLeft = sX;
+    return sPos;
+}
+
+int LogViewWidget::getStrEndPos(const QString &text, int right, int *newRight)
+{
+    int eX(m_fm.horizontalAdvance(text));
+    int ePos(text.size());
+    int x(eX);
+    int p(ePos);
+    QString tmpStr(text);
+
+    x = eX;
+    p = ePos;
+    tmpStr = text;
+    while (x > right && !tmpStr.isEmpty())
+    {
+        eX = x;
+        ePos = p;
+        tmpStr = tmpStr.mid(0, --p);
+        x = m_fm.horizontalAdvance(tmpStr);
+    }
+
+    if (newRight)
+        *newRight = eX;
+    return ePos;
+}
+
+QString LogViewWidget::getSelectedText(
+    const QString &text,
+    const QRect &textRect,
+    const QRect &selRect,
+    QRect &resultRect)
+{
+    if (text.isEmpty() || selRect.isNull() || !selRect.isValid())
+    {
+        resultRect = QRect();
+        return QString();
+    }
+
+    const int selStart = selRect.left() - textRect.left();
+    const int selEnd = selRect.right() - textRect.left();
+
+    int sX;
+    int eX;
+    const int sPos = getStrStartPos(text, selStart, &sX);
+    const int ePos = getStrEndPos(text, selEnd, &eX);
+
+    if (eX <= sX || ePos <= sPos)
+    {
+        resultRect = QRect();
+        return QString();
+    }
+
+    resultRect = textRect;
+    resultRect.setLeft(textRect.left() + sX);
+    resultRect.setRight(textRect.left() + eX);
+    return text.mid(sPos, ePos - sPos);
+}
+
+bool LogViewWidget::canCopy() const
+{
+    return ((m_startSelect.has_value() && m_currentSelec.has_value()) || m_currentRow.has_value());
+}
+
+void LogViewWidget::copySelected()
+{
+    bool isTextSel(false);
+    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    {
+        isTextSel = (m_startSelect.value().first == m_currentSelec.value().first);
+    }
+    else if (!m_currentRow.has_value())
+    {
+        return;
+    }
+
+    QString value;
+
+    forEachVisualRow(
+        [&value, isTextSel](VisualRowData &vrData)
+        {
+            if (isTextSel)
+            {
+                // Selected text
+                for (const auto &col : vrData.columns)
+                {
+                    if (col.selection.has_value())
+                    {
+                        value = col.selection.value().second;
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                // Selected rows
+                if (vrData.selected)
+                {
+                    QString rowText;
+                    for (const auto &col : vrData.columns)
+                    {
+                        if (!rowText.isEmpty())
+                            rowText.append('\t');
+                        rowText.append(col.text);
+                    }
+                    if (!value.isEmpty())
+                        value.append('\n');
+                    value.append(rowText);
+                }
+            }
+            return true;
+        });
+
+    if (!value.isEmpty())
+    {
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        clipboard->setText(value);
     }
 }

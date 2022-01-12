@@ -38,6 +38,7 @@ ssize_t ProxyModel::getRowNum(ssize_t row) const
     if (row < m_rowMap.size())
     {
         auto it = m_rowMap.begin();
+        // TODO: Find a better solution as this does not perform well.
         std::advance(it, row);
         if (it != m_rowMap.end())
         {
