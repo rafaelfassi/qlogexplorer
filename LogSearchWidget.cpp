@@ -54,8 +54,7 @@ LogSearchWidget::LogSearchWidget(BaseLogModel *sourceModel, QWidget *parent)
     hLayout->addStretch();
     hLayout->addWidget(btnAddSearchParam);
 
-    m_searchResults = new LogViewWidget(this);
-    m_searchResults->setLogModel(m_proxyModel);
+    m_searchResults = new LogViewWidget(m_proxyModel, this);
 
     m_searchParamsLayout = new QVBoxLayout();
     m_searchParamsLayout->setMargin(2);

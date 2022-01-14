@@ -37,10 +37,9 @@ class LogViewWidget : public QWidget
     };
 
 public:
-    LogViewWidget(QWidget *parent = nullptr);
+    LogViewWidget(AbstractModel *model, QWidget *parent = nullptr);
     ~LogViewWidget();
 
-    void setLogModel(AbstractModel *logModel);
     bool canCopy() const;
 
 signals:
@@ -58,7 +57,7 @@ protected slots:
     void headerChanged();
     void vScrollBarPosChanged();
     void hScrollBarPosChanged();
-    void updateRowWidth();
+    void stabilizedUpdate();
     void expandColumnToContent(ssize_t columnIdx);
 
 protected:
@@ -91,7 +90,7 @@ protected:
     QString getSelectedText(ssize_t row);
 
 private:
-    AbstractModel *m_logModel = nullptr;
+    AbstractModel *m_model;
     HeaderView *m_header = nullptr;
     LongScrollBar *m_vScrollBar = nullptr;
     LongScrollBar *m_hScrollBar = nullptr;
@@ -99,8 +98,8 @@ private:
     QVBoxLayout *m_hScrollBarLayout = nullptr;
     QPushButton *m_btnExpandColumns = nullptr;
     QPushButton *m_btnFitColumns = nullptr;
+    QTimer *m_stabilizedUpdateTimer = nullptr;
     QAction *m_actCopy;
-    QTimer *m_updateTimer;
     QFont m_font;
     QFontMetrics m_fm;
     ssize_t m_rowHeight = 0;

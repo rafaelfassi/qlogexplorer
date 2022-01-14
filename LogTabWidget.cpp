@@ -32,9 +32,8 @@ LogTabWidget::LogTabWidget(const QString &fileName, FileType type, QWidget *pare
             break;
     }
 
-    m_logViewWidget = new LogViewWidget(this);
+    m_logViewWidget = new LogViewWidget(m_logModel, this);
     m_logViewWidget->setMinimumSize(400, 200);
-    m_logViewWidget->setLogModel(m_logModel);
 
     m_logSearchWidget = new LogSearchWidget(m_logModel, this);
 

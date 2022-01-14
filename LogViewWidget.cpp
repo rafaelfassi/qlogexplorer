@@ -20,7 +20,11 @@
 constexpr int gScrollBarThickness(25);
 constexpr ssize_t gDefaultMarging(10);
 
-LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times", 14), m_fm(m_font)
+LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
+    : QWidget(parent),
+      m_model(model),
+      m_font("times", 14),
+      m_fm(m_font)
 {
     m_header = new HeaderView(this);
     m_header->setFont(&m_font);
@@ -75,8 +79,8 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
 
     setLayout(hLayout);
 
-    m_updateTimer = new QTimer(this);
-    m_updateTimer->setInterval(200);
+    m_stabilizedUpdateTimer = new QTimer(this);
+    m_stabilizedUpdateTimer->setInterval(200);
 
     m_actCopy = new QAction("Copy", this);
     m_actCopy->setShortcut(QKeySequence::Copy);
@@ -85,9 +89,10 @@ LogViewWidget::LogViewWidget(QWidget *parent) : QWidget(parent), m_font("times",
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
 
+    connect(m_model, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
     connect(m_vScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::vScrollBarPosChanged);
     connect(m_hScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::hScrollBarPosChanged);
-    connect(m_updateTimer, &QTimer::timeout, this, &LogViewWidget::updateRowWidth);
+    connect(m_stabilizedUpdateTimer, &QTimer::timeout, this, &LogViewWidget::stabilizedUpdate);
     connect(m_header, &QHeaderView::geometriesChanged, this, &LogViewWidget::headerChanged);
     connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
     connect(m_header, &QHeaderView::sectionMoved, this, [this](int, int, int) { this->headerChanged(); });
@@ -103,23 +108,15 @@ LogViewWidget::~LogViewWidget()
 {
 }
 
-void LogViewWidget::setLogModel(AbstractModel *logModel)
-{
-    m_logModel = logModel;
-    modelCountChanged();
-    connect(logModel, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
-}
-
 void LogViewWidget::headerChanged()
 {
     updateView();
-    m_updateTimer->start();
+    m_stabilizedUpdateTimer->start();
 }
 
-void LogViewWidget::updateRowWidth()
+void LogViewWidget::stabilizedUpdate()
 {
-    m_updateTimer->stop();
-    disconnect(m_header, &QHeaderView::sectionResized, nullptr, nullptr);
+    m_stabilizedUpdateTimer->stop();
 
     ssize_t maxRowWidth = getMaxRowWidth();
     const auto newHScrollMax(maxRowWidth - m_textAreaRect.width());
@@ -131,11 +128,9 @@ void LogViewWidget::updateRowWidth()
         }
         else
         {
-            m_updateTimer->start();
+            m_stabilizedUpdateTimer->start();
         }
     }
-
-    connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
 }
 
 void LogViewWidget::vScrollBarPosChanged()
@@ -157,7 +152,7 @@ void LogViewWidget::modelCountChanged()
 
 void LogViewWidget::goToRow(ssize_t row)
 {
-    if ((m_logModel != nullptr) && (row >= 0) && (row < m_logModel->rowCount()))
+    if ((m_model != nullptr) && (row >= 0) && (row < m_model->rowCount()))
     {
         if ((row < m_vScrollBar->getPos()) || ((row - m_vScrollBar->getPos()) >= m_itemsPerPage))
         {
@@ -178,16 +173,16 @@ void LogViewWidget::goToRow(ssize_t row)
 
 void LogViewWidget::updateDisplaySize()
 {
-    if (m_logModel)
+    if (m_model)
     {
-        ssize_t rowCount(m_logModel->rowCount());
+        ssize_t rowCount(m_model->rowCount());
         configureColumns();
         m_rowHeight = m_fm.height();
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
 
-        const std::string lastLineNumberStr(std::to_string(m_logModel->getRowNum(rowCount - 1L) + 1L));
+        const std::string lastLineNumberStr(std::to_string(m_model->getRowNum(rowCount - 1L) + 1L));
         m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + gDefaultMarging);
         m_hScrollBarLayout->setContentsMargins(m_textAreaRect.left(), 0, 0, 0);
     }
@@ -209,13 +204,13 @@ void LogViewWidget::resizeEvent(QResizeEvent *event)
     m_textAreaRect.setHeight(height() - gScrollBarThickness - m_textAreaRect.top());
     m_textAreaRect.setWidth(width() - gScrollBarThickness - m_textAreaRect.left());
     updateDisplaySize();
-    updateRowWidth();
+    stabilizedUpdate();
 }
 
 void LogViewWidget::paintEvent(QPaintEvent *event)
 {
     const QRect invalidRect = event->rect();
-    if (invalidRect.isEmpty() || (m_logModel == nullptr))
+    if (invalidRect.isEmpty())
         return;
 
     const auto dataRect(m_textAreaRect);
@@ -240,6 +235,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
 
             devicePainter.setClipping(true);
 
+            // Hightlight selected line
             if (vrData.selected)
             {
                 devicePainter.fillRect(vrData.rect, QColor("#4169e1"));
@@ -265,16 +261,11 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
             return true;
         });
 
-    m_updateTimer->start();
+    m_stabilizedUpdateTimer->start();
 }
 
 void LogViewWidget::mousePressEvent(QMouseEvent *event)
 {
-    if (m_logModel == nullptr)
-    {
-        return;
-    }
-
     if (event->button() == Qt::LeftButton)
     {
         const ssize_t row = getRowByScreenPos(event->pos().y());
@@ -299,11 +290,11 @@ void LogViewWidget::mouseReleaseEvent(QMouseEvent *event)
     if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
     {
         const ssize_t row = getRowByScreenPos(event->pos().y());
-        if (row >= 0 && (row < m_logModel->rowCount()))
+        if (row >= 0 && (row < m_model->rowCount()))
         {
             m_currentRow = row;
             update();
-            emit rowSelected(m_logModel->getRowNum(row));
+            emit rowSelected(m_model->getRowNum(row));
         }
     }
 }
@@ -365,11 +356,12 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
 
         const int selSize = m_fm.horizontalAdvance(selText);
         const int prevTextSize = m_fm.horizontalAdvance(col.text.mid(0, sPos));
-        const int lMarging = (m_fm.horizontalAdvance(selText.front()) / 2) + m_hScrollBar->getPos();
-        const int rMarging = (m_fm.horizontalAdvance(selText.back()) / 3) - m_hScrollBar->getPos();
+        const int startSel = m_hScrollBar->getPos() + col.rect.left() + prevTextSize;
+        const int lMarging = (m_fm.horizontalAdvance(selText.front()) / 2);
+        const int rMarging = (m_fm.horizontalAdvance(selText.back()) / 3);
 
-        m_startSelect = std::make_pair(row, prevTextSize + col.rect.left() + lMarging);
-        m_currentSelec = std::make_pair(row, prevTextSize + selSize + col.rect.left() - rMarging);
+        m_startSelect = std::make_pair(row, startSel + lMarging);
+        m_currentSelec = std::make_pair(row, startSel - rMarging + selSize);
         update();
         break;
     }
@@ -394,7 +386,7 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
     const ssize_t yOffset = m_textAreaRect.top() + (m_rowHeight * relativeRow);
 
     vrData.row = row;
-    vrData.number = m_logModel->getRow(row, rowData);
+    vrData.number = m_model->getRow(row, rowData);
 
     QRect rect(m_textAreaRect.left(), yOffset, m_textAreaRect.width(), m_rowHeight);
     vrData.rect = rect;
@@ -482,7 +474,7 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
 
 void LogViewWidget::forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback)
 {
-    const ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
+    const ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
     for (ssize_t i = 0; i < rowsToRender; ++i)
     {
         VisualRowData vrData;
@@ -530,10 +522,10 @@ QString LogViewWidget::getElidedText(const std::string &text, ssize_t width, boo
 
 void LogViewWidget::configureColumns()
 {
-    if ((m_header->count() == 0) && !m_logModel->getColumns().empty())
+    if ((m_header->count() == 0) && !m_model->getColumns().empty())
     {
-        m_header->setColumns(m_logModel->getColumns());
-        if (m_logModel->getColumns().front().empty())
+        m_header->setColumns(m_model->getColumns());
+        if (m_model->getColumns().front().empty())
         {
             m_header->setVisible(false);
             m_btnExpandColumns->setVisible(false);
@@ -575,7 +567,7 @@ void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSi
 {
     getColumnsSizeToHeader(columnSizesMap);
 
-    ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
+    ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
     const ssize_t elideWith(getTextWidth("..."));
     std::vector<std::string> rowData;
 
@@ -583,7 +575,7 @@ void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSi
     {
         ssize_t row = i + m_vScrollBar->getPos();
         rowData.clear();
-        m_logModel->getRow(row, rowData);
+        m_model->getRow(row, rowData);
 
         for (auto &[idx, columnWidth] : columnSizesMap)
         {
@@ -647,7 +639,7 @@ void LogViewWidget::adjustColumns(ColumnsSize size)
         m_header->resizeSection(idx, columnWidth);
     }
 
-    m_updateTimer->start();
+    m_stabilizedUpdateTimer->start();
 }
 
 void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
