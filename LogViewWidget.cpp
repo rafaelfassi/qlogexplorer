@@ -17,8 +17,9 @@
 #include <limits>
 #include <iostream>
 
-constexpr int gScrollBarThickness(25);
-constexpr ssize_t gDefaultMarging(10);
+constexpr ssize_t g_scrollBarThickness(25);
+constexpr ssize_t g_defaultMargin(10);
+constexpr ssize_t g_startTextMargin(5);
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
@@ -34,13 +35,13 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_header->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
 
     m_vScrollBar = new LongScrollBar(Qt::Vertical, this);
-    m_vScrollBar->setFixedWidth(gScrollBarThickness);
+    m_vScrollBar->setFixedWidth(g_scrollBarThickness);
     m_vScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Expanding);
     m_vScrollBar->sizePolicy().setHorizontalPolicy(QSizePolicy::Fixed);
 
     m_hScrollBar = new LongScrollBar(Qt::Horizontal, this);
     m_hScrollBar->setPosPerStep(20);
-    m_hScrollBar->setFixedHeight(gScrollBarThickness);
+    m_hScrollBar->setFixedHeight(g_scrollBarThickness);
     m_hScrollBar->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
     m_hScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
 
@@ -50,15 +51,15 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_btnExpandColumns->setToolTip("Expand All Columns");
     m_btnExpandColumns->setFlat(true);
     m_btnExpandColumns->setFixedHeight(m_header->maximumHeight());
-    m_btnExpandColumns->setFixedWidth(gScrollBarThickness);
+    m_btnExpandColumns->setFixedWidth(g_scrollBarThickness);
 
     m_btnFitColumns = new QPushButton(this);
     m_btnFitColumns->setFocusPolicy(Qt::NoFocus);
     m_btnFitColumns->setIcon(QIcon(":/images/fit_icon.png"));
     m_btnFitColumns->setToolTip("Adjust Columns to Fit");
     m_btnFitColumns->setFlat(true);
-    m_btnFitColumns->setFixedHeight(gScrollBarThickness);
-    m_btnFitColumns->setFixedWidth(gScrollBarThickness);
+    m_btnFitColumns->setFixedHeight(g_scrollBarThickness);
+    m_btnFitColumns->setFixedWidth(g_scrollBarThickness);
 
     m_hScrollBarLayout = new QVBoxLayout();
     m_hScrollBarLayout->setMargin(0);
@@ -124,6 +125,7 @@ void LogViewWidget::stabilizedUpdate()
     {
         if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
         {
+            configureColumns();
             m_hScrollBar->setMax(newHScrollMax);
         }
         else
@@ -176,14 +178,13 @@ void LogViewWidget::updateDisplaySize()
     if (m_model)
     {
         ssize_t rowCount(m_model->rowCount());
-        configureColumns();
         m_rowHeight = m_fm.height();
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
 
         const std::string lastLineNumberStr(std::to_string(m_model->getRowNum(rowCount - 1L) + 1L));
-        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + gDefaultMarging);
+        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + g_startTextMargin + g_defaultMargin);
         m_hScrollBarLayout->setContentsMargins(m_textAreaRect.left(), 0, 0, 0);
     }
     else
@@ -201,10 +202,11 @@ void LogViewWidget::updateView()
 
 void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
-    m_textAreaRect.setHeight(height() - gScrollBarThickness - m_textAreaRect.top());
-    m_textAreaRect.setWidth(width() - gScrollBarThickness - m_textAreaRect.left());
+    m_textAreaRect.setHeight(height() - g_scrollBarThickness - m_textAreaRect.top());
+    m_textAreaRect.setWidth(width() - g_scrollBarThickness - m_textAreaRect.left());
     updateDisplaySize();
-    stabilizedUpdate();
+    m_stabilizedUpdateTimer->start();
+    QWidget::resizeEvent(event);
 }
 
 void LogViewWidget::paintEvent(QPaintEvent *event)
@@ -226,12 +228,16 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
             devicePainter.setPen(Qt::black);
 
             // Draw Line Number
-            devicePainter.setClipping(false);
-            devicePainter.fillRect(vrData.numberRect, QColor("#ffebcd"));
-            devicePainter.drawText(
-                vrData.numberRect,
-                Qt::AlignTop | Qt::AlignLeft,
-                std::to_string(vrData.number).c_str());
+            {
+                devicePainter.setClipping(false);
+                QRect numberAreaRect(vrData.numberRect);
+                numberAreaRect.setLeft(0);
+                devicePainter.fillRect(numberAreaRect, QColor("#ffebcd"));
+                devicePainter.drawText(
+                    vrData.numberRect,
+                    Qt::AlignTop | Qt::AlignLeft,
+                    std::to_string(vrData.number).c_str());
+            }
 
             devicePainter.setClipping(true);
 
@@ -357,11 +363,11 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
         const int selSize = m_fm.horizontalAdvance(selText);
         const int prevTextSize = m_fm.horizontalAdvance(col.text.mid(0, sPos));
         const int startSel = m_hScrollBar->getPos() + col.rect.left() + prevTextSize;
-        const int lMarging = (m_fm.horizontalAdvance(selText.front()) / 2);
-        const int rMarging = (m_fm.horizontalAdvance(selText.back()) / 3);
+        const int lMargin = (m_fm.horizontalAdvance(selText.front()) / 2);
+        const int rMargin = (m_fm.horizontalAdvance(selText.back()) / 3);
 
-        m_startSelect = std::make_pair(row, startSel + lMarging);
-        m_currentSelec = std::make_pair(row, startSel - rMarging + selSize);
+        m_startSelect = std::make_pair(row, startSel + lMargin);
+        m_currentSelec = std::make_pair(row, startSel - rMargin + selSize);
         update();
         break;
     }
@@ -392,7 +398,7 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
     vrData.rect = rect;
     rect.translate(-hOffset, 0);
 
-    vrData.numberRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
+    vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin, m_rowHeight);
 
     std::optional<QRect> selectText;
     if (m_startSelect.has_value() && m_currentSelec.has_value())
@@ -430,9 +436,10 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
             const ssize_t idx = m_header->logicalIndex(vIdx);
             const ssize_t colWidth = m_header->sectionSize(idx);
             rect.setWidth(colWidth);
+            rect.setLeft(rect.left() + g_startTextMargin);
             if (idx < rowData.size())
             {
-                vcData.text = getElidedText(rowData[idx], colWidth - gDefaultMarging, true);
+                vcData.text = getElidedText(rowData[idx], colWidth - g_defaultMargin, true);
                 if (selectText.has_value() && rect.contains(selectText.value()))
                 {
                     QRect selRect;
@@ -453,8 +460,9 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
         for (const auto &colText : rowData)
         {
             VisualColData vcData;
-            const ssize_t colWidth = getTextWidth(colText) + gDefaultMarging;
+            const ssize_t colWidth = getTextWidth(colText) + g_defaultMargin;
             rect.setWidth(colWidth);
+            rect.setLeft(rect.left() + g_startTextMargin);
             vcData.text = QString::fromStdString(colText);
             if (selectText.has_value() && rect.contains(selectText.value()))
             {
@@ -553,7 +561,7 @@ void LogViewWidget::getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSiz
         if (!m_header->isSectionHidden(idx))
         {
             const std::string &headerText = m_header->getColumns().at(idx);
-            const ssize_t headerTextWidth = getTextWidth(headerText) + gDefaultMarging;
+            const ssize_t headerTextWidth = getTextWidth(headerText) + g_startTextMargin + g_defaultMargin;
             const auto colSize = std::min(maxWidthPerCol, headerTextWidth);
             columnSizesMap[idx] = colSize;
             remainingWidth -= colSize;
@@ -579,7 +587,8 @@ void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSi
 
         for (auto &[idx, columnWidth] : columnSizesMap)
         {
-            const ssize_t textWidth = getTextWidth(rowData[idx], true) + elideWith + gDefaultMarging;
+            const ssize_t textWidth =
+                getTextWidth(rowData[idx], true) + g_startTextMargin + elideWith + g_defaultMargin;
             columnWidth = std::max(columnWidth, textWidth);
         }
     }
@@ -655,6 +664,7 @@ void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
 
 int LogViewWidget::getStrStartPos(const QString &text, int left, int *newLeft)
 {
+    // Not the best implementation, but it allows variable-width fonts as well.
     int sX(0);
     int eX(m_fm.horizontalAdvance(text));
     int sPos(0);

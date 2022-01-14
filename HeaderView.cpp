@@ -168,7 +168,7 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
 
     if (hiddenSectionCount() > 0)
     {
-        QMenu *showMenu = menu.addMenu("Show");
+        QMenu *showMenu = menu.addMenu(tr("Show"));
         for (int i = 0; i < count(); ++i)
         {
             if (isSectionHidden(i))
@@ -186,7 +186,7 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
 
     if (canMoveLeft || canMoveRight)
     {
-        QMenu *moveMenu = menu.addMenu("Move");
+        QMenu *moveMenu = menu.addMenu(tr("Move"));
         if (canMoveLeft)
         {
             int moveTo = visibleColumns.at(visiblePos - 1).second;
