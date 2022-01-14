@@ -70,8 +70,8 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
-    void getVisualData(ssize_t relativeRow, VisualRowData &visRowData);
-    void forEachVisualRow(const std::function<bool(VisualRowData &)> &callback);
+    void getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData);
+    void forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback);
     ssize_t getMaxRowWidth();
 
     ssize_t getRowByScreenPos(int yPos) const;
@@ -86,6 +86,9 @@ protected:
     QString getSelectedText(const QString &text, const QRect &textRect, const QRect &selRect, QRect &resultRect);
     int getStrStartPos(const QString &text, int left, int *newLeft = nullptr);
     int getStrEndPos(const QString &text, int right, int *newRight = nullptr);
+
+    QString rowToText(ssize_t row);
+    QString getSelectedText(ssize_t row);
 
 private:
     AbstractModel *m_logModel = nullptr;

@@ -225,7 +225,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     devicePainter.eraseRect(rect());
     devicePainter.setClipRect(dataRect);
 
-    forEachVisualRow(
+    forEachVisualRowInPage(
         [&devicePainter, &dataRect](VisualRowData &vrData)
         {
             devicePainter.setPen(Qt::black);
@@ -340,10 +340,9 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
     const int yPos(event->pos().y());
     const int xPos(event->pos().x());
     const ssize_t row = getRowByScreenPos(yPos);
-    const ssize_t relativeRow = row - m_vScrollBar->getPos();
 
     VisualRowData vrData;
-    getVisualData(relativeRow, vrData);
+    getVisualRowData(row, m_vScrollBar->getPos(), m_hScrollBar->getPos(), vrData);
 
     const auto isSeparator = [](const QChar &c)
     { return !c.isLetterOrNumber() && (c.category() != QChar::Punctuation_Connector); };
@@ -388,21 +387,20 @@ void LogViewWidget::wheelEvent(QWheelEvent *event)
     }
 }
 
-void LogViewWidget::getVisualData(ssize_t relativeRow, VisualRowData &vrData)
+void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData)
 {
     std::vector<std::string> rowData;
-    const ssize_t hScrollOffset(m_hScrollBar->getPos());
-    const ssize_t row = relativeRow + m_vScrollBar->getPos();
-    const ssize_t rY = m_textAreaRect.top() + (m_rowHeight * relativeRow);
+    const ssize_t relativeRow = row - rowOffset;
+    const ssize_t yOffset = m_textAreaRect.top() + (m_rowHeight * relativeRow);
 
     vrData.row = row;
     vrData.number = m_logModel->getRow(row, rowData);
 
-    QRect rect(m_textAreaRect.left(), rY, m_textAreaRect.width(), m_rowHeight);
+    QRect rect(m_textAreaRect.left(), yOffset, m_textAreaRect.width(), m_rowHeight);
     vrData.rect = rect;
-    rect.translate(-hScrollOffset, 0);
+    rect.translate(-hOffset, 0);
 
-    vrData.numberRect = QRect(0, rY, m_textAreaRect.left(), m_rowHeight);
+    vrData.numberRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
 
     std::optional<QRect> selectText;
     if (m_startSelect.has_value() && m_currentSelec.has_value())
@@ -422,7 +420,7 @@ void LogViewWidget::getVisualData(ssize_t relativeRow, VisualRowData &vrData)
                 QRect selRect(rect);
                 selRect.setLeft(std::min(sPos, ePos));
                 selRect.setRight(std::max(sPos, ePos));
-                selRect.translate(-hScrollOffset, 0);
+                selRect.translate(-hOffset, 0);
                 selectText = selRect;
             }
         }
@@ -482,13 +480,14 @@ void LogViewWidget::getVisualData(ssize_t relativeRow, VisualRowData &vrData)
     }
 }
 
-void LogViewWidget::forEachVisualRow(const std::function<bool(VisualRowData &)> &callback)
+void LogViewWidget::forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback)
 {
-    ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
+    const ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_logModel->rowCount()));
     for (ssize_t i = 0; i < rowsToRender; ++i)
     {
         VisualRowData vrData;
-        getVisualData(i, vrData);
+        const ssize_t row = i + m_vScrollBar->getPos();
+        getVisualRowData(row, m_vScrollBar->getPos(), m_hScrollBar->getPos(), vrData);
         if (!callback(vrData))
         {
             break;
@@ -500,7 +499,7 @@ ssize_t LogViewWidget::getMaxRowWidth()
 {
     ssize_t maxRowWidth(0);
     const auto offset(m_hScrollBar->getPos());
-    forEachVisualRow(
+    forEachVisualRowInPage(
         [&maxRowWidth, offset](VisualRowData &vrData)
         {
             for (const auto &col : vrData.columns)
@@ -745,54 +744,62 @@ bool LogViewWidget::canCopy() const
     return ((m_startSelect.has_value() && m_currentSelec.has_value()) || m_currentRow.has_value());
 }
 
+QString LogViewWidget::rowToText(ssize_t row)
+{
+    QString rowText;
+    VisualRowData vrData;
+    getVisualRowData(row, 0, 0, vrData);
+    for (const auto &col : vrData.columns)
+    {
+        if (!rowText.isEmpty())
+            rowText.append('\t');
+        rowText.append(col.text);
+    }
+    return rowText;
+}
+
+QString LogViewWidget::getSelectedText(ssize_t row)
+{
+    QString selectedText;
+    VisualRowData vrData;
+    getVisualRowData(row, 0, 0, vrData);
+    for (const auto &col : vrData.columns)
+    {
+        if (col.selection.has_value())
+        {
+            selectedText = col.selection->second;
+            break;
+        }
+    }
+    return selectedText;
+}
+
 void LogViewWidget::copySelected()
 {
-    bool isTextSel(false);
-    if (m_startSelect.has_value() && m_currentSelec.has_value())
-    {
-        isTextSel = (m_startSelect.value().first == m_currentSelec.value().first);
-    }
-    else if (!m_currentRow.has_value())
-    {
-        return;
-    }
-
     QString value;
 
-    forEachVisualRow(
-        [&value, isTextSel](VisualRowData &vrData)
+    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    {
+        if (m_startSelect->first == m_currentSelec->first)
         {
-            if (isTextSel)
+            value = getSelectedText(m_startSelect->first);
+        }
+        else
+        {
+            const ssize_t firstRow = std::min(m_startSelect->first, m_currentSelec->first);
+            const ssize_t lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+            for (ssize_t row = firstRow; row <= lastRow; ++row)
             {
-                // Selected text
-                for (const auto &col : vrData.columns)
-                {
-                    if (col.selection.has_value())
-                    {
-                        value = col.selection.value().second;
-                        return false;
-                    }
-                }
+                if (!value.isEmpty())
+                    value.append('\n');
+                value.append(rowToText(row));
             }
-            else
-            {
-                // Selected rows
-                if (vrData.selected)
-                {
-                    QString rowText;
-                    for (const auto &col : vrData.columns)
-                    {
-                        if (!rowText.isEmpty())
-                            rowText.append('\t');
-                        rowText.append(col.text);
-                    }
-                    if (!value.isEmpty())
-                        value.append('\n');
-                    value.append(rowText);
-                }
-            }
-            return true;
-        });
+        }
+    }
+    else if (m_currentRow.has_value())
+    {
+        value = rowToText(m_currentRow.value());
+    }
 
     if (!value.isEmpty())
     {
