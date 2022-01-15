@@ -1,11 +1,195 @@
 #include "BaseLogModel.h"
 #include <QDebug>
 #include <QElapsedTimer>
+#include <QRegularExpression>
 #include <memory>
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
 #include <regex>
+
+class BaseParamMatcher
+{
+public:
+    BaseParamMatcher(const SearchParam &param) : m_param(param) {}
+    virtual bool match(const std::string &text) = 0;
+    bool isRegex() const { return m_param.isRegex; }
+    bool matchCase() const { return m_param.matchCase; }
+    bool matchWholeText() const { return m_param.wholeText; }
+    bool hasColumn() const { return m_param.column.has_value(); }
+    size_t getColumn() const { return *m_param.column; }
+
+protected:
+    const SearchParam &m_param;
+};
+
+// Very slow compared to QRegularExpression that uses JIT.
+// class RegexParamMatcher : public BaseParamMatcher
+// {
+// public:
+//     RegexParamMatcher(const SearchParam &param) : BaseParamMatcher(param), m_rx(param.exp, getOpts())
+//     {
+//         std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
+//         if (!param.matchCase)
+//         {
+//             opts |= std::regex::icase;
+//         }
+//     }
+
+//     std::regex::flag_type getOpts()
+//     {
+//         std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
+//         if (!m_param.matchCase)
+//         {
+//             opts |= std::regex::icase;
+//         }
+//         return opts;
+//     }
+
+//     bool match(const std::string &text) override
+//     {
+//         if (m_param.wholeText)
+//         {
+//             return std::regex_match(text, m_match, m_rx);
+//         }
+//         else
+//         {
+//             return std::regex_search(text, m_match, m_rx);
+//         }
+//     }
+
+// private:
+//     const std::regex m_rx;
+//     std::smatch m_match;
+// };
+
+class RegexParamMatcher : public BaseParamMatcher
+{
+public:
+    RegexParamMatcher(const SearchParam &param) : BaseParamMatcher(param), m_rx(param.exp.c_str(), getOpts()) {}
+
+    QRegularExpression::PatternOptions getOpts()
+    {
+        QRegularExpression::PatternOptions opts = QRegularExpression::DontCaptureOption;
+        if (!m_param.matchCase)
+        {
+            opts |= QRegularExpression::CaseInsensitiveOption;
+        }
+        return opts;
+    }
+
+    bool match(const std::string &text) override { return m_rx.match(text.c_str()).hasMatch(); }
+
+private:
+    const QRegularExpression m_rx;
+};
+
+class TextParamMatcher : public BaseParamMatcher
+{
+public:
+    TextParamMatcher(const SearchParam &param)
+        : BaseParamMatcher(param),
+          m_textToSearch(param.matchCase ? m_param.exp : capitalize(m_param.exp))
+    {
+    }
+
+    std::string capitalize(const std::string &text)
+    {
+        std::string res(text);
+        std::transform(text.begin(), text.end(), res.begin(), [](int c) { return std::toupper(c); });
+        return res;
+    }
+
+    // Way more farter, but works only for ascii characters.
+    // std::string capitalize(const std::string &text)
+    // {
+    //     std::string res(text);
+    //     for (auto it = res.begin(); it != res.end(); ++it)
+    //         if (*it >= 'a' && *it <= 'z')
+    //             *it &= ~0x20;
+    //     return res;
+    // }
+
+    bool match(const std::string &text) override
+    {
+        if (m_param.wholeText)
+        {
+            if (text.size() != m_textToSearch.size())
+                return false;
+
+            if (m_param.matchCase)
+                return (text == m_textToSearch);
+            else
+                return (capitalize(text) == m_textToSearch);
+        }
+        else
+        {
+            if (m_param.matchCase)
+                return (text.find(m_textToSearch) != std::string::npos);
+            else
+                return (capitalize(text).find(m_textToSearch) != std::string::npos);
+        }
+    }
+
+private:
+    const std::string m_textToSearch;
+};
+
+using ParamMatchers = std::vector<std::unique_ptr<BaseParamMatcher>>;
+
+ParamMatchers makeParamMatchers(const SearchParamLst &params)
+{
+    ParamMatchers matchers;
+    for (const auto &param : params)
+    {
+        if (param.isRegex)
+        {
+            matchers.emplace_back(std::make_unique<RegexParamMatcher>(param));
+        }
+        else
+        {
+            matchers.emplace_back(std::make_unique<TextParamMatcher>(param));
+        }
+    }
+    return matchers;
+}
+
+bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vector<std::string> &rowData)
+{
+    std::uint32_t cnt(0);
+
+    for (const auto &param : matchers)
+    {
+        if (param->hasColumn())
+        {
+            if (param->getColumn() < rowData.size())
+            {
+                if (param->match(rowData[param->getColumn()]))
+                {
+                    if ((++cnt == matchers.size()) || orOp)
+                        return true;
+                }
+            }
+            else
+            {
+                qCritical() << "Filter column is bigger than row columns";
+            }
+        }
+        else
+        {
+            for (const auto &columnData : rowData)
+            {
+                if (param->match(columnData))
+                {
+                    if ((++cnt == matchers.size()) || orOp)
+                        return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
 
 BaseLogModel::BaseLogModel(const std::string &fileName, QObject *parent)
     : AbstractModel(parent),
@@ -86,103 +270,6 @@ bool BaseLogModel::isSearching() const
     return m_searching.load();
 }
 
-bool matchParam(const std::string &text, const SearchParam &param)
-{
-    if (param.isRegex)
-    {
-        std::smatch m;
-        std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
-        if (!param.matchCase)
-        {
-            opts |= std::regex::icase;
-        }
-
-        std::regex rx(param.exp, opts);
-
-        if (param.wholeText)
-        {
-            return std::regex_match(text, m, rx);
-        }
-        else
-        {
-            return std::regex_search(text, m, rx);
-        }
-    }
-    else
-    {
-        if (param.wholeText && (text.size() != param.exp.size()))
-        {
-            return false;
-        }
-
-        if (param.matchCase)
-        {
-            if (param.wholeText)
-            {
-                return (text == param.exp);
-            }
-            else
-            {
-                return (text.find(param.exp) != std::string::npos);
-            }
-        }
-        else
-        {
-            const auto it = std::search(
-                text.begin(),
-                text.end(),
-                param.exp.begin(),
-                param.exp.end(),
-                [](const char c1, const char c2) { return std::tolower(c1) == std::tolower(c2); });
-
-            if (param.wholeText)
-            {
-                return (it == text.begin());
-            }
-            else
-            {
-                return (it != text.end());
-            }
-        }
-    }
-}
-
-bool searchParamsInRow(const SearchParamLst &params, bool orOp, const std::vector<std::string> &rowData)
-{
-    std::uint32_t cnt(0);
-    for (const auto &param : params)
-    {
-        if (param.column.has_value())
-        {
-            if (*param.column < rowData.size())
-            {
-                if (matchParam(rowData[*param.column], param))
-                {
-                    if ((++cnt == params.size()) || orOp)
-                        return true;
-                }
-            }
-            else
-            {
-                qCritical() << "Filter column is bigger than row columns";
-            }
-        }
-        else
-        {
-            for (const auto &columnData : rowData)
-            {
-                if (matchParam(columnData, param))
-                {
-                    if ((++cnt == params.size()) || orOp)
-                        return true;
-                }
-            }
-        }
-    }
-
-    return false;
-}
-
 void BaseLogModel::search()
 {
     qDebug() << "Starting to search";
@@ -190,6 +277,7 @@ void BaseLogModel::search()
     ChunkRows chunkRows;
     std::vector<std::string> rowData;
     std::size_t row(0);
+    const auto &matchers = makeParamMatchers(m_searchParams);
 
     while (m_searching.load())
     {
@@ -211,7 +299,7 @@ void BaseLogModel::search()
             for (const auto &[currRow, rawText] : chunkRows.data())
             {
                 parseRow(rawText, rowData);
-                if (searchParamsInRow(m_searchParams, m_searchWithOrOperator, rowData))
+                if (matchParamsInRow(matchers, m_searchWithOrOperator, rowData))
                 {
                     emit valueFound(currRow);
                 }
