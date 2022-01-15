@@ -5,26 +5,26 @@
 
 // HeaderModel ----------------------------------------------------------------
 
-HeaderModel::HeaderModel(QObject *parent) : QAbstractTableModel(parent)
+priv::HeaderModel::HeaderModel(QObject *parent) : QAbstractTableModel(parent)
 {
 }
 
-int HeaderModel::rowCount(const QModelIndex & /*parent*/) const
+int priv::HeaderModel::rowCount(const QModelIndex & /*parent*/) const
 {
     return 0;
 }
 
-int HeaderModel::columnCount(const QModelIndex & /*parent*/) const
+int priv::HeaderModel::columnCount(const QModelIndex & /*parent*/) const
 {
     return m_columns.size();
 }
 
-QVariant HeaderModel::data(const QModelIndex &index, int role) const
+QVariant priv::HeaderModel::data(const QModelIndex &index, int role) const
 {
     return QVariant();
 }
 
-QVariant HeaderModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     switch (role)
     {
@@ -35,22 +35,22 @@ QVariant HeaderModel::headerData(int section, Qt::Orientation orientation, int r
         case Qt::FontRole:
             return (m_font != nullptr) ? *m_font : QFont();
         case Qt::BackgroundRole:
-            return QBrush(QColor("blue"));
+            return m_bgBrush;
         case Qt::ForegroundRole:
-            return QBrush(QColor("white"));
+            return m_textBrush;
         default:
             return QVariant();
     }
 }
 
-void HeaderModel::addColumn(const std::string &colName)
+void priv::HeaderModel::addColumn(const std::string &colName)
 {
     beginInsertColumns(QModelIndex(), m_columns.size(), m_columns.size());
     m_columns.push_back(colName);
     endInsertColumns();
 }
 
-void HeaderModel::setColumns(const std::vector<std::string> &columns)
+void priv::HeaderModel::setColumns(const std::vector<std::string> &columns)
 {
     beginResetModel();
     m_columns.insert(m_columns.begin(), columns.begin(), columns.end());
@@ -58,6 +58,8 @@ void HeaderModel::setColumns(const std::vector<std::string> &columns)
 }
 
 // HeaderView -----------------------------------------------------------------
+
+using namespace priv;
 
 HeaderView::HeaderView(QWidget *parent) : QHeaderView(Qt::Horizontal, parent)
 {
@@ -103,6 +105,16 @@ const std::vector<std::string> &HeaderView::getColumns()
 void HeaderView::setFont(const QFont *font)
 {
     m_headerModel->m_font = font;
+}
+
+void HeaderView::setTextColor(const QColor& color)
+{
+    m_headerModel->m_textBrush = color;
+}
+
+void HeaderView::setBgColor(const QColor& color)
+{
+    m_headerModel->m_bgBrush = color;
 }
 
 void HeaderView::getVisibleColumns(VisibleColumns &columns)

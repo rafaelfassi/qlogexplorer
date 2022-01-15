@@ -20,15 +20,25 @@
 constexpr ssize_t g_scrollBarThickness(25);
 constexpr ssize_t g_defaultMargin(10);
 constexpr ssize_t g_startTextMargin(5);
+constexpr auto g_fontName = "times";
+constexpr int g_fontSize = 14;
+static const QColor g_bgColor(Qt::white);
+static const QColor g_txtColor(Qt::black);
+static const QColor g_selectionBgColor("#4169e1");
+static const QColor g_selectionTxtColor(Qt::white);
+static const QColor g_headerTxtColor(Qt::white);
+static const QColor g_headerBgColor(Qt::darkGray);
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
       m_model(model),
-      m_font("times", 14),
+      m_font(g_fontName, g_fontSize),
       m_fm(m_font)
 {
     m_header = new HeaderView(this);
     m_header->setFont(&m_font);
+    m_header->setTextColor(g_headerTxtColor);
+    m_header->setBgColor(g_headerBgColor);
     m_header->setMaximumHeight(m_fm.height());
     m_header->setFixedHeight(m_header->maximumHeight());
     m_header->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
@@ -90,7 +100,8 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
 
-    connect(m_model, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::UniqueConnection);
+    connect(m_model, &AbstractModel::modelConfigured, this, &LogViewWidget::configureColumns, Qt::QueuedConnection);
+    connect(m_model, &AbstractModel::countChanged, this, &LogViewWidget::modelCountChanged, Qt::QueuedConnection);
     connect(m_vScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::vScrollBarPosChanged);
     connect(m_hScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::hScrollBarPosChanged);
     connect(m_stabilizedUpdateTimer, &QTimer::timeout, this, &LogViewWidget::stabilizedUpdate);
@@ -119,14 +130,13 @@ void LogViewWidget::stabilizedUpdate()
 {
     m_stabilizedUpdateTimer->stop();
 
-    ssize_t maxRowWidth = getMaxRowWidth();
-    const auto newHScrollMax(maxRowWidth - m_textAreaRect.width());
-    if (m_hScrollBar->getMax() != newHScrollMax)
+    const ssize_t newMaxHScrollBar = std::max<ssize_t>(getMaxRowWidth() - m_textAreaRect.width(), 0L);
+    if (newMaxHScrollBar != m_hScrollBar->getMax())
     {
         if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
         {
             configureColumns();
-            m_hScrollBar->setMax(newHScrollMax);
+            m_hScrollBar->setMax(newMaxHScrollBar);
         }
         else
         {
@@ -205,8 +215,8 @@ void LogViewWidget::resizeEvent(QResizeEvent *event)
     m_textAreaRect.setHeight(height() - g_scrollBarThickness - m_textAreaRect.top());
     m_textAreaRect.setWidth(width() - g_scrollBarThickness - m_textAreaRect.left());
     updateDisplaySize();
-    m_stabilizedUpdateTimer->start();
     QWidget::resizeEvent(event);
+    m_stabilizedUpdateTimer->start();
 }
 
 void LogViewWidget::paintEvent(QPaintEvent *event)
@@ -217,51 +227,52 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
 
     const auto dataRect(m_textAreaRect);
 
-    QPainter devicePainter(this);
-    devicePainter.setFont(m_font);
-    devicePainter.eraseRect(rect());
-    devicePainter.setClipRect(dataRect);
+    QPainter painter(this);
+    painter.setFont(m_font);
+    painter.eraseRect(rect());
+    painter.setClipRect(dataRect);
+    painter.fillRect(dataRect, g_bgColor);
 
     forEachVisualRowInPage(
-        [&devicePainter, &dataRect](VisualRowData &vrData)
+        [&painter, &dataRect](VisualRowData &vrData)
         {
-            devicePainter.setPen(Qt::black);
-
             // Draw Line Number
             {
-                devicePainter.setClipping(false);
                 QRect numberAreaRect(vrData.numberRect);
                 numberAreaRect.setLeft(0);
-                devicePainter.fillRect(numberAreaRect, QColor("#ffebcd"));
-                devicePainter.drawText(
+                painter.setClipping(false);
+                painter.setPen(g_headerTxtColor);
+                painter.fillRect(numberAreaRect, g_headerBgColor);
+                painter.drawText(
                     vrData.numberRect,
                     Qt::AlignTop | Qt::AlignLeft,
-                    std::to_string(vrData.number).c_str());
+                    std::to_string(vrData.number + 1).c_str());
             }
 
-            devicePainter.setClipping(true);
+            painter.setClipping(true);
+            painter.setPen(g_txtColor);
 
             // Hightlight selected line
             if (vrData.selected)
             {
-                devicePainter.fillRect(vrData.rect, QColor("#4169e1"));
-                devicePainter.setPen(Qt::white);
+                painter.fillRect(vrData.rect, g_selectionBgColor);
+                painter.setPen(g_selectionTxtColor);
             }
 
             // Draw Row Data
             for (const auto &colData : vrData.columns)
             {
-                devicePainter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+                painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
 
                 if (colData.selection.has_value())
                 {
                     const auto &[selRect, selText] = colData.selection.value();
-                    devicePainter.setClipRect(selRect.intersected(dataRect));
-                    devicePainter.fillRect(selRect, QColor("#4169e1"));
-                    devicePainter.setPen(Qt::white);
-                    devicePainter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
-                    devicePainter.setPen(Qt::black);
-                    devicePainter.setClipRect(dataRect);
+                    painter.setClipRect(selRect.intersected(dataRect));
+                    painter.fillRect(selRect, g_selectionBgColor);
+                    painter.setPen(g_selectionTxtColor);
+                    painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+                    painter.setPen(g_txtColor);
+                    painter.setClipRect(dataRect);
                 }
             }
             return true;

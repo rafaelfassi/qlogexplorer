@@ -4,11 +4,13 @@
 #include <QAbstractTableModel>
 
 class QAction;
+class HeaderView;
 
+namespace priv
+{
 class HeaderModel : public QAbstractTableModel
 {
     Q_OBJECT
-public:
     HeaderModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -17,11 +19,13 @@ public:
     void addColumn(const std::string &colName);
     void setColumns(const std::vector<std::string> &columns);
 
-private:
     std::vector<std::string> m_columns;
     const QFont *m_font = nullptr;
-    friend class HeaderView;
+    QBrush m_textBrush = QColor(Qt::white);
+    QBrush m_bgBrush = QColor(Qt::blue);
+    friend class ::HeaderView;
 };
+} // namespace priv
 
 // <VisualPos, ColPos>
 using VisibleColPos = std::pair<ssize_t, ssize_t>;
@@ -37,6 +41,8 @@ public:
     void setColumns(const std::vector<std::string> &columns);
     const std::vector<std::string> &getColumns();
     void setFont(const QFont *font);
+    void setTextColor(const QColor& color);
+    void setBgColor(const QColor& color);
     void getVisibleColumns(VisibleColumns &columns);
     VisibleColPos getVisiblePos(ssize_t colIdx, const VisibleColumns &visibleColumns);
 
@@ -54,7 +60,7 @@ private slots:
     void handleContextMenuAction();
 
 private:
-    HeaderModel *m_headerModel;
+    priv::HeaderModel *m_headerModel;
     QAction *m_hide;
     QAction *m_moveLeft;
     QAction *m_moveRight;

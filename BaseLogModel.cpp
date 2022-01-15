@@ -238,6 +238,18 @@ void BaseLogModel::search()
     }
 }
 
+void BaseLogModel::tryConfigure()
+{
+    if (m_columns.empty())
+    {
+        m_ifs.clear();
+        m_ifs.seekg(0, std::ios::beg);
+        configure(m_ifs);
+        if (!m_columns.empty())
+            emit modelConfigured();
+    }
+}
+
 std::size_t BaseLogModel::columnCount() const
 {
     return m_columns.size();
@@ -261,11 +273,7 @@ bool BaseLogModel::isWatching() const
 void BaseLogModel::start()
 {
     stop();
-    if (m_columns.empty())
-    {
-        configure(m_ifs);
-        emit modelConfigured();
-    }
+    tryConfigure();
     m_watching.store(true);
     m_watchThread = std::thread(&BaseLogModel::keepWatching, this);
 }
@@ -360,6 +368,8 @@ WatchingResult BaseLogModel::watchFile()
         else
         {
             const std::lock_guard<std::mutex> lock(m_ifsMutex);
+
+            tryConfigure();
 
             m_ifs.clear();
             m_ifs.seekg(0, std::ios::end);

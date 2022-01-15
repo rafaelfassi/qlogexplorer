@@ -52,6 +52,7 @@ public slots:
     void copySelected();
 
 protected slots:
+    void configureColumns();
     void updateDisplaySize();
     void modelCountChanged();
     void headerChanged();
@@ -77,7 +78,6 @@ protected:
     ssize_t getTextWidth(const std::string &text, bool simplified = false);
     QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
 
-    void configureColumns();
     void getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSizesMap);
     void getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSizesMap);
     void getColumnsSizeToScreen(std::map<ssize_t, ssize_t> &columnSizesMap);

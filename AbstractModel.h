@@ -15,6 +15,7 @@ public:
     virtual ssize_t getRowNum(ssize_t row) const = 0;
 
 signals:
-    void countChanged();
+    void modelConfigured() const;
+    void countChanged() const;
 };
 

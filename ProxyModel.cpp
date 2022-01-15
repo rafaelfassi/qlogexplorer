@@ -2,6 +2,7 @@
 
 ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(source)
 {
+    connect(m_source, &AbstractModel::modelConfigured, this, &AbstractModel::modelConfigured);
 }
 
 ssize_t ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const

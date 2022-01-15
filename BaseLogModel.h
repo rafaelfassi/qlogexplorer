@@ -105,7 +105,6 @@ public:
     bool isFollowing() const;
 
 signals:
-    void modelConfigured() const;
     void parsingProgress(char progress);
     void valueFound(ssize_t row) const;
 
@@ -138,6 +137,7 @@ private:
     void keepWatching();
     WatchingResult watchFile();
     void search();
+    void tryConfigure();
     std::string m_fileName;
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;

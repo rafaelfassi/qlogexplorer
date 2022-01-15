@@ -16,12 +16,15 @@
 #include <QMenuBar>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QApplication>
+#include <QDesktopWidget>
 
 #include <fstream>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-    setMinimumSize(1200, 800);
+    QRect rec = QApplication::desktop()->screenGeometry();
+    setMinimumSize(std::min(800, rec.width()), std::min(600, rec.height()));
     createActions();
     createMenus();
 
@@ -31,8 +34,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     createConnections();
 
-    openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Json);
-    openFile("/home/rafael/Dev/QLogViewer/log.txt", FileType::Text);
+    //openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Json);
+    //openFile("/home/rafael/Dev/QLogViewer/log.txt", FileType::Text);
 }
 
 MainWindow::~MainWindow()
