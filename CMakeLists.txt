@@ -58,4 +58,9 @@ target_link_libraries(qlogviewer
   Qt${QT_VERSION_MAJOR}::Widgets
 )
 
+target_link_libraries(qlogviewer
+  PRIVATE
+  -ltbb
+)
+
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)

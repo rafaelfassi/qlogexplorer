@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ProxyModel.h"
+#include <execution>
 
 ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(source)
 {
@@ -40,28 +41,63 @@ ssize_t ProxyModel::getRowNum(ssize_t row) const
     return -1;
 }
 
+ssize_t ProxyModel::find(ssize_t srcRow) const
+{
+    auto it = std::lower_bound(m_rowMap.begin(), m_rowMap.end(), srcRow);
+    return (it != m_rowMap.end() && srcRow == *it) ? *it : -1L;
+}
+
+bool ProxyModel::constains(ssize_t srcRow) const
+{
+    const auto it = std::lower_bound(m_rowMap.begin(), m_rowMap.end(), srcRow);
+    return (it != m_rowMap.end() && srcRow == *it);
+}
+
 void ProxyModel::addRow(ssize_t srcRow)
 {
-    m_rowMap.push_back(srcRow);
-    std::sort(m_rowMap.begin(), m_rowMap.end());
+    if (!constains(srcRow))
+    {
+        m_rowMap.push_back(srcRow);
+        std::sort(std::execution::par, m_rowMap.begin(), m_rowMap.end());
+        emit countChanged();
+    }
 }
 
 void ProxyModel::addRows(const std::deque<ssize_t> &srcRows)
 {
-    m_rowMap.insert(m_rowMap.end(), srcRows.begin(), srcRows.end());
-    std::sort(m_rowMap.begin(), m_rowMap.end());
+    const size_t oldSize(m_rowMap.size());
+
+    for (const auto srcRow : srcRows)
+    {
+        if (!constains(srcRow))
+        {
+            m_rowMap.push_back(srcRow);
+        }
+    }
+
+    std::sort(std::execution::par, m_rowMap.begin(), m_rowMap.end());
+
+    if (m_rowMap.size() != oldSize)
+    {
+        emit countChanged();
+    }
 }
 
 void ProxyModel::removeRow(ssize_t srcRow)
 {
-    auto it = std::find(m_rowMap.begin(), m_rowMap.end(), srcRow);
-    if (it != m_rowMap.end())
+    const auto pos = find(srcRow);
+    if (pos != -1)
     {
-        m_rowMap.erase(it);
+        m_rowMap.erase(m_rowMap.begin() + pos);
+        emit countChanged();
     }
 }
 
 void ProxyModel::clear()
 {
-    m_rowMap.clear();
+    if (!m_rowMap.empty())
+    {
+        m_rowMap.clear();
+        emit countChanged();
+    }
 }
