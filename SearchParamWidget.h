@@ -19,7 +19,6 @@ public:
     void setColumns(const std::vector<std::string> &columns);
     bool matchCase() const;
     bool isRegex() const;
-    bool matchWholeText() const;
     bool notOp() const;
     bool getIsEnabled() const;
     std::string expression() const;
@@ -32,7 +31,6 @@ signals:
 private:
     QAction *m_actMatchCase;
     QAction *m_actRegex;
-    QAction *m_actWholeText;
     QAction *m_actNotOp;
     QAction *m_actDisableMe;
     QAction *m_actRemoveMe;

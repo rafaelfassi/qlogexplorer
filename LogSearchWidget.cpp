@@ -131,7 +131,6 @@ void LogSearchWidget::startSearch()
             SearchParam param;
             param.matchCase = paramWidget->matchCase();
             param.isRegex = paramWidget->isRegex();
-            param.wholeText = paramWidget->matchWholeText();
             param.notOp = paramWidget->notOp();
             param.exp = paramWidget->expression();
             param.column = paramWidget->column();

@@ -76,7 +76,6 @@ struct SearchParam
 {
     bool isRegex = false;
     bool matchCase = true;
-    bool wholeText = false;
     bool notOp = false;
     std::string exp;
     std::optional<std::size_t> column;

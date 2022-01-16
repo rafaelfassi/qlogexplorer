@@ -33,10 +33,6 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     btnRegex->setFocusPolicy(Qt::NoFocus);
     btnRegex->setDefaultAction(m_actRegex);
 
-    QToolButton *btnWholeText = new QToolButton(this);
-    btnWholeText->setFocusPolicy(Qt::NoFocus);
-    btnWholeText->setDefaultAction(m_actWholeText);
-
     QToolButton *btnNotOp = new QToolButton(this);
     btnNotOp->setFocusPolicy(Qt::NoFocus);
     btnNotOp->setDefaultAction(m_actNotOp);
@@ -57,7 +53,6 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     hLayout->addWidget(m_cmbColumns);
     hLayout->addWidget(btnMatchCase);
     hLayout->addWidget(btnRegex);
-    hLayout->addWidget(btnWholeText);
     hLayout->addWidget(btnNotOp);
     hLayout->addWidget(m_txtSearch);
     hLayout->addWidget(btnDisableMe);
@@ -83,10 +78,6 @@ void SearchParamWidget::createActions()
     m_actRegex = new QAction(tr("Regular Expression"), this);
     m_actRegex->setIcon(QIcon(":/images/regex_icon.png"));
     m_actRegex->setCheckable(true);
-
-    m_actWholeText = new QAction(tr("Match Whole Text"), this);
-    m_actWholeText->setIcon(QIcon(":/images/whole_text_icon.png"));
-    m_actWholeText->setCheckable(true);
 
     m_actNotOp = new QAction(tr("Not (invert the match)"), this);
     m_actNotOp->setIcon(QIcon(":/images/not_icon.png"));
@@ -127,11 +118,6 @@ bool SearchParamWidget::matchCase() const
 bool SearchParamWidget::isRegex() const
 {
     return m_actRegex->isChecked();
-}
-
-bool SearchParamWidget::matchWholeText() const
-{
-    return m_actWholeText->isChecked();
 }
 
 bool SearchParamWidget::notOp() const

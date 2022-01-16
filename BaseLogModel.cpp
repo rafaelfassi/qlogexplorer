@@ -14,7 +14,6 @@ public:
     virtual bool match(const std::string &text) = 0;
     bool isRegex() const { return m_param.isRegex; }
     bool matchCase() const { return m_param.matchCase; }
-    bool matchWholeText() const { return m_param.wholeText; }
     bool notOp() const { return m_param.notOp; }
     bool hasColumn() const { return m_param.column.has_value(); }
     size_t getColumn() const { return *m_param.column; }
@@ -48,14 +47,7 @@ protected:
 
 //     bool match(const std::string &text) override
 //     {
-//         if (m_param.wholeText)
-//         {
-//             return std::regex_match(text, m_match, m_rx);
-//         }
-//         else
-//         {
-//             return std::regex_search(text, m_match, m_rx);
-//         }
+//         return std::regex_search(text, m_match, m_rx);
 //     }
 
 // private:
@@ -112,23 +104,10 @@ public:
 
     bool match(const std::string &text) override
     {
-        if (m_param.wholeText)
-        {
-            if (text.size() != m_textToSearch.size())
-                return false;
-
-            if (m_param.matchCase)
-                return (text == m_textToSearch);
-            else
-                return (capitalize(text) == m_textToSearch);
-        }
+        if (m_param.matchCase)
+            return (text.find(m_textToSearch) != std::string::npos);
         else
-        {
-            if (m_param.matchCase)
-                return (text.find(m_textToSearch) != std::string::npos);
-            else
-                return (capitalize(text).find(m_textToSearch) != std::string::npos);
-        }
+            return (capitalize(text).find(m_textToSearch) != std::string::npos);
     }
 
 private:
