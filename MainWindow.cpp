@@ -1,3 +1,4 @@
+#include <pch.h>
 #include "MainWindow.h"
 #include "LogViewWidget.h"
 #include "TextLogModel.h"
@@ -34,8 +35,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     createConnections();
 
-    //openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Json);
-    //openFile("/home/rafael/Dev/QLogViewer/log.txt", FileType::Text);
+    //openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Json);
+    //openFile("/home/rafael/Dev/QLogViewer/biglog.txt", FileType::Text);
+    //openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Text);
+    //openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Text);
 }
 
 MainWindow::~MainWindow()

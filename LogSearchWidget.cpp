@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "LogSearchWidget.h"
 #include "LogViewWidget.h"
 #include "TextLogModel.h"
@@ -6,7 +7,6 @@
 #include "ProxyModel.h"
 #include "LongScrollBar.h"
 #include <QTableView>
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -151,11 +151,11 @@ void LogSearchWidget::startSearch()
     }
 }
 
-void LogSearchWidget::addSearchResult(ssize_t row)
+void LogSearchWidget::addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsPtr)
 {
     if (m_sourceModel->isSearching())
     {
-        m_proxyModel->addRow(row);
+        m_proxyModel->addRows(*rowsPtr.get());
         m_searchResults->updateView();
     }
 }

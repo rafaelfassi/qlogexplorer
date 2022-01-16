@@ -26,7 +26,7 @@ signals:
     void rowSelected(ssize_t row);
 
 public slots:
-    void addSearchResult(ssize_t row);
+    void addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsPtr);
 
 private slots:
     void addSearchParam();

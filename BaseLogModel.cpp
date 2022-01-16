@@ -1,8 +1,7 @@
+#include "pch.h"
 #include "BaseLogModel.h"
-#include <QDebug>
 #include <QElapsedTimer>
 #include <QRegularExpression>
-#include <memory>
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
@@ -283,8 +282,11 @@ void BaseLogModel::search()
     {
         QElapsedTimer timer;
         timer.start();
+        qint64 searchTime(0);
 
         std::size_t startingRow(row);
+
+        std::shared_ptr<std::deque<ssize_t>> rowsPtr = std::make_shared<std::deque<ssize_t>>();
 
         while ((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
         {
@@ -301,7 +303,7 @@ void BaseLogModel::search()
                 parseRow(rawText, rowData);
                 if (matchParamsInRow(matchers, m_searchWithOrOperator, rowData))
                 {
-                    emit valueFound(currRow);
+                    rowsPtr->push_back(currRow);
                 }
 
                 rowData.clear();
@@ -312,11 +314,23 @@ void BaseLogModel::search()
                     break;
                 }
             }
+
+            if (!rowsPtr->empty() && timer.hasExpired(1000))
+            {
+                emit valueFound(rowsPtr);
+                rowsPtr = std::make_shared<std::deque<ssize_t>>();
+                searchTime += timer.restart();
+            }
+        }
+
+        if (!rowsPtr->empty())
+        {
+            emit valueFound(rowsPtr);
         }
 
         if (row > startingRow)
         {
-            qDebug() << "Searching finished after" << timer.elapsed() / 1000 << "seconds";
+            qDebug() << "Searching finished after" << searchTime / 1000 << "seconds";
         }
 
         if (m_searching.load())

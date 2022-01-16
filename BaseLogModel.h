@@ -3,7 +3,6 @@
 #include "AbstractModel.h"
 #include <fstream>
 #include <thread>
-#include <deque>
 #include <mutex>
 
 constexpr size_t g_chunkSize = 1024 * 1024;
@@ -106,7 +105,7 @@ public:
 
 signals:
     void parsingProgress(char progress);
-    void valueFound(ssize_t row) const;
+    void valueFound(std::shared_ptr<std::deque<ssize_t>> rowsPtr) const;
 
 public slots:
     void setFollowing(bool following);

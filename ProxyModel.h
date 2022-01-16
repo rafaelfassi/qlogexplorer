@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AbstractModel.h"
-#include <set>
 
 class ProxyModel : public AbstractModel
 {
@@ -15,8 +14,9 @@ public:
     std::size_t rowCount() const override;
     ssize_t getRowNum(ssize_t row) const override;
 
-    void addRow(std::size_t srcRow);
-    void removeRow(std::size_t srcRow);
+    void addRow(ssize_t srcRow);
+    void addRows(const std::deque<ssize_t>& srcRows);
+    void removeRow(ssize_t srcRow);
     void clear();
 
 signals:
@@ -24,5 +24,5 @@ signals:
 
 private:
     AbstractModel *m_source;
-    std::set<std::size_t> m_rowMap;
+    std::deque<ssize_t> m_rowMap;
 };

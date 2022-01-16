@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ProxyModel.h"
 
 ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(source)
@@ -9,12 +10,7 @@ ssize_t ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData)
 {
     if (row < m_rowMap.size())
     {
-        auto it = m_rowMap.begin();
-        std::advance(it, row);
-        if (it != m_rowMap.end())
-        {
-            return m_source->getRow(*it, rowData);
-        }
+        return m_source->getRow(m_rowMap[row], rowData);
     }
     return -1;
 }
@@ -38,26 +34,31 @@ ssize_t ProxyModel::getRowNum(ssize_t row) const
 {
     if (row < m_rowMap.size())
     {
-        auto it = m_rowMap.begin();
-        // TODO: Find a better solution as this does not perform well.
-        std::advance(it, row);
-        if (it != m_rowMap.end())
-        {
-            return *it;
-        }
+        return m_source->getRowNum(m_rowMap[row]);
     }
 
     return -1;
 }
 
-void ProxyModel::addRow(std::size_t srcRow)
+void ProxyModel::addRow(ssize_t srcRow)
 {
-    m_rowMap.insert(srcRow);
+    m_rowMap.push_back(srcRow);
+    std::sort(m_rowMap.begin(), m_rowMap.end());
 }
 
-void ProxyModel::removeRow(std::size_t srcRow)
+void ProxyModel::addRows(const std::deque<ssize_t> &srcRows)
 {
-    m_rowMap.erase(srcRow);
+    m_rowMap.insert(m_rowMap.end(), srcRows.begin(), srcRows.end());
+    std::sort(m_rowMap.begin(), m_rowMap.end());
+}
+
+void ProxyModel::removeRow(ssize_t srcRow)
+{
+    auto it = std::find(m_rowMap.begin(), m_rowMap.end(), srcRow);
+    if (it != m_rowMap.end())
+    {
+        m_rowMap.erase(it);
+    }
 }
 
 void ProxyModel::clear()
