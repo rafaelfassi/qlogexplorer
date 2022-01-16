@@ -15,6 +15,7 @@ public:
     bool isRegex() const { return m_param.isRegex; }
     bool matchCase() const { return m_param.matchCase; }
     bool matchWholeText() const { return m_param.wholeText; }
+    bool notOp() const { return m_param.notOp; }
     bool hasColumn() const { return m_param.column.has_value(); }
     size_t getColumn() const { return *m_param.column; }
 
@@ -139,6 +140,8 @@ using ParamMatchers = std::vector<std::unique_ptr<BaseParamMatcher>>;
 ParamMatchers makeParamMatchers(const SearchParamLst &params)
 {
     ParamMatchers matchers;
+    matchers.reserve(params.size());
+
     for (const auto &param : params)
     {
         if (param.isRegex)
@@ -157,13 +160,16 @@ bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vecto
 {
     std::uint32_t cnt(0);
 
-    for (const auto &param : matchers)
+    for (const auto &matcher : matchers)
     {
-        if (param->hasColumn())
+        if (matcher->hasColumn())
         {
-            if (param->getColumn() < rowData.size())
+            if (matcher->getColumn() < rowData.size())
             {
-                if (param->match(rowData[param->getColumn()]))
+                bool matched = matcher->match(rowData[matcher->getColumn()]);
+                if (matcher->notOp())
+                    matched = !matched;
+                if (matched)
                 {
                     if ((++cnt == matchers.size()) || orOp)
                         return true;
@@ -176,13 +182,21 @@ bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vecto
         }
         else
         {
+            bool matched(false);
             for (const auto &columnData : rowData)
             {
-                if (param->match(columnData))
+                if (matcher->match(columnData))
                 {
-                    if ((++cnt == matchers.size()) || orOp)
-                        return true;
+                    matched = true;
+                    break;
                 }
+            }
+            if (matcher->notOp())
+                matched = !matched;
+            if (matched)
+            {
+                if ((++cnt == matchers.size()) || orOp)
+                    return true;
             }
         }
     }

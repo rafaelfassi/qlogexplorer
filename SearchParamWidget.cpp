@@ -37,6 +37,10 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     btnWholeText->setFocusPolicy(Qt::NoFocus);
     btnWholeText->setDefaultAction(m_actWholeText);
 
+    QToolButton *btnNotOp = new QToolButton(this);
+    btnNotOp->setFocusPolicy(Qt::NoFocus);
+    btnNotOp->setDefaultAction(m_actNotOp);
+
     m_txtSearch = new QLineEdit(this);
     m_txtSearch->setFocusPolicy(Qt::StrongFocus);
 
@@ -54,6 +58,7 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     hLayout->addWidget(btnMatchCase);
     hLayout->addWidget(btnRegex);
     hLayout->addWidget(btnWholeText);
+    hLayout->addWidget(btnNotOp);
     hLayout->addWidget(m_txtSearch);
     hLayout->addWidget(btnDisableMe);
     hLayout->addWidget(btnRemoveMe);
@@ -82,6 +87,10 @@ void SearchParamWidget::createActions()
     m_actWholeText = new QAction(tr("Match Whole Text"), this);
     m_actWholeText->setIcon(QIcon(":/images/whole_text_icon.png"));
     m_actWholeText->setCheckable(true);
+
+    m_actNotOp = new QAction(tr("Not (invert the match)"), this);
+    m_actNotOp->setIcon(QIcon(":/images/not_icon.png"));
+    m_actNotOp->setCheckable(true);
 
     m_actDisableMe = new QAction(tr("Disable Parameter"), this);
     m_actDisableMe->setIcon(QIcon(":/images/filter_off_icon.png"));
@@ -123,6 +132,11 @@ bool SearchParamWidget::isRegex() const
 bool SearchParamWidget::matchWholeText() const
 {
     return m_actWholeText->isChecked();
+}
+
+bool SearchParamWidget::notOp() const
+{
+    return m_actNotOp->isChecked();
 }
 
 bool SearchParamWidget::getIsEnabled() const
