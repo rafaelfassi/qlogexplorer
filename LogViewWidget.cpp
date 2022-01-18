@@ -28,6 +28,7 @@ static const QColor g_selectionBgColor("#4169e1");
 static const QColor g_selectionTxtColor(Qt::white);
 static const QColor g_headerTxtColor(Qt::white);
 static const QColor g_headerBgColor(Qt::darkGray);
+static const QColor g_markColor("#9400d3");
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
@@ -96,7 +97,24 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_actCopy = new QAction("Copy", this);
     m_actCopy->setShortcut(QKeySequence::Copy);
     m_actCopy->setShortcutContext(Qt::WidgetShortcut);
+
+    m_actMark = new QAction("Mark", this);
+    m_actMark->setShortcut(Qt::CTRL + Qt::Key_M);
+    m_actMark->setShortcutContext(Qt::WidgetShortcut);
+
+    m_actNextMark = new QAction("Next Mark", this);
+    m_actNextMark->setShortcut(Qt::CTRL + Qt::Key_Down);
+    m_actNextMark->setShortcutContext(Qt::WidgetShortcut);
+
+    m_actPrevMark = new QAction("Previous Mark", this);
+    m_actPrevMark->setShortcut(Qt::CTRL + Qt::Key_Up);
+    m_actPrevMark->setShortcutContext(Qt::WidgetShortcut);
+
     addAction(m_actCopy);
+    addAction(m_actMark);
+    addAction(m_actNextMark);
+    addAction(m_actPrevMark);
+
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
 
@@ -114,10 +132,18 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
     connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
     connect(m_actCopy, &QAction::triggered, this, &LogViewWidget::copySelected);
+    connect(m_actMark, &QAction::triggered, this, &LogViewWidget::markSelected);
+    connect(m_actNextMark, &QAction::triggered, this, &LogViewWidget::goToNextMark);
+    connect(m_actPrevMark, &QAction::triggered, this, &LogViewWidget::goToPrevMark);
 }
 
 LogViewWidget::~LogViewWidget()
 {
+}
+
+AbstractModel *LogViewWidget::getModel()
+{
+    return m_model;
 }
 
 void LogViewWidget::headerChanged()
@@ -225,7 +251,8 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     if (invalidRect.isEmpty())
         return;
 
-    const auto dataRect(m_textAreaRect);
+    const auto &dataRect(m_textAreaRect);
+    const auto &marks(m_marks);
 
     QPainter painter(this);
     painter.setFont(m_font);
@@ -234,7 +261,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     painter.fillRect(dataRect, g_bgColor);
 
     forEachVisualRowInPage(
-        [&painter, &dataRect](VisualRowData &vrData)
+        [&painter, &dataRect, &marks](VisualRowData &vrData)
         {
             // Draw Line Number
             {
@@ -243,6 +270,10 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                 painter.setClipping(false);
                 painter.setPen(g_headerTxtColor);
                 painter.fillRect(numberAreaRect, g_headerBgColor);
+                if (marks.find(vrData.row) == marks.end())
+                    painter.fillRect(numberAreaRect, g_headerBgColor);
+                else
+                    painter.fillRect(numberAreaRect, g_markColor);
                 painter.drawText(
                     vrData.numberRect,
                     Qt::AlignTop | Qt::AlignLeft,
@@ -283,22 +314,45 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
 
 void LogViewWidget::mousePressEvent(QMouseEvent *event)
 {
+    const ssize_t row = getRowByScreenPos(event->pos().y());
+    const int xPos = event->pos().x();
+
     if (event->button() == Qt::LeftButton)
     {
-        const ssize_t row = getRowByScreenPos(event->pos().y());
-        m_startSelect = std::make_pair(row, event->pos().x() + m_hScrollBar->getPos());
-        m_currentSelec = std::nullopt;
+        if (event->modifiers() == Qt::ShiftModifier && m_startSelect.has_value())
+        {
+            m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
+        }
+        else
+        {
+            m_startSelect = std::make_pair(row, xPos + m_hScrollBar->getPos());
+            m_currentSelec = std::nullopt;
+        }
+        update();
     }
     else
     {
+        if (!m_currentSelec.has_value())
+        {
+            m_currentRow = row;
+        }
+
         m_actCopy->setEnabled(canCopy());
+        m_actPrevMark->setEnabled(hasPrevMark());
+        m_actNextMark->setEnabled(hasNextMark());
 
         QMenu menu(this);
         menu.addAction(m_actCopy);
+        menu.addSeparator();
+        menu.addAction(m_actMark);
+        menu.addAction(m_actPrevMark);
+        menu.addAction(m_actNextMark);
         menu.exec(event->globalPos());
 
         // Let the action enabled for the shortcuts
         m_actCopy->setEnabled(true);
+        m_actPrevMark->setEnabled(true);
+        m_actNextMark->setEnabled(true);
     }
 }
 
@@ -332,6 +386,16 @@ void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
         {
             const ssize_t offset = xPos - m_textAreaRect.left();
             m_hScrollBar->setPos(m_hScrollBar->getPos() + offset);
+        }
+        else if (const auto lastRow = getLastPageRow(); row > lastRow)
+        {
+            const ssize_t offset = row - lastRow;
+            m_vScrollBar->setPos(m_vScrollBar->getPos() + offset);
+        }
+        else if (const auto firstRow = getFirstPageRow(); row < firstRow)
+        {
+            const ssize_t offset = firstRow - row;
+            m_vScrollBar->setPos(m_vScrollBar->getPos() - offset);
         }
 
         m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
@@ -520,6 +584,17 @@ ssize_t LogViewWidget::getMaxRowWidth()
             return true;
         });
     return maxRowWidth;
+}
+
+ssize_t LogViewWidget::getFirstPageRow() const
+{
+    return m_vScrollBar->getPos();
+}
+
+ssize_t LogViewWidget::getLastPageRow() const
+{
+    const ssize_t itemsInPage(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
+    return m_vScrollBar->getPos() + itemsInPage - 1;
 }
 
 ssize_t LogViewWidget::getRowByScreenPos(int yPos) const
@@ -819,4 +894,111 @@ void LogViewWidget::copySelected()
         QClipboard *clipboard = QGuiApplication::clipboard();
         clipboard->setText(value);
     }
+}
+
+const std::set<ssize_t> &LogViewWidget::getMarks()
+{
+    return m_marks;
+}
+
+bool LogViewWidget::hasMark(ssize_t row) const
+{
+    return (m_marks.find(row) != m_marks.end());
+}
+
+void LogViewWidget::clearMarks()
+{
+    m_marks.clear();
+}
+
+void LogViewWidget::markRow(ssize_t row)
+{
+    m_marks.insert(row);
+}
+
+void LogViewWidget::removeMark(ssize_t row)
+{
+    if (auto it = m_marks.find(row); it != m_marks.end())
+    {
+        m_marks.erase(it);
+    }
+}
+
+void LogViewWidget::toggleMark(ssize_t row)
+{
+    if (auto it = m_marks.find(row); it != m_marks.end())
+    {
+        m_marks.erase(it);
+        return;
+    }
+    m_marks.insert(row);
+}
+
+bool LogViewWidget::hasNextMark()
+{
+    if (!m_currentRow.has_value())
+        return false;
+    return (m_marks.upper_bound(m_currentRow.value()) != m_marks.end());
+}
+
+bool LogViewWidget::hasPrevMark()
+{
+    if (!m_currentRow.has_value())
+        return false;
+    return (m_marks.lower_bound(m_currentRow.value()) != m_marks.begin());
+}
+
+void LogViewWidget::goToNextMark()
+{
+    if (m_currentRow.has_value())
+    {
+        const auto it = m_marks.upper_bound(m_currentRow.value());
+        if (it != m_marks.end())
+        {
+            goToRow(*it);
+        }
+    }
+}
+
+void LogViewWidget::goToPrevMark()
+{
+    if (m_currentRow.has_value())
+    {
+        auto it = m_marks.lower_bound(m_currentRow.value());
+        if (it != m_marks.begin())
+        {
+            goToRow(*(--it));
+        }
+    }
+}
+
+void LogViewWidget::markSelected()
+{
+    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    {
+        const ssize_t firstRow = std::min(m_startSelect->first, m_currentSelec->first);
+        const ssize_t lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+        bool allMarked(true);
+        for (ssize_t row = firstRow; row <= lastRow; ++row)
+        {
+            if (!hasMark(row))
+            {
+                allMarked = false;
+                break;
+            }
+        }
+        for (ssize_t row = firstRow; row <= lastRow; ++row)
+        {
+            if (allMarked)
+                removeMark(row);
+            else
+                markRow(row);
+        }
+    }
+    else if (m_currentRow.has_value())
+    {
+        toggleMark(m_currentRow.value());
+    }
+
+    update();
 }

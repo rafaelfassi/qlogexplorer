@@ -41,6 +41,10 @@ public:
     ~LogViewWidget();
 
     bool canCopy() const;
+    AbstractModel *getModel();
+    const std::set<ssize_t> &getMarks();
+    void clearMarks();
+    bool hasMark(ssize_t row) const;
 
 signals:
     void rowSelected(ssize_t row);
@@ -48,8 +52,12 @@ signals:
 public slots:
     void updateView();
     void goToRow(ssize_t row);
+    void markRow(ssize_t row);
     void adjustColumns(ColumnsSize size);
     void copySelected();
+    void markSelected();
+    void goToNextMark();
+    void goToPrevMark();
 
 protected slots:
     void configureColumns();
@@ -74,6 +82,8 @@ protected:
     void forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback);
     ssize_t getMaxRowWidth();
 
+    ssize_t getFirstPageRow() const;
+    ssize_t getLastPageRow() const;
     ssize_t getRowByScreenPos(int yPos) const;
     ssize_t getTextWidth(const std::string &text, bool simplified = false);
     QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
@@ -88,6 +98,10 @@ protected:
 
     QString rowToText(ssize_t row);
     QString getSelectedText(ssize_t row);
+    void removeMark(ssize_t row);
+    void toggleMark(ssize_t row);
+    bool hasNextMark();
+    bool hasPrevMark();
 
 private:
     AbstractModel *m_model;
@@ -100,6 +114,9 @@ private:
     QPushButton *m_btnFitColumns = nullptr;
     QTimer *m_stabilizedUpdateTimer = nullptr;
     QAction *m_actCopy;
+    QAction *m_actMark;
+    QAction *m_actNextMark;
+    QAction *m_actPrevMark;
     QFont m_font;
     QFontMetrics m_fm;
     ssize_t m_rowHeight = 0;
@@ -108,4 +125,5 @@ private:
     std::optional<ssize_t> m_currentRow;
     std::optional<std::pair<ssize_t, int>> m_startSelect;
     std::optional<std::pair<ssize_t, int>> m_currentSelec;
+    std::set<ssize_t> m_marks;
 };

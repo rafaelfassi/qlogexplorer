@@ -13,5 +13,6 @@
         <file>images/fit_icon.png</file>
         <file>images/expand_icon.png</file>
         <file>images/not_icon.png</file>
+        <file>images/mark_icon.png</file>
     </qresource>
 </RCC>

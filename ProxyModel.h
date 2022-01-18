@@ -14,11 +14,11 @@ public:
     std::size_t rowCount() const override;
     ssize_t getRowNum(ssize_t row) const override;
 
-    ssize_t find(ssize_t srcRow) const;
-    bool constains(ssize_t srcRow) const;
-    void addRow(ssize_t srcRow);
-    void addRows(const std::deque<ssize_t> &srcRows);
-    void removeRow(ssize_t srcRow);
+    ssize_t findSourceRow(ssize_t srcRow) const;
+    bool constainsSourceRow(ssize_t srcRow) const;
+    void addSourceRow(ssize_t srcRow);
+    void addSourceRows(const std::deque<ssize_t> &srcRows);
+    void removeSourceRow(ssize_t srcRow);
     void clear();
 
 signals:

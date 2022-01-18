@@ -16,10 +16,9 @@
 #include <QLineEdit>
 #include <QToolButton>
 
-#include <fstream>
-
-LogSearchWidget::LogSearchWidget(BaseLogModel *sourceModel, QWidget *parent)
+LogSearchWidget::LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent)
     : QWidget(parent),
+      m_mainLog(mainLog),
       m_sourceModel(sourceModel)
 {
     createActions();
@@ -40,6 +39,10 @@ LogSearchWidget::LogSearchWidget(BaseLogModel *sourceModel, QWidget *parent)
     btnClear->setFocusPolicy(Qt::NoFocus);
     btnClear->setDefaultAction(m_actClear);
 
+    QToolButton *btnAddMarks = new QToolButton(this);
+    btnAddMarks->setFocusPolicy(Qt::NoFocus);
+    btnAddMarks->setDefaultAction(m_actAddMarks);
+
     QToolButton *btnExec = new QToolButton(this);
     btnExec->setFocusPolicy(Qt::NoFocus);
     btnExec->setDefaultAction(m_actExec);
@@ -50,6 +53,7 @@ LogSearchWidget::LogSearchWidget(BaseLogModel *sourceModel, QWidget *parent)
     hLayout->addWidget(btnMergeResults);
     hLayout->addWidget(btnOrOperator);
     hLayout->addWidget(btnClear);
+    hLayout->addWidget(btnAddMarks);
     hLayout->addWidget(btnExec);
     hLayout->addStretch();
     hLayout->addWidget(btnAddSearchParam);
@@ -90,6 +94,9 @@ void LogSearchWidget::createActions()
     m_actClear = new QAction(tr("Clear Results"), this);
     m_actClear->setIcon(QIcon(":/images/clear_icon.png"));
 
+    m_actAddMarks = new QAction(tr("Add/Show Main Log Marks"), this);
+    m_actAddMarks->setIcon(QIcon(":/images/mark_icon.png"));
+
     m_actExec = new QAction(tr("Search"), this);
     m_actExec->setIcon(QIcon(":/images/search_icon.png"));
 }
@@ -98,10 +105,11 @@ void LogSearchWidget::createConnections()
 {
     connect(m_actExec, &QAction::triggered, this, &LogSearchWidget::startSearch);
     connect(m_actClear, &QAction::triggered, this, &LogSearchWidget::clearResults);
+    connect(m_actAddMarks, &QAction::triggered, this, &LogSearchWidget::addMarksFromMainLog);
     connect(m_actAddSearchParam, &QAction::triggered, this, &LogSearchWidget::addSearchParam);
     connect(m_sourceModel, &BaseLogModel::modelConfigured, this, &LogSearchWidget::sourceModelConfigured);
     connect(m_sourceModel, &BaseLogModel::valueFound, this, &LogSearchWidget::addSearchResult);
-    connect(m_searchResults, &LogViewWidget::rowSelected, this, &LogSearchWidget::rowSelected);
+    connect(m_searchResults, &LogViewWidget::rowSelected, m_mainLog, &LogViewWidget::goToRow);
 }
 
 void LogSearchWidget::addSearchParam()
@@ -155,7 +163,7 @@ void LogSearchWidget::addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsP
 {
     if (m_sourceModel->isSearching())
     {
-        m_proxyModel->addRows(*rowsPtr.get());
+        m_proxyModel->addSourceRows(*rowsPtr.get());
         m_searchResults->updateView();
     }
 }
@@ -164,6 +172,7 @@ void LogSearchWidget::clearResults()
 {
     m_sourceModel->stopSearch();
     m_proxyModel->clear();
+    m_searchResults->clearMarks();
     m_searchResults->updateView();
 }
 
@@ -187,4 +196,18 @@ void LogSearchWidget::sourceModelConfigured()
     {
         addSearchParam();
     }
+}
+
+void LogSearchWidget::addMarksFromMainLog()
+{
+    for (const auto mainLogRow : m_mainLog->getMarks())
+    {
+        m_proxyModel->addSourceRow(mainLogRow);
+        const auto row = m_proxyModel->findSourceRow(mainLogRow);
+        if (row != -1)
+        {
+            m_searchResults->markRow(row);
+        }
+    }
+    m_searchResults->updateView();
 }

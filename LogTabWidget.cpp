@@ -35,7 +35,7 @@ LogTabWidget::LogTabWidget(const QString &fileName, FileType type, QWidget *pare
     m_logViewWidget = new LogViewWidget(m_logModel, this);
     m_logViewWidget->setMinimumSize(400, 200);
 
-    m_logSearchWidget = new LogSearchWidget(m_logModel, this);
+    m_logSearchWidget = new LogSearchWidget(m_logViewWidget, m_logModel, this);
 
     QSplitter *splitter = new QSplitter(parent);
     splitter->setOrientation(Qt::Vertical);
@@ -64,5 +64,5 @@ void LogTabWidget::createActions()
 
 void LogTabWidget::createConnections()
 {
-    connect(m_logSearchWidget, &LogSearchWidget::rowSelected, m_logViewWidget, &LogViewWidget::goToRow);
+
 }

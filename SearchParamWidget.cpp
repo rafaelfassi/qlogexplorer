@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SearchParamWidget.h"
 #include "LogViewWidget.h"
 #include "TextLogModel.h"
@@ -5,7 +6,6 @@
 #include "ProxyModel.h"
 #include "LongScrollBar.h"
 #include <QTableView>
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>

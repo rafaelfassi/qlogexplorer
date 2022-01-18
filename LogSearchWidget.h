@@ -15,7 +15,7 @@ class LogSearchWidget : public QWidget
     Q_OBJECT
 
 public:
-    LogSearchWidget(BaseLogModel* sourceModel, QWidget *parent = nullptr);
+    LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
     ~LogSearchWidget();
     void createActions();
     void createMenus();
@@ -32,18 +32,21 @@ private slots:
     void addSearchParam();
     void startSearch();
     void clearResults();
-    void deleteParamWidget(QWidget*);
+    void deleteParamWidget(QWidget *);
     void sourceModelConfigured();
+    void addMarksFromMainLog();
 
 private:
     QAction *m_actAddSearchParam;
     QAction *m_actMergeResults;
     QAction *m_actOrOperator;
     QAction *m_actClear;
+    QAction *m_actAddMarks;
     QAction *m_actExec;
     QVBoxLayout *m_searchParamsLayout;
-    LogViewWidget *m_searchResults;
+    LogViewWidget *m_mainLog;
     BaseLogModel *m_sourceModel;
+    LogViewWidget *m_searchResults;
     ProxyModel *m_proxyModel;
-    QList<SearchParamWidget*> m_searchParamWidgets;
+    QList<SearchParamWidget *> m_searchParamWidgets;
 };
