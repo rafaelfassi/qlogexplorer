@@ -56,8 +56,18 @@ public slots:
     void adjustColumns(ColumnsSize size);
     void copySelected();
     void markSelected();
-    void goToNextMark();
+    void goToPrevRow();
+    void goToNextRow();
+    void goToPrevPage();
+    void goToNextPage();
+    void gotToFirstRow();
+    void gotToLastRow();
+    void goLeft();
+    void goRight();
+    void goFullLeft();
+    void goFullRight();
     void goToPrevMark();
+    void goToNextMark();
 
 protected slots:
     void configureColumns();
@@ -100,8 +110,8 @@ protected:
     QString getSelectedText(ssize_t row);
     void removeMark(ssize_t row);
     void toggleMark(ssize_t row);
-    bool hasNextMark();
     bool hasPrevMark();
+    bool hasNextMark();
 
 private:
     AbstractModel *m_model;
@@ -113,10 +123,20 @@ private:
     QPushButton *m_btnExpandColumns = nullptr;
     QPushButton *m_btnFitColumns = nullptr;
     QTimer *m_stabilizedUpdateTimer = nullptr;
+    QAction *m_actGoUp;
+    QAction *m_actGoDown;
+    QAction *m_actGoPrevPage;
+    QAction *m_actGoNextPage;
+    QAction *m_actGoFirstRow;
+    QAction *m_actGoLastRow;
+    QAction *m_actGoLeft;
+    QAction *m_actGoRight;
+    QAction *m_actGoFullLeft;
+    QAction *m_actGoFullRight;
     QAction *m_actCopy;
     QAction *m_actMark;
-    QAction *m_actNextMark;
     QAction *m_actPrevMark;
+    QAction *m_actNextMark;
     QFont m_font;
     QFontMetrics m_fm;
     ssize_t m_rowHeight = 0;

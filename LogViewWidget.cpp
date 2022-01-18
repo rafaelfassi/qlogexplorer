@@ -94,26 +94,75 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_stabilizedUpdateTimer = new QTimer(this);
     m_stabilizedUpdateTimer->setInterval(200);
 
+    m_actGoUp = new QAction("Up", this);
+    m_actGoUp->setShortcut(QKeySequence::MoveToPreviousLine);
+    m_actGoUp->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoUp);
+
+    m_actGoDown = new QAction("Down", this);
+    m_actGoDown->setShortcut(QKeySequence::MoveToNextLine);
+    m_actGoDown->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoDown);
+
+    m_actGoPrevPage = new QAction("Previous Page", this);
+    m_actGoPrevPage->setShortcut(QKeySequence::MoveToPreviousPage);
+    m_actGoPrevPage->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoPrevPage);
+
+    m_actGoNextPage = new QAction("Next Page", this);
+    m_actGoNextPage->setShortcut(QKeySequence::MoveToNextPage);
+    m_actGoNextPage->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoNextPage);
+
+    m_actGoFirstRow = new QAction("First Row", this);
+    m_actGoFirstRow->setShortcut(QKeySequence::MoveToStartOfDocument);
+    m_actGoFirstRow->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoFirstRow);
+
+    m_actGoLastRow = new QAction("Last Row", this);
+    m_actGoLastRow->setShortcut(QKeySequence::MoveToEndOfDocument);
+    m_actGoLastRow->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoLastRow);
+
+    m_actGoLeft = new QAction("Left", this);
+    m_actGoLeft->setShortcut(QKeySequence::MoveToPreviousChar);
+    m_actGoLeft->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoLeft);
+
+    m_actGoRight = new QAction("Right", this);
+    m_actGoRight->setShortcut(QKeySequence::MoveToNextChar);
+    m_actGoRight->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoRight);
+
+    m_actGoFullLeft = new QAction("Start of Line", this);
+    m_actGoFullLeft->setShortcut(QKeySequence::MoveToStartOfLine);
+    m_actGoFullLeft->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoFullLeft);
+
+    m_actGoFullRight = new QAction("End of Line", this);
+    m_actGoFullRight->setShortcut(QKeySequence::MoveToEndOfLine);
+    m_actGoFullRight->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actGoFullRight);
+
     m_actCopy = new QAction("Copy", this);
     m_actCopy->setShortcut(QKeySequence::Copy);
     m_actCopy->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actCopy);
 
-    m_actMark = new QAction("Mark", this);
+    m_actMark = new QAction("Toggle Mark", this);
     m_actMark->setShortcut(Qt::CTRL + Qt::Key_M);
     m_actMark->setShortcutContext(Qt::WidgetShortcut);
-
-    m_actNextMark = new QAction("Next Mark", this);
-    m_actNextMark->setShortcut(Qt::CTRL + Qt::Key_Down);
-    m_actNextMark->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actMark);
 
     m_actPrevMark = new QAction("Previous Mark", this);
     m_actPrevMark->setShortcut(Qt::CTRL + Qt::Key_Up);
     m_actPrevMark->setShortcutContext(Qt::WidgetShortcut);
-
-    addAction(m_actCopy);
-    addAction(m_actMark);
-    addAction(m_actNextMark);
     addAction(m_actPrevMark);
+
+    m_actNextMark = new QAction("Next Mark", this);
+    m_actNextMark->setShortcut(Qt::CTRL + Qt::Key_Down);
+    m_actNextMark->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actNextMark);
 
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
@@ -133,8 +182,18 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
     connect(m_actCopy, &QAction::triggered, this, &LogViewWidget::copySelected);
     connect(m_actMark, &QAction::triggered, this, &LogViewWidget::markSelected);
-    connect(m_actNextMark, &QAction::triggered, this, &LogViewWidget::goToNextMark);
     connect(m_actPrevMark, &QAction::triggered, this, &LogViewWidget::goToPrevMark);
+    connect(m_actNextMark, &QAction::triggered, this, &LogViewWidget::goToNextMark);
+    connect(m_actGoUp, &QAction::triggered, this, &LogViewWidget::goToPrevRow);
+    connect(m_actGoDown, &QAction::triggered, this, &LogViewWidget::goToNextRow);
+    connect(m_actGoPrevPage, &QAction::triggered, this, &LogViewWidget::goToPrevPage);
+    connect(m_actGoNextPage, &QAction::triggered, this, &LogViewWidget::goToNextPage);
+    connect(m_actGoFirstRow, &QAction::triggered, this, &LogViewWidget::gotToFirstRow);
+    connect(m_actGoLastRow, &QAction::triggered, this, &LogViewWidget::gotToLastRow);
+    connect(m_actGoLeft, &QAction::triggered, this, &LogViewWidget::goLeft);
+    connect(m_actGoRight, &QAction::triggered, this, &LogViewWidget::goRight);
+    connect(m_actGoFullLeft, &QAction::triggered, this, &LogViewWidget::goFullLeft);
+    connect(m_actGoFullRight, &QAction::triggered, this, &LogViewWidget::goFullRight);
 }
 
 LogViewWidget::~LogViewWidget()
@@ -319,24 +378,33 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
 
     if (event->button() == Qt::LeftButton)
     {
-        if (event->modifiers() == Qt::ShiftModifier && m_startSelect.has_value())
+        if (m_startSelect.has_value() && (event->modifiers() == Qt::ShiftModifier))
         {
+            // Selects many rows by clicking with shift.
             m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
         }
         else
         {
+
             m_startSelect = std::make_pair(row, xPos + m_hScrollBar->getPos());
             m_currentSelec = std::nullopt;
+            if (m_currentRow != row)
+            {
+                m_currentRow = row;
+                emit rowSelected(m_model->getRowNum(row));
+            }
         }
         update();
     }
     else
     {
-        if (!m_currentSelec.has_value())
+        if (!m_currentSelec.has_value() && (m_currentRow != row))
         {
             m_currentRow = row;
+            emit rowSelected(m_model->getRowNum(row));
         }
 
+        // As an alternative implementation, it could not include the not available actions into the menu.
         m_actCopy->setEnabled(canCopy());
         m_actPrevMark->setEnabled(hasPrevMark());
         m_actNextMark->setEnabled(hasNextMark());
@@ -347,6 +415,12 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         menu.addAction(m_actMark);
         menu.addAction(m_actPrevMark);
         menu.addAction(m_actNextMark);
+
+        menu.addAction(m_actGoFirstRow);
+        menu.addAction(m_actGoLastRow);
+        menu.addAction(m_actGoFullLeft);
+        menu.addAction(m_actGoFullRight);
+
         menu.exec(event->globalPos());
 
         // Let the action enabled for the shortcuts
@@ -356,18 +430,18 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
     }
 }
 
-void LogViewWidget::mouseReleaseEvent(QMouseEvent *event)
+void LogViewWidget::mouseReleaseEvent(QMouseEvent *)
 {
-    if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
-    {
-        const ssize_t row = getRowByScreenPos(event->pos().y());
-        if (row >= 0 && (row < m_model->rowCount()))
-        {
-            m_currentRow = row;
-            update();
-            emit rowSelected(m_model->getRowNum(row));
-        }
-    }
+    // if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
+    // {
+    //     const ssize_t row = getRowByScreenPos(event->pos().y());
+    //     if (row >= 0 && (row < m_model->rowCount()))
+    //     {
+    //         m_currentRow = row;
+    //         update();
+    //         emit rowSelected(m_model->getRowNum(row));
+    //     }
+    // }
 }
 
 void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
@@ -827,6 +901,75 @@ QString LogViewWidget::getSelectedText(
     return text.mid(sPos, ePos - sPos);
 }
 
+void LogViewWidget::goToPrevRow()
+{
+    if (m_currentRow.value_or(0L) < 1L)
+        return;
+    *m_currentRow -= 1;
+    m_vScrollBar->setPos(m_vScrollBar->getPos() - 1);
+    update();
+}
+
+void LogViewWidget::goToNextRow()
+{
+    const auto lastRow = m_model->rowCount() - 1;
+    if (m_currentRow.value_or(lastRow) >= lastRow)
+        return;
+    *m_currentRow += 1;
+    m_vScrollBar->setPos(m_vScrollBar->getPos() + 1);
+    update();
+}
+
+void LogViewWidget::goToPrevPage()
+{
+    m_vScrollBar->setPos(getFirstPageRow() - m_itemsPerPage + 1);
+    update();
+}
+
+void LogViewWidget::goToNextPage()
+{
+    m_vScrollBar->setPos(getFirstPageRow() + m_itemsPerPage - 1);
+    update();
+}
+
+void LogViewWidget::gotToFirstRow()
+{
+    m_vScrollBar->setPos(0);
+    update();
+}
+
+void LogViewWidget::gotToLastRow()
+{
+    m_vScrollBar->setPos(m_vScrollBar->getMax());
+    update();
+}
+
+void LogViewWidget::goLeft()
+{
+    const ssize_t step = m_textAreaRect.width() / 20L;
+    m_hScrollBar->setPos(m_hScrollBar->getPos() - step);
+    update();
+}
+
+void LogViewWidget::goRight()
+{
+    const ssize_t step = m_textAreaRect.width() / 20L;
+    m_hScrollBar->setPos(m_hScrollBar->getPos() + step);
+    update();
+}
+
+void LogViewWidget::goFullLeft()
+{
+    m_hScrollBar->setPos(0);
+    update();
+}
+
+void LogViewWidget::goFullRight()
+{
+    m_hScrollBar->setPos(m_hScrollBar->getMax());
+    update();
+}
+
 bool LogViewWidget::canCopy() const
 {
     return ((m_startSelect.has_value() && m_currentSelec.has_value()) || m_currentRow.has_value());
@@ -934,13 +1077,6 @@ void LogViewWidget::toggleMark(ssize_t row)
     m_marks.insert(row);
 }
 
-bool LogViewWidget::hasNextMark()
-{
-    if (!m_currentRow.has_value())
-        return false;
-    return (m_marks.upper_bound(m_currentRow.value()) != m_marks.end());
-}
-
 bool LogViewWidget::hasPrevMark()
 {
     if (!m_currentRow.has_value())
@@ -948,16 +1084,11 @@ bool LogViewWidget::hasPrevMark()
     return (m_marks.lower_bound(m_currentRow.value()) != m_marks.begin());
 }
 
-void LogViewWidget::goToNextMark()
+bool LogViewWidget::hasNextMark()
 {
-    if (m_currentRow.has_value())
-    {
-        const auto it = m_marks.upper_bound(m_currentRow.value());
-        if (it != m_marks.end())
-        {
-            goToRow(*it);
-        }
-    }
+    if (!m_currentRow.has_value())
+        return false;
+    return (m_marks.upper_bound(m_currentRow.value()) != m_marks.end());
 }
 
 void LogViewWidget::goToPrevMark()
@@ -968,6 +1099,18 @@ void LogViewWidget::goToPrevMark()
         if (it != m_marks.begin())
         {
             goToRow(*(--it));
+        }
+    }
+}
+
+void LogViewWidget::goToNextMark()
+{
+    if (m_currentRow.has_value())
+    {
+        const auto it = m_marks.upper_bound(m_currentRow.value());
+        if (it != m_marks.end())
+        {
+            goToRow(*it);
         }
     }
 }

@@ -200,6 +200,11 @@ void LogSearchWidget::sourceModelConfigured()
 
 void LogSearchWidget::addMarksFromMainLog()
 {
+    for (const auto searchResultsRow : m_searchResults->getMarks())
+    {
+        m_mainLog->markRow(m_proxyModel->getRowNum(searchResultsRow));
+    }
+
     for (const auto mainLogRow : m_mainLog->getMarks())
     {
         m_proxyModel->addSourceRow(mainLogRow);
@@ -209,5 +214,6 @@ void LogSearchWidget::addMarksFromMainLog()
             m_searchResults->markRow(row);
         }
     }
+    m_mainLog->updateView();
     m_searchResults->updateView();
 }
