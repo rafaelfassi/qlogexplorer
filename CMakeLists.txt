@@ -17,50 +17,69 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 add_definitions(-fPIC)
 
-set(PROJECT_HEADERS
-    MainWindow.h
-    AbstractModel.h
-    BaseLogModel.h
-    TextLogModel.h
-    JsonLogModel.h
-    LongScrollBar.h
-    LogViewWidget.h
-    SearchParamWidget.h
-    LogSearchWidget.h
-    LogTabWidget.h
-    ProxyModel.h
-    HeaderView.h
-)
-
-set(PROJECT_SOURCES
+set(MAIN_SOURCES
     qlogviewer.qrc
-    main.cpp
-    MainWindow.cpp
-    BaseLogModel.cpp
-    TextLogModel.cpp
-    JsonLogModel.cpp
-    LongScrollBar.cpp
-    LogViewWidget.cpp
-    SearchParamWidget.cpp
-    LogSearchWidget.cpp
-    LogTabWidget.cpp
-    ProxyModel.cpp
-    HeaderView.cpp
+    src/main.cpp
 )
 
-add_executable(qlogviewer
-    ${PROJECT_SOURCES}
-    ${PROJECT_HEADERS}
+set(MODEL_HEADERS
+    src/model/AbstractModel.h
+    src/model/BaseLogModel.h
+    src/model/TextLogModel.h
+    src/model/JsonLogModel.h
+    src/model/ProxyModel.h
 )
 
-target_link_libraries(qlogviewer
-  PRIVATE
-  Qt${QT_VERSION_MAJOR}::Widgets
+set(MODEL_SOURCES
+    src/model/BaseLogModel.cpp
+    src/model/TextLogModel.cpp
+    src/model/JsonLogModel.cpp
+    src/model/ProxyModel.cpp
 )
 
-target_link_libraries(qlogviewer
-  PRIVATE
-  -ltbb
+set(GUI_HEADERS
+    src/gui/MainWindow.h
+    src/gui/LongScrollBar.h
+    src/gui/LogViewWidget.h
+    src/gui/SearchParamWidget.h
+    src/gui/LogSearchWidget.h
+    src/gui/LogTabWidget.h
+    src/gui/HeaderView.h
 )
 
-target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)
+set(GUI_SOURCES
+    src/gui/MainWindow.cpp
+    src/gui/LongScrollBar.cpp
+    src/gui/LogViewWidget.cpp
+    src/gui/SearchParamWidget.cpp
+    src/gui/LogSearchWidget.cpp
+    src/gui/LogTabWidget.cpp
+    src/gui/HeaderView.cpp
+)
+
+add_executable(${PROJECT_NAME}
+    ${MAIN_SOURCES}
+    ${MODEL_HEADERS}
+    ${MODEL_SOURCES}
+    ${GUI_HEADERS}
+    ${GUI_SOURCES}
+)
+
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    src
+    src/model
+    src/gui
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    Qt${QT_VERSION_MAJOR}::Widgets
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    -ltbb
+)
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
