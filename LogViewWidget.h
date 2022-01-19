@@ -33,6 +33,7 @@ class LogViewWidget : public QWidget
         ssize_t row;
         QRect rect;
         QRect numberRect;
+        QRect numberAreaRect;
         bool selected = false;
     };
 
@@ -81,12 +82,12 @@ protected slots:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
-    void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
     void getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData);
     void forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback);

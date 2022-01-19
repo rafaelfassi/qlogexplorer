@@ -28,7 +28,7 @@ static const QColor g_selectionBgColor("#4169e1");
 static const QColor g_selectionTxtColor(Qt::white);
 static const QColor g_headerTxtColor(Qt::white);
 static const QColor g_headerBgColor(Qt::darkGray);
-static const QColor g_markColor("#9400d3");
+static const QColor g_markBgColor("#9400d3");
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
@@ -279,7 +279,7 @@ void LogViewWidget::updateDisplaySize()
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
 
         const std::string lastLineNumberStr(std::to_string(m_model->getRowNum(rowCount - 1L) + 1L));
-        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + g_startTextMargin + g_defaultMargin);
+        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + 2 * g_startTextMargin);
         m_hScrollBarLayout->setContentsMargins(m_textAreaRect.left(), 0, 0, 0);
     }
     else
@@ -301,73 +301,6 @@ void LogViewWidget::resizeEvent(QResizeEvent *event)
     m_textAreaRect.setWidth(width() - g_scrollBarThickness - m_textAreaRect.left());
     updateDisplaySize();
     QWidget::resizeEvent(event);
-    m_stabilizedUpdateTimer->start();
-}
-
-void LogViewWidget::paintEvent(QPaintEvent *event)
-{
-    const QRect invalidRect = event->rect();
-    if (invalidRect.isEmpty())
-        return;
-
-    const auto &dataRect(m_textAreaRect);
-    const auto &marks(m_marks);
-
-    QPainter painter(this);
-    painter.setFont(m_font);
-    painter.eraseRect(rect());
-    painter.setClipRect(dataRect);
-    painter.fillRect(dataRect, g_bgColor);
-
-    forEachVisualRowInPage(
-        [&painter, &dataRect, &marks](VisualRowData &vrData)
-        {
-            // Draw Line Number
-            {
-                QRect numberAreaRect(vrData.numberRect);
-                numberAreaRect.setLeft(0);
-                painter.setClipping(false);
-                painter.setPen(g_headerTxtColor);
-                painter.fillRect(numberAreaRect, g_headerBgColor);
-                if (marks.find(vrData.row) == marks.end())
-                    painter.fillRect(numberAreaRect, g_headerBgColor);
-                else
-                    painter.fillRect(numberAreaRect, g_markColor);
-                painter.drawText(
-                    vrData.numberRect,
-                    Qt::AlignTop | Qt::AlignLeft,
-                    std::to_string(vrData.number + 1).c_str());
-            }
-
-            painter.setClipping(true);
-            painter.setPen(g_txtColor);
-
-            // Hightlight selected line
-            if (vrData.selected)
-            {
-                painter.fillRect(vrData.rect, g_selectionBgColor);
-                painter.setPen(g_selectionTxtColor);
-            }
-
-            // Draw Row Data
-            for (const auto &colData : vrData.columns)
-            {
-                painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
-
-                if (colData.selection.has_value())
-                {
-                    const auto &[selRect, selText] = colData.selection.value();
-                    painter.setClipRect(selRect.intersected(dataRect));
-                    painter.fillRect(selRect, g_selectionBgColor);
-                    painter.setPen(g_selectionTxtColor);
-                    painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
-                    painter.setPen(g_txtColor);
-                    painter.setClipRect(dataRect);
-                }
-            }
-            return true;
-        });
-
     m_stabilizedUpdateTimer->start();
 }
 
@@ -415,12 +348,6 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         menu.addAction(m_actMark);
         menu.addAction(m_actPrevMark);
         menu.addAction(m_actNextMark);
-
-        menu.addAction(m_actGoFirstRow);
-        menu.addAction(m_actGoLastRow);
-        menu.addAction(m_actGoFullLeft);
-        menu.addAction(m_actGoFullRight);
-
         menu.exec(event->globalPos());
 
         // Let the action enabled for the shortcuts
@@ -534,6 +461,67 @@ void LogViewWidget::wheelEvent(QWheelEvent *event)
     }
 }
 
+void LogViewWidget::paintEvent(QPaintEvent *event)
+{
+    const QRect invalidRect = event->rect();
+    if (invalidRect.isEmpty())
+        return;
+
+    QPainter painter(this);
+    painter.setFont(m_font);
+    painter.eraseRect(rect());
+    painter.setClipRect(m_textAreaRect);
+    painter.fillRect(m_textAreaRect, g_bgColor);
+
+    forEachVisualRowInPage(
+        [&painter, this](VisualRowData &vrData)
+        {
+            // Draw Line Number
+            {
+                painter.setClipping(false);
+                painter.setPen(g_headerTxtColor);
+                const QColor &bgColor = hasMark(vrData.row) ? g_markBgColor : g_headerBgColor;
+                painter.fillRect(vrData.numberAreaRect, bgColor);
+                painter.drawText(
+                    vrData.numberRect,
+                    Qt::AlignTop | Qt::AlignRight,
+                    std::to_string(vrData.number + 1).c_str());
+            }
+
+            painter.setClipping(true);
+            painter.setPen(g_txtColor);
+
+            // Selected line
+            if (vrData.selected)
+            {
+                painter.fillRect(vrData.rect, g_selectionBgColor);
+                painter.setPen(g_selectionTxtColor);
+            }
+
+            // Draw Row Data
+            for (const auto &colData : vrData.columns)
+            {
+                // Draw column text
+                painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+
+                if (colData.selection.has_value())
+                {
+                    // Draw selected text
+                    const auto &[selRect, selText] = colData.selection.value();
+                    painter.setClipRect(selRect.intersected(m_textAreaRect));
+                    painter.fillRect(selRect, g_selectionBgColor);
+                    painter.setPen(g_selectionTxtColor);
+                    painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+                    painter.setPen(g_txtColor);
+                    painter.setClipRect(m_textAreaRect);
+                }
+            }
+            return true;
+        });
+
+    m_stabilizedUpdateTimer->start();
+}
+
 void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData)
 {
     std::vector<std::string> rowData;
@@ -547,7 +535,8 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
     vrData.rect = rect;
     rect.translate(-hOffset, 0);
 
-    vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin, m_rowHeight);
+    vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
+    vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin * 2, m_rowHeight);
 
     std::optional<QRect> selectText;
     if (m_startSelect.has_value() && m_currentSelec.has_value())
@@ -653,7 +642,7 @@ ssize_t LogViewWidget::getMaxRowWidth()
         {
             for (const auto &col : vrData.columns)
             {
-                maxRowWidth = std::max<ssize_t>(maxRowWidth, col.rect.right() - vrData.numberRect.right() + offset);
+                maxRowWidth = std::max<ssize_t>(maxRowWidth, col.rect.right() - vrData.numberAreaRect.right() + offset);
             }
             return true;
         });
