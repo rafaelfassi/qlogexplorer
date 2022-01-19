@@ -34,11 +34,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(m_tabViews);
 
     createConnections();
-
-    //openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Json);
-    //openFile("/home/rafael/Dev/QLogViewer/biglog.txt", FileType::Text);
-    //openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Text);
-    //openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Text);
 }
 
 MainWindow::~MainWindow()
@@ -48,7 +43,7 @@ MainWindow::~MainWindow()
 void MainWindow::createActions()
 {
     m_openFile = new QAction(tr("Open"), this);
-    m_openFileAsText = new QAction(tr("Text File"), this);
+    m_openFileAsText = new QAction(tr("Plain Text File"), this);
     m_openFileAsJson = new QAction(tr("Json Log File"), this);
 }
 
