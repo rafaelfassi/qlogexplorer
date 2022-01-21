@@ -1,10 +1,5 @@
+#include "pch.h"
 #include "JsonLogModel.h"
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/istreamwrapper.h>
-#include <set>
-#include <QDebug>
 
 constexpr size_t g_maxChunksPerParse(50);
 
@@ -16,7 +11,7 @@ std::string toString(const rapidjson::Value &json)
     return buffer.GetString();
 }
 
-JsonLogModel::JsonLogModel(const std::string &fileName, QObject *parent) : BaseLogModel(fileName, parent)
+JsonLogModel::JsonLogModel(Conf &conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -25,18 +20,47 @@ JsonLogModel::~JsonLogModel()
     stop();
 }
 
-void JsonLogModel::configure(std::istream &is)
+bool JsonLogModel::configure(Conf &conf, std::istream &is)
 {
-    rapidjson::IStreamWrapper isw(is);
-    rapidjson::Document d;
-    d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
-    if (!d.HasParseError())
+    if (conf.getColumns().empty())
     {
-        for (auto i = d.MemberBegin(); i != d.MemberEnd(); ++i)
+        rapidjson::IStreamWrapper isw(is);
+        rapidjson::Document d;
+        d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
+        if (!d.HasParseError())
         {
-            addColumn(i->name.GetString());
+            for (auto i = d.MemberBegin(); i != d.MemberEnd(); ++i)
+            {
+                tp::Column cl;
+                cl.key = i->name.GetString();
+                cl.name = cl.key;
+                switch (i->value.GetType())
+                {
+                case rapidjson::kFalseType:
+                case rapidjson::kTrueType:
+                    cl.type = tp::ColumnType::Bool;
+                    break;
+                case rapidjson::kStringType:
+                    cl.type = tp::ColumnType::Str;
+                    break;
+                case rapidjson::kNumberType:
+                    if (i->value.IsUint64())
+                        cl.type = tp::ColumnType::UInt;
+                    if (i->value.IsInt64())
+                        cl.type = tp::ColumnType::Int;
+                    else
+                        cl.type = tp::ColumnType::Float;
+                    break;
+                default:
+                    break;
+                }
+                conf.addColumn(std::move(cl));
+                cl.Width = -1;
+            }
         }
     }
+
+    return !conf.getColumns().empty();
 }
 
 bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string> &rowData) const
@@ -47,7 +71,7 @@ bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string>
     {
         std::string colText;
 
-        const auto &i = d.FindMember(col.c_str());
+        const auto &i = d.FindMember(col.key.c_str());
         if (i != d.MemberEnd())
         {
             switch (i->value.GetType())

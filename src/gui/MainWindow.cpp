@@ -1,5 +1,6 @@
-#include <pch.h>
+#include "pch.h"
 #include "MainWindow.h"
+#include "LogTabWidget.h"
 #include "LogViewWidget.h"
 #include "TextLogModel.h"
 #include "JsonLogModel.h"
@@ -7,7 +8,6 @@
 #include "LogSearchWidget.h"
 #include "HeaderView.h"
 #include <QTableView>
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -16,9 +16,11 @@
 #include <QToolBar>
 #include <QMenuBar>
 #include <QFileDialog>
+#include <QInputDialog>
 #include <QFileInfo>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QStandardPaths>
 
 #include <fstream>
 
@@ -34,10 +36,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(m_tabViews);
 
     createConnections();
+
+    loadConfig();
+
+    //openFile("/home/rafael/Dev/QLogViewer/log.json", tp::FileType::Json);
+    //openFile("/home/rafael/Dev/QLogViewer/log.txt", tp::FileType::Text);
+    // openFile("/home/rafael/Dev/QLogViewer/biglog.txt", FileType::Text);
+    // openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Text);
+    // openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Text);
 }
 
 MainWindow::~MainWindow()
 {
+
 }
 
 void MainWindow::createActions()
@@ -45,6 +56,7 @@ void MainWindow::createActions()
     m_openFile = new QAction(tr("Open"), this);
     m_openFileAsText = new QAction(tr("Plain Text File"), this);
     m_openFileAsJson = new QAction(tr("Json Log File"), this);
+    m_actSave = new QAction(tr("Save Template"), this);
 }
 
 void MainWindow::createMenus()
@@ -55,6 +67,10 @@ void MainWindow::createMenus()
     auto openAsMenu = fileMenu->addMenu(tr("Open As..."));
     openAsMenu->addAction(m_openFileAsText);
     openAsMenu->addAction(m_openFileAsJson);
+
+    fileMenu->addSeparator();
+
+    fileMenu->addAction(m_actSave);
 }
 
 void MainWindow::createToolBars()
@@ -65,13 +81,83 @@ void MainWindow::createToolBars()
 
 void MainWindow::createConnections()
 {
-    connect(m_openFile, &QAction::triggered, this, [this]() { openFile(FileType::Text); });
-    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFile(FileType::Text); });
-    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFile(FileType::Json); });
+    connect(m_openFile, &QAction::triggered, this, [this]() { openFile(tp::FileType::Text); });
+    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFile(tp::FileType::Text); });
+    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFile(tp::FileType::Json); });
+    connect(m_actSave, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
 }
 
-void MainWindow::openFile(FileType type)
+void MainWindow::loadConfig()
+{
+    const auto& confPaths = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
+    if (confPaths.isEmpty())
+    {
+        qCritical() << "Cannot locate the default configuration directory";
+        return;
+    }
+
+    m_configDir.setPath(confPaths.first());
+    if (!m_configDir.exists())
+    {
+        if (!m_configDir.mkpath(m_configDir.absolutePath()))
+        {
+            qCritical() << "Cannot create config directory" << m_configDir.absolutePath();
+            return;
+        }
+    }
+
+    m_templatesDir.setPath(m_configDir.absolutePath() + QDir::separator() + "templates");
+    if (!m_templatesDir.exists())
+    {
+        if (!m_templatesDir.mkpath(m_templatesDir.absolutePath()))
+        {
+            qCritical() << "Cannot create config/templates directory" << m_templatesDir.absolutePath();
+            return;
+        }
+    }
+
+    const auto& templates = m_templatesDir.entryList(QDir::Files|QDir::Readable);
+
+    auto fileMenu = menuBar()->addMenu(tr("&Templates"));
+    for (const auto& templ : templates)
+    {
+        Conf *conf = new Conf(m_templatesDir.absoluteFilePath(templ).toStdString());
+        QAction *actOpenTempl = new QAction(conf->getConfigName().c_str(), this);
+        actOpenTempl->setProperty("conf", QVariant::fromValue(conf));
+        connect(actOpenTempl, &QAction::triggered, this, &MainWindow::openTemplTriggered);
+        fileMenu->addAction(actOpenTempl);
+    }
+
+    //auto fileMenu = menuBar()->addMenu(tr("&File"));
+
+    // QFile confFile(configDir.absoluteFilePath("config.txt"));
+    // if (!confFile.open(QIODevice::WriteOnly))
+    // {
+    //     qCritical() << "Cannot open config file" << confFile.fileName();
+    //     return;
+    // }
+}
+
+void MainWindow::openTemplTriggered()
+{
+    const auto senderAct(sender());
+    if (senderAct == nullptr)
+        return;
+    
+    auto conf = senderAct->property("conf").value<Conf*>();
+    if (conf)
+    {
+        const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
+        if (fileName.isEmpty())
+            return;
+        auto newConf = new Conf(*conf);
+        newConf->setFileName(fileName.toStdString());
+        openFile(newConf);
+    }
+}
+
+void MainWindow::openFile(tp::FileType type)
 {
     const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
     if (fileName.isEmpty())
@@ -82,15 +168,24 @@ void MainWindow::openFile(FileType type)
     openFile(fileName, type);
 }
 
-void MainWindow::openFile(const QString &fileName, FileType type)
+void MainWindow::openFile(const QString &fileName, tp::FileType type)
 {
-    QFileInfo fileInfo(fileName);
+    Conf *conf = new Conf(type);
+    conf->setFileName(fileName.toStdString());
+    openFile(conf);
+}
+
+void MainWindow::openFile(Conf* conf)
+{
+    QFileInfo fileInfo(conf->getFileName().c_str());
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
         return;
     }
 
-    LogTabWidget *logTabWidget = new LogTabWidget(fileInfo.filePath(), type, this);
+    conf->setFileName(fileInfo.filePath().toStdString());
+    LogTabWidget *logTabWidget = new LogTabWidget(conf, this);
+
     int newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
     m_tabViews->setCurrentIndex(newTabIdx);
 }
@@ -98,10 +193,56 @@ void MainWindow::openFile(const QString &fileName, FileType type)
 void MainWindow::closeTab(int index)
 {
     LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
-    if (tab)
+    if (!tab)
     {
-        m_tabViews->removeTab(index);
-        delete tab;
+        qCritical() << "No tab for index" << index;
+        return;
+    }
+
+    m_tabViews->removeTab(index);
+    delete tab;
+    
+}
+
+void MainWindow::saveConf()
+{
+    LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->currentWidget());
+    if (!tab)
+    {
+        qCritical() << "No current tab";
+        return;
+    }
+
+    auto& conf = tab->getConf();
+    if (conf.exists())
+    {
+        conf.saveConf();
+    }
+    else
+    {
+        bool ok;
+        QString confName = QInputDialog::getText(this, tr("Save template"),
+                                         tr("Template name:"), QLineEdit::Normal, QString(), &ok);
+        if (ok && !confName.isEmpty())
+        {
+            conf.setConfigName(confName.toStdString());
+
+            QString fileName = confName.simplified().toLower().replace(QRegularExpression("[^a-z\\d-]"), "_");
+            if (fileName.isEmpty())
+            {
+                fileName = "template";
+            }
+            int cnt(0);
+            QString ext(".json");
+            while(m_templatesDir.exists(fileName + ext))
+            {
+                fileName.append(QString("_%1").arg(++cnt));
+            }
+            fileName.append(ext);
+            
+            fileName = m_templatesDir.absoluteFilePath(fileName);
+            conf.saveConfAs(fileName.toStdString());
+        }
     }
 }
 

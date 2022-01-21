@@ -97,16 +97,16 @@ void SearchParamWidget::createConnections()
     connect(m_actRemoveMe, &QAction::triggered, this, [this]() { emit deleteRequested(this); });
 }
 
-void SearchParamWidget::setColumns(const std::vector<std::string> &columns)
+void SearchParamWidget::setColumns(const tp::Columns  &columns)
 {
-    if ((columns.size() == 1) && columns.front().empty())
+    if ((columns.size() == 1) && columns.front().key.empty())
     {
         return;
     }
 
     for (const auto &column : columns)
     {
-        m_cmbColumns->addItem(QString::fromStdString(column));
+        m_cmbColumns->addItem(QString::fromStdString(column.name));
     }
 }
 

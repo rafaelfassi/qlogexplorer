@@ -87,11 +87,11 @@ class BaseLogModel : public AbstractModel
     Q_OBJECT
 
 public:
-    BaseLogModel(const std::string &fileName, QObject *parent = 0);
+    BaseLogModel(Conf &conf, QObject *parent = 0);
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
     ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
-    const std::vector<std::string> &getColumns() const override final;
+    const tp::Columns &getColumns() const override final;
     std::size_t columnCount() const override final;
     std::size_t rowCount() const override final;
     ssize_t getRowNum(ssize_t row) const override final;
@@ -111,7 +111,7 @@ public slots:
     void setFollowing(bool following);
 
 protected:
-    virtual void configure(std::istream &is) = 0;
+    virtual bool configure(Conf &conf, std::istream &is) = 0;
     virtual bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const = 0;
     virtual std::size_t parseChunks(
         std::istream &is,
@@ -120,8 +120,6 @@ protected:
         std::size_t nextRow,
         std::size_t fileSize) = 0;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
-
-    void addColumn(const std::string &name);
 
     // Helping funtions to operate over istream.
     static ssize_t getFileSize(std::istream &is);
@@ -137,11 +135,11 @@ private:
     WatchingResult watchFile();
     void search();
     void tryConfigure();
+    Conf &m_conf;
     std::string m_fileName;
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
-    std::vector<std::string> m_columns;
     std::vector<Chunk> m_chunks;
     SearchParamLst m_searchParams;
     bool m_searchWithOrOperator;
@@ -151,6 +149,7 @@ private:
     std::atomic_bool m_searching = false;
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = true;
+    std::atomic_bool m_configured = false;
     // Set by m_watchThread and read by main and m_searchThread threads.
     std::atomic_size_t m_rowCount = 0;
     // Accessed only by m_watchThread.

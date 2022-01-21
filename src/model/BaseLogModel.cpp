@@ -183,10 +183,11 @@ bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vecto
     return false;
 }
 
-BaseLogModel::BaseLogModel(const std::string &fileName, QObject *parent)
+BaseLogModel::BaseLogModel(Conf &conf, QObject *parent)
     : AbstractModel(parent),
-      m_fileName(fileName),
-      m_ifs(fileName)
+      m_conf(conf),
+      m_fileName(conf.getFileName()),
+      m_ifs(m_fileName)
 {
 }
 
@@ -234,9 +235,9 @@ ssize_t BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDat
     return -1;
 }
 
-const std::vector<std::string> &BaseLogModel::getColumns() const
+const tp::Columns &BaseLogModel::getColumns() const
 {
-    return m_columns;
+    return m_conf.getColumns();
 }
 
 void BaseLogModel::startSearch(const SearchParamLst &params, bool orOp)
@@ -335,19 +336,21 @@ void BaseLogModel::search()
 
 void BaseLogModel::tryConfigure()
 {
-    if (m_columns.empty())
+    if (!m_configured.load())
     {
         m_ifs.clear();
         m_ifs.seekg(0, std::ios::beg);
-        configure(m_ifs);
-        if (!m_columns.empty())
+        if (configure(m_conf, m_ifs))
+        {
+            m_configured.store(true);
             emit modelConfigured();
+        }
     }
 }
 
 std::size_t BaseLogModel::columnCount() const
 {
-    return m_columns.size();
+    return m_conf.getColumns().size();
 }
 
 std::size_t BaseLogModel::rowCount() const
@@ -509,11 +512,6 @@ WatchingResult BaseLogModel::watchFile()
     }
 
     return WatchingResult::NormalExit;
-}
-
-void BaseLogModel::addColumn(const std::string &name)
-{
-    m_columns.push_back(name);
 }
 
 ssize_t BaseLogModel::getFileSize(std::istream &is)

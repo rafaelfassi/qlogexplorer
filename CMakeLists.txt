@@ -20,6 +20,12 @@ add_definitions(-fPIC)
 set(MAIN_SOURCES
     qlogviewer.qrc
     src/main.cpp
+    src/Types.h
+    src/Types.cpp
+    src/Conf.h
+    src/Conf.cpp
+    src/Utils.h
+    src/Utils.cpp
 )
 
 set(MODEL_HEADERS

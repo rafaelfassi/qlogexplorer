@@ -6,26 +6,23 @@ class BaseLogModel;
 class LogViewWidget;
 class LogSearchWidget;
 
-enum class FileType
-{
-    Text,
-    Json
-};
-
 class LogTabWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    LogTabWidget(const QString& fileName, FileType type, QWidget *parent = nullptr);
+    LogTabWidget(Conf *conf, QWidget *parent = nullptr);
     ~LogTabWidget();
     void createActions();
     void createMenus();
     void createToolBars();
     void createConnections();
 
+    Conf& getConf();
+
 private:
     BaseLogModel *m_logModel;
     LogViewWidget *m_logViewWidget;
     LogSearchWidget *m_logSearchWidget;
+    Conf *m_conf;
 };

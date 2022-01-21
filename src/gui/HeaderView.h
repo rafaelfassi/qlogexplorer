@@ -38,7 +38,7 @@ class HeaderView : public QHeaderView
 public:
     HeaderView(QWidget *parent = nullptr);
     ~HeaderView();
-    void setColumns(const std::vector<std::string> &columns);
+    void setColumns(const tp::Columns &columns);
     const std::vector<std::string> &getColumns();
     void setFont(const QFont *font);
     void setTextColor(const QColor& color);

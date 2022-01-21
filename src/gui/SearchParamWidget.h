@@ -16,7 +16,7 @@ public:
     ~SearchParamWidget();
     void createActions();
     void createConnections();
-    void setColumns(const std::vector<std::string> &columns);
+    void setColumns(const tp::Columns &columns);
     bool matchCase() const;
     bool isRegex() const;
     bool notOp() const;

@@ -16,7 +16,7 @@ ssize_t ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData)
     return -1;
 }
 
-const std::vector<std::string> &ProxyModel::getColumns() const
+const tp::Columns &ProxyModel::getColumns() const
 {
     return m_source->getColumns();
 }

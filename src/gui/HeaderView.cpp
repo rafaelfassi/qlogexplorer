@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "HeaderView.h"
 #include "QMouseEvent"
 #include <QMenu>
@@ -92,9 +93,15 @@ HeaderView::~HeaderView()
 {
 }
 
-void HeaderView::setColumns(const std::vector<std::string> &columns)
+void HeaderView::setColumns(const tp::Columns &columns)
 {
-    m_headerModel->setColumns(columns);
+    std::vector<std::string> modelColumns;
+    modelColumns.reserve(columns.size());
+    for (const auto& column : columns)
+    {
+        modelColumns.emplace_back(column.name);
+    }
+    m_headerModel->setColumns(modelColumns);
 }
 
 const std::vector<std::string> &HeaderView::getColumns()

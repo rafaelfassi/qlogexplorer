@@ -3,7 +3,7 @@
 
 constexpr size_t g_maxChunksPerParse(500);
 
-TextLogModel::TextLogModel(const std::string &fileName, QObject *parent) : BaseLogModel(fileName, parent)
+TextLogModel::TextLogModel(Conf &conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -12,9 +12,11 @@ TextLogModel::~TextLogModel()
     stop();
 }
 
-void TextLogModel::configure(std::istream &is)
+bool TextLogModel::configure(Conf &conf, std::istream &is)
 {
-    addColumn(std::string());
+    conf.addColumn(tp::Column());
+    return true;
+
 }
 
 bool TextLogModel::parseRow(const std::string &rawText, std::vector<std::string> &rowData) const

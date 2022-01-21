@@ -9,7 +9,7 @@ class ProxyModel : public AbstractModel
 public:
     ProxyModel(AbstractModel *source);
     ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override;
-    const std::vector<std::string> &getColumns() const override;
+    const tp::Columns &getColumns() const override;
     std::size_t columnCount() const override;
     std::size_t rowCount() const override;
     ssize_t getRowNum(ssize_t row) const override;

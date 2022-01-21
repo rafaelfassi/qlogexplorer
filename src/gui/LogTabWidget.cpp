@@ -18,17 +18,17 @@
 
 #include <fstream>
 
-LogTabWidget::LogTabWidget(const QString &fileName, FileType type, QWidget *parent) : QWidget(parent)
+LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_conf(conf)
 {
     createActions();
 
-    switch (type)
+    switch (conf->getFileType())
     {
-        case FileType::Text:
-            m_logModel = new TextLogModel(fileName.toStdString(), this);
+        case tp::FileType::Text:
+            m_logModel = new TextLogModel(*conf, this);
             break;
-        case FileType::Json:
-            m_logModel = new JsonLogModel(fileName.toStdString(), this);
+        case tp::FileType::Json:
+            m_logModel = new JsonLogModel(*conf, this);
             break;
     }
 
@@ -56,6 +56,7 @@ LogTabWidget::LogTabWidget(const QString &fileName, FileType type, QWidget *pare
 
 LogTabWidget::~LogTabWidget()
 {
+    delete m_conf;
 }
 
 void LogTabWidget::createActions()
@@ -65,4 +66,9 @@ void LogTabWidget::createActions()
 void LogTabWidget::createConnections()
 {
 
+}
+
+Conf& LogTabWidget::getConf()
+{
+    return *m_conf;
 }
