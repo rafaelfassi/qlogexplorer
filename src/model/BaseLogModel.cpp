@@ -235,6 +235,11 @@ ssize_t BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDat
     return -1;
 }
 
+tp::Columns &BaseLogModel::getColumns()
+{
+    return m_conf.getColumns();
+}
+
 const tp::Columns &BaseLogModel::getColumns() const
 {
     return m_conf.getColumns();

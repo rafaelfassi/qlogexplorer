@@ -172,9 +172,7 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_vScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::vScrollBarPosChanged);
     connect(m_hScrollBar, &LongScrollBar::posChanged, this, &LogViewWidget::hScrollBarPosChanged);
     connect(m_stabilizedUpdateTimer, &QTimer::timeout, this, &LogViewWidget::stabilizedUpdate);
-    connect(m_header, &QHeaderView::geometriesChanged, this, &LogViewWidget::headerChanged);
-    connect(m_header, &QHeaderView::sectionResized, this, [this](int, int, int) { this->headerChanged(); });
-    connect(m_header, &QHeaderView::sectionMoved, this, [this](int, int, int) { this->headerChanged(); });
+    connect(m_header, &HeaderView::columnsChanged, this, &LogViewWidget::headerChanged);
     connect(m_header, &HeaderView::expandToContent, this, &LogViewWidget::expandColumnToContent);
     connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
     connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
@@ -699,30 +697,21 @@ void LogViewWidget::configureColumns()
     }
 }
 
-void LogViewWidget::getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToHeader(tp::ColumnsRef &columnsRef)
 {
-    ssize_t remainingWidth(m_textAreaRect.width());
-    ssize_t remainingColumns(m_header->count() - m_header->hiddenSectionCount());
-    ssize_t maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
-
-    for (size_t idx = 0; idx < m_header->count(); ++idx)
+    for (auto &headerColumn : columnsRef)
     {
-        if (!m_header->isSectionHidden(idx))
+        auto &column(headerColumn.get());
+        if (column.width < 0)
         {
-            const std::string &headerText = m_header->getColumns().at(idx);
-            const ssize_t headerTextWidth = getTextWidth(headerText) + g_startTextMargin + g_defaultMargin;
-            const auto colSize = std::min(maxWidthPerCol, headerTextWidth);
-            columnSizesMap[idx] = colSize;
-            remainingWidth -= colSize;
-            --remainingColumns;
-            maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+            column.width = getTextWidth(column.name) + g_startTextMargin + g_defaultMargin;
         }
     }
 }
 
-void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
 {
-    getColumnsSizeToHeader(columnSizesMap);
+    getColumnsSizeToHeader(columnsRef);
 
     ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
     const ssize_t elideWith(getTextWidth("..."));
@@ -734,80 +723,82 @@ void LogViewWidget::getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSi
         rowData.clear();
         m_model->getRow(row, rowData);
 
-        for (auto &[idx, columnWidth] : columnSizesMap)
+        for (auto &headerColumn : columnsRef)
         {
+            auto &column(headerColumn.get());
             const ssize_t textWidth =
-                getTextWidth(rowData[idx], true) + g_startTextMargin + elideWith + g_defaultMargin;
-            columnWidth = std::max(columnWidth, textWidth);
+                getTextWidth(rowData[column.idx], true) + g_startTextMargin + elideWith + g_defaultMargin;
+            column.width = std::max<ssize_t>(column.width, textWidth);
         }
     }
 }
 
-void LogViewWidget::getColumnsSizeToScreen(std::map<ssize_t, ssize_t> &columnSizesMap)
+void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
 {
-    getColumnsSizeToContent(columnSizesMap);
+    getColumnsSizeToContent(columnsRef);
 
     std::map<ssize_t, ssize_t> columnsMap;
     ssize_t remainingWidth(m_textAreaRect.width());
-    ssize_t remainingColumns(columnSizesMap.size());
+    ssize_t remainingColumns(columnsRef.size());
     ssize_t maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
     std::pair<ssize_t, ssize_t> biggerColumn{0, 0};
 
-    for (auto &[idx, columnWidth] : columnSizesMap)
+    ssize_t idx(0);
+    for (auto &headerColumn : columnsRef)
     {
-        if (columnWidth > biggerColumn.second)
+        auto &column(headerColumn.get());
+        if (column.width > biggerColumn.second)
         {
             biggerColumn.first = idx;
-            biggerColumn.second = columnWidth;
+            biggerColumn.second = column.width;
         }
 
-        columnWidth = std::min(maxWidthPerCol, columnWidth);
-        remainingWidth -= columnWidth;
+        column.width = std::min<ssize_t>(maxWidthPerCol, column.width);
+        remainingWidth -= column.width;
         --remainingColumns;
         maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+        ++idx;
     }
 
-    if (!columnSizesMap.empty() && remainingWidth > 0 && biggerColumn.second > 0)
+    if (!columnsRef.empty() && remainingWidth > 0 && biggerColumn.second > 0)
     {
-        columnSizesMap[biggerColumn.first] += remainingWidth;
+        columnsRef[biggerColumn.first].get().width += remainingWidth;
     }
 }
 
 void LogViewWidget::adjustColumns(ColumnsSize size)
 {
-    std::map<ssize_t, ssize_t> columnSizesMap;
+    tp::ColumnsRef headerColumns;
+    m_header->getVisibleColumns(headerColumns);
 
     switch (size)
     {
         case ColumnsSize::Headers:
-            getColumnsSizeToHeader(columnSizesMap);
+            getColumnsSizeToHeader(headerColumns);
             break;
         case ColumnsSize::Content:
-            getColumnsSizeToContent(columnSizesMap);
+            getColumnsSizeToContent(headerColumns);
             break;
         case ColumnsSize::Screen:
-            getColumnsSizeToScreen(columnSizesMap);
+            getColumnsSizeToScreen(headerColumns);
             break;
         default:
             break;
     }
 
-    for (const auto &[idx, columnWidth] : columnSizesMap)
-    {
-        m_header->resizeSection(idx, columnWidth);
-    }
+    m_header->updateColumns();
 
     m_stabilizedUpdateTimer->start();
 }
 
 void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
 {
-    std::map<ssize_t, ssize_t> columnSizesMap;
-    getColumnsSizeToContent(columnSizesMap);
-    const auto it = columnSizesMap.find(columnIdx);
-    if (it != columnSizesMap.end())
+    if (columnIdx < m_header->getColumns().size())
     {
-        m_header->resizeSection(it->first, it->second);
+        tp::ColumnsRef columnsRef;
+        columnsRef.push_back(m_header->getColumns().at(columnIdx));
+        getColumnsSizeToContent(columnsRef);
+        m_header->updateColumns();
     }
 }
 

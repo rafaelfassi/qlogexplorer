@@ -91,6 +91,7 @@ public:
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
     ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
+    tp::Columns &getColumns() override final;
     const tp::Columns &getColumns() const override final;
     std::size_t columnCount() const override final;
     std::size_t rowCount() const override final;

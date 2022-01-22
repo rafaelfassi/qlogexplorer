@@ -46,13 +46,16 @@ void fromStr(const std::string &str, ColumnType &type);
 
 struct Column
 {
+    int32_t idx = -1;
+    int32_t pos = -1;
     std::string key;
     std::string name;
     std::string format;
     ColumnType type = ColumnType::Str;
-    int32_t Width = -1;
+    int32_t width = -1;
 };
 using Columns = std::vector<Column>;
+using ColumnsRef = std::vector<std::reference_wrapper<Column>>;
 
 struct HighlighterParam
 {

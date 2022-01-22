@@ -29,6 +29,7 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
         d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
         if (!d.HasParseError())
         {
+            int32_t idx(0);
             for (auto i = d.MemberBegin(); i != d.MemberEnd(); ++i)
             {
                 tp::Column cl;
@@ -54,8 +55,11 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
                 default:
                     break;
                 }
+
+                cl.idx = idx++;
+                cl.pos = cl.idx;
+                cl.width = -1;
                 conf.addColumn(std::move(cl));
-                cl.Width = -1;
             }
         }
     }

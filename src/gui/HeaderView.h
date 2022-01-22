@@ -11,25 +11,21 @@ namespace priv
 class HeaderModel : public QAbstractTableModel
 {
     Q_OBJECT
+
     HeaderModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    void addColumn(const std::string &colName);
-    void setColumns(const std::vector<std::string> &columns);
+    void setColumns(tp::Columns &columns);
 
-    std::vector<std::string> m_columns;
+    tp::ColumnsRef m_columns;
     const QFont *m_font = nullptr;
     QBrush m_textBrush = QColor(Qt::white);
     QBrush m_bgBrush = QColor(Qt::blue);
     friend class ::HeaderView;
 };
 } // namespace priv
-
-// <VisualPos, ColPos>
-using VisibleColPos = std::pair<ssize_t, ssize_t>;
-using VisibleColumns = std::vector<VisibleColPos>;
 
 class HeaderView : public QHeaderView
 {
@@ -38,23 +34,31 @@ class HeaderView : public QHeaderView
 public:
     HeaderView(QWidget *parent = nullptr);
     ~HeaderView();
-    void setColumns(const tp::Columns &columns);
-    const std::vector<std::string> &getColumns();
+    void setColumns(tp::Columns &columns);
     void setFont(const QFont *font);
-    void setTextColor(const QColor& color);
-    void setBgColor(const QColor& color);
-    void getVisibleColumns(VisibleColumns &columns);
-    VisibleColPos getVisiblePos(ssize_t colIdx, const VisibleColumns &visibleColumns);
+    void setTextColor(const QColor &color);
+    void setBgColor(const QColor &color);
+    void getVisibleColumns(tp::ColumnsRef &columnsRef, bool orderByPos = false);
+    tp::ColumnsRef &getColumns();
 
 signals:
+    void columnsChanged();
     void expandToContent(ssize_t colIdx);
     void expandAllToContent();
     void expandAllToScreen();
 
 protected:
     void mousePressEvent(QMouseEvent *e) override;
+    void enableBaseSignals();
+    void disableBaseSignals();
+
+public slots:
+    void updateColumns();
 
 private slots:
+    void changedColumnsCount(int, int);
+    void movedColumns(int, int, int);
+    void resizedColumn(int idx, int oldSize, int size);
     void columnDoubleClicked(int idx);
     void openContextMenu(QPoint pos, int idx);
     void handleContextMenuAction();

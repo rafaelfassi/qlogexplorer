@@ -30,7 +30,7 @@ QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation,
     switch (role)
     {
         case Qt::DisplayRole:
-            return QString::fromStdString(m_columns.at(section));
+            return QString::fromStdString(m_columns.at(section).get().name);
         case Qt::TextAlignmentRole:
             return Qt::AlignLeft;
         case Qt::FontRole:
@@ -44,14 +44,7 @@ QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation,
     }
 }
 
-void priv::HeaderModel::addColumn(const std::string &colName)
-{
-    beginInsertColumns(QModelIndex(), m_columns.size(), m_columns.size());
-    m_columns.push_back(colName);
-    endInsertColumns();
-}
-
-void priv::HeaderModel::setColumns(const std::vector<std::string> &columns)
+void priv::HeaderModel::setColumns(tp::Columns &columns)
 {
     beginResetModel();
     m_columns.insert(m_columns.begin(), columns.begin(), columns.end());
@@ -80,33 +73,116 @@ HeaderView::HeaderView(QWidget *parent) : QHeaderView(Qt::Horizontal, parent)
 
     setModel(m_headerModel);
 
-    connect(this, &QHeaderView::sectionDoubleClicked, this, &HeaderView::columnDoubleClicked);
     connect(m_hide, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
     connect(m_moveLeft, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
     connect(m_moveRight, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
     connect(m_expandColumn, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
     connect(m_expandAllToContent, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
     connect(m_expandAllToScreen, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
+
+    enableBaseSignals();
 }
 
 HeaderView::~HeaderView()
 {
 }
 
-void HeaderView::setColumns(const tp::Columns &columns)
+void HeaderView::enableBaseSignals()
 {
-    std::vector<std::string> modelColumns;
-    modelColumns.reserve(columns.size());
-    for (const auto& column : columns)
-    {
-        modelColumns.emplace_back(column.name);
-    }
-    m_headerModel->setColumns(modelColumns);
+    connect(this, &QHeaderView::sectionCountChanged, this, &HeaderView::changedColumnsCount, Qt::UniqueConnection);
+    connect(this, &QHeaderView::sectionMoved, this, &HeaderView::movedColumns, Qt::UniqueConnection);
+    connect(this, &QHeaderView::sectionResized, this, &HeaderView::resizedColumn, Qt::UniqueConnection);
+    connect(this, &QHeaderView::sectionDoubleClicked, this, &HeaderView::columnDoubleClicked, Qt::UniqueConnection);
+    connect(this, &QHeaderView::geometriesChanged, this, &HeaderView::columnsChanged, Qt::UniqueConnection);
 }
 
-const std::vector<std::string> &HeaderView::getColumns()
+void HeaderView::disableBaseSignals()
 {
-    return m_headerModel->m_columns;
+    disconnect(this, &QHeaderView::sectionCountChanged, nullptr, nullptr);
+    disconnect(this, &QHeaderView::sectionMoved, nullptr, nullptr);
+    disconnect(this, &QHeaderView::sectionResized, nullptr, nullptr);
+    disconnect(this, &QHeaderView::sectionDoubleClicked, nullptr, nullptr);
+    disconnect(this, &QHeaderView::geometriesChanged, nullptr, nullptr);
+}
+
+void HeaderView::setColumns(tp::Columns &columns)
+{
+    m_headerModel->setColumns(columns);
+}
+
+void HeaderView::updateColumns()
+{
+    const auto &columns(m_headerModel->m_columns);
+    for (size_t idx = 0; idx < columns.size(); ++idx)
+    {
+        auto &column = columns[idx].get();
+        if (column.width == 0)
+        {
+            hideSection(column.idx);
+        }
+        else if (column.width > 0)
+        {
+            resizeSection(idx, column.width);
+        }
+    }
+}
+
+void HeaderView::changedColumnsCount(int, int)
+{
+    disableBaseSignals();
+
+    auto &columns(m_headerModel->m_columns);
+    for (size_t idx = 0; idx < columns.size(); ++idx)
+    {
+        auto &column = columns[idx].get();
+        if (column.idx < 0)
+        {
+            column.idx = idx;
+        }
+        else if (column.idx != idx)
+        {
+            qCritical() << "Column idx mismatch" << idx << column.idx;
+        }
+
+        if (column.pos < 0)
+        {
+            column.pos = visualIndex(idx);
+        }
+        else
+        {
+            const auto pos = visualIndex(column.idx);
+            if (pos != -1)
+            {
+                moveSection(pos, column.pos);
+            }
+        }
+    }
+
+    if (!columns.empty())
+        updateColumns();
+
+    enableBaseSignals();
+    emit columnsChanged();
+}
+
+void HeaderView::movedColumns(int, int, int)
+{
+    auto &columns(m_headerModel->m_columns);
+    for (auto &column : columns)
+    {
+        column.get().pos = visualIndex(column.get().idx);
+    }
+    emit columnsChanged();
+}
+
+void HeaderView::resizedColumn(int idx, int oldSize, int size)
+{
+    auto &columns(m_headerModel->m_columns);
+    if (idx < columns.size())
+    {
+        columns.at(idx).get().width = size;
+    }
+    emit columnsChanged();
 }
 
 void HeaderView::setFont(const QFont *font)
@@ -114,41 +190,50 @@ void HeaderView::setFont(const QFont *font)
     m_headerModel->m_font = font;
 }
 
-void HeaderView::setTextColor(const QColor& color)
+void HeaderView::setTextColor(const QColor &color)
 {
     m_headerModel->m_textBrush = color;
 }
 
-void HeaderView::setBgColor(const QColor& color)
+void HeaderView::setBgColor(const QColor &color)
 {
     m_headerModel->m_bgBrush = color;
 }
 
-void HeaderView::getVisibleColumns(VisibleColumns &columns)
+void HeaderView::getVisibleColumns(tp::ColumnsRef &columnsRef, bool orderByPos)
 {
-    for (int pos = 0; pos < count(); ++pos)
+    auto& columns(m_headerModel->m_columns);
+
+    if(!orderByPos)
     {
-        const auto idx = logicalIndex(pos);
-        if ((idx >= 0) && !isSectionHidden(idx))
+        for (auto &column : columns)
         {
-            columns.push_back(std::make_pair<ssize_t, ssize_t>(idx, pos));
+            if (column.get().width != 0)
+            {
+                columnsRef.emplace_back(column);
+            }
+        }
+    }
+    else
+    {
+        for (int pos = 0; pos < count(); ++pos)
+        {
+            const auto idx = logicalIndex(pos);
+            if ((idx >= 0) && (idx < columns.size()))
+            {
+                auto &column = columns[idx];
+                if (column.get().width != 0)
+                {
+                    columnsRef.emplace_back(column);
+                }
+            }
         }
     }
 }
 
-VisibleColPos HeaderView::getVisiblePos(ssize_t colIdx, const VisibleColumns &visibleColumns)
+tp::ColumnsRef &HeaderView::getColumns()
 {
-    ssize_t visiblePos(0);
-    for (const auto &[cIdx, cPos] : visibleColumns)
-    {
-        if (cIdx == colIdx)
-        {
-            return std::make_pair(visiblePos, cPos);
-        }
-        ++visiblePos;
-    }
-
-    return {-1, -1};
+    return m_headerModel->m_columns;
 }
 
 void HeaderView::mousePressEvent(QMouseEvent *e)
@@ -171,10 +256,27 @@ void HeaderView::columnDoubleClicked(int idx)
 
 void HeaderView::openContextMenu(QPoint pos, int idx)
 {
-    VisibleColumns visibleColumns;
-    getVisibleColumns(visibleColumns);
-    const auto &[visiblePos, colPos] = getVisiblePos(idx, visibleColumns);
-    if (visiblePos < 0)
+    tp::ColumnsRef visibleColumns;
+    // Gets the visible columns ordered by position
+    getVisibleColumns(visibleColumns, true);
+
+    // Gets the visual position of the column
+    const auto getVisualPosFunc = [&visibleColumns](int idx)
+    {
+        ssize_t visualPos(0);
+        for (const auto &column : visibleColumns)
+        {
+            if (column.get().idx == idx)
+            {
+                return visualPos;
+            }
+            ++visualPos;
+        }
+        return -1L;
+    };
+
+    const auto visualPos = getVisualPosFunc(idx);
+    if (visualPos < 0)
     {
         return;
     }
@@ -192,7 +294,7 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
         {
             if (isSectionHidden(i))
             {
-                auto act = showMenu->addAction(m_headerModel->m_columns.at(i).c_str());
+                auto act = showMenu->addAction(m_headerModel->m_columns.at(i).get().name.c_str());
                 act->setProperty("show", true);
                 act->setProperty("column", i);
                 connect(act, &QAction::triggered, this, &HeaderView::handleContextMenuAction);
@@ -200,21 +302,21 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
         }
     }
 
-    const bool canMoveLeft(visiblePos > 0);
-    const bool canMoveRight(visiblePos < (visibleColumns.size() - 1));
+    const bool canMoveLeft(visualPos > 0);
+    const bool canMoveRight(visualPos < (visibleColumns.size() - 1));
 
     if (canMoveLeft || canMoveRight)
     {
         QMenu *moveMenu = menu.addMenu(tr("Move"));
         if (canMoveLeft)
         {
-            int moveTo = visibleColumns.at(visiblePos - 1).second;
+            int moveTo = visibleColumns.at(visualPos - 1).get().pos;
             m_moveLeft->setProperty("moveToPos", moveTo);
             moveMenu->addAction(m_moveLeft);
         }
         if (canMoveRight)
         {
-            int moveTo = visibleColumns.at(visiblePos + 1).second;
+            int moveTo = visibleColumns.at(visualPos + 1).get().pos;
             m_moveRight->setProperty("moveToPos", moveTo);
             moveMenu->addAction(m_moveRight);
         }
@@ -249,13 +351,11 @@ void HeaderView::handleContextMenuAction()
     else if (senderAct == m_moveLeft)
     {
         int moveToPos = senderAct->property("moveToPos").toInt();
-        qDebug() << "moveToPos" << moveToPos;
         moveSection(colPos, moveToPos);
     }
     else if (senderAct == m_moveRight)
     {
         int moveToPos = senderAct->property("moveToPos").toInt();
-        qDebug() << "moveToPos" << moveToPos;
         moveSection(colPos, moveToPos);
     }
     else if (senderAct == m_expandColumn)

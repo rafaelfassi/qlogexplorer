@@ -57,10 +57,14 @@ bool Conf::loadFConf(const std::string &confFileName)
             {
                 column.type = tp::fromStr<tp::ColumnType>(cIt->value.GetString());
             }
-            // if (const auto &cIt = col.FindMember("Width"); cIt != col.MemberEnd())
-            // {
-            //     column.Width = cIt->value.GetInt64();
-            // }
+            if (const auto &cIt = col.FindMember("width"); cIt != col.MemberEnd())
+            {
+                column.width = cIt->value.GetInt64();
+            }
+            if (const auto &cIt = col.FindMember("pos"); cIt != col.MemberEnd())
+            {
+                column.pos = cIt->value.GetInt64();
+            }
             m_columns.emplace_back(std::move(column));
         }
     }
@@ -90,9 +94,14 @@ void Conf::saveConfAs(const std::string &confFileName)
     m_confFileName = confFileName;
 }
 
-void Conf::saveConf() const
+void Conf::saveConf()
 {
-    
+    if (m_confFileName.empty())
+    {
+        qCritical() << "No config file defined";
+        return;
+    }
+    saveConfAs(m_confFileName);
 }
 
 void Conf::fromJson(const rapidjson::Document &doc)
@@ -111,10 +120,11 @@ rapidjson::Document Conf::toJson() const
     for (const auto &column : m_columns)
     {
         rapidjson::Value jCol(rapidjson::kObjectType);
+        jCol.AddMember("pos", column.pos, alloc);
         jCol.AddMember("key", column.key, alloc);
         jCol.AddMember("name", column.name, alloc);
         jCol.AddMember("type", tp::toStr(column.type), alloc);
-        jCol.AddMember("Width", column.Width, alloc);
+        jCol.AddMember("width", column.width, alloc);
         jCols.GetArray().PushBack(jCol, alloc);
     }
     jDoc.AddMember("columns", jCols, alloc);

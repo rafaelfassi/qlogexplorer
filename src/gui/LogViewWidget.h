@@ -99,9 +99,9 @@ protected:
     ssize_t getTextWidth(const std::string &text, bool simplified = false);
     QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
 
-    void getColumnsSizeToHeader(std::map<ssize_t, ssize_t> &columnSizesMap);
-    void getColumnsSizeToContent(std::map<ssize_t, ssize_t> &columnSizesMap);
-    void getColumnsSizeToScreen(std::map<ssize_t, ssize_t> &columnSizesMap);
+    void getColumnsSizeToHeader(tp::ColumnsRef &columnsRef);
+    void getColumnsSizeToContent(tp::ColumnsRef &columnsRef);
+    void getColumnsSizeToScreen(tp::ColumnsRef &columnsRef);
 
     QString getSelectedText(const QString &text, const QRect &textRect, const QRect &selRect, QRect &resultRect);
     int getStrStartPos(const QString &text, int left, int *newLeft = nullptr);

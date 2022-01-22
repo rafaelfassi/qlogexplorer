@@ -7,7 +7,7 @@ public:
     Conf(const std::string& confFileName);
     bool loadFConf(const std::string& confFileName);
     void saveConfAs(const std::string& confFileName);
-    void saveConf() const;
+    void saveConf();
 
     void fromJson(const rapidjson::Document& doc);
     rapidjson::Document toJson() const;
@@ -19,7 +19,7 @@ public:
     const std::string& getConfFileName() const { return m_confFileName; }
     bool exists() const { return !m_confFileName.empty(); }
     void setConfigName(const std::string& configName) { m_configName = configName; }
-    const tp::Columns& getColumns() const { return m_columns; }
+    tp::Columns& getColumns() { return m_columns; }
     void addColumn(tp::Column &&column) { m_columns.emplace_back(column); }
     
 
