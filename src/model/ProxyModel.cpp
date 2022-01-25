@@ -7,7 +7,7 @@ ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(
     connect(m_source, &AbstractModel::modelConfigured, this, &AbstractModel::modelConfigured);
 }
 
-ssize_t ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
+tp::SInt ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
 {
     if (row < m_rowMap.size())
     {
@@ -26,17 +26,17 @@ const tp::Columns &ProxyModel::getColumns() const
     return m_source->getColumns();
 }
 
-std::size_t ProxyModel::columnCount() const
+tp::UInt ProxyModel::columnCount() const
 {
     return m_source->columnCount();
 }
 
-std::size_t ProxyModel::rowCount() const
+tp::UInt ProxyModel::rowCount() const
 {
     return m_rowMap.size();
 }
 
-ssize_t ProxyModel::getRowNum(ssize_t row) const
+tp::SInt ProxyModel::getRowNum(tp::SInt row) const
 {
     if (row < m_rowMap.size())
     {
@@ -46,19 +46,19 @@ ssize_t ProxyModel::getRowNum(ssize_t row) const
     return -1;
 }
 
-ssize_t ProxyModel::findSourceRow(ssize_t srcRow) const
+tp::SInt ProxyModel::findSourceRow(tp::SInt srcRow) const
 {
     auto it = std::lower_bound(m_rowMap.begin(), m_rowMap.end(), srcRow);
     return (it != m_rowMap.end() && srcRow == *it) ? std::distance(m_rowMap.begin(), it) : -1L;
 }
 
-bool ProxyModel::constainsSourceRow(ssize_t srcRow) const
+bool ProxyModel::constainsSourceRow(tp::SInt srcRow) const
 {
     const auto it = std::lower_bound(m_rowMap.begin(), m_rowMap.end(), srcRow);
     return (it != m_rowMap.end() && srcRow == *it);
 }
 
-void ProxyModel::addSourceRow(ssize_t srcRow)
+void ProxyModel::addSourceRow(tp::SInt srcRow)
 {
     if (!constainsSourceRow(srcRow))
     {
@@ -68,9 +68,9 @@ void ProxyModel::addSourceRow(ssize_t srcRow)
     }
 }
 
-void ProxyModel::addSourceRows(const std::deque<ssize_t> &srcRows)
+void ProxyModel::addSourceRows(const tp::SIntList &srcRows)
 {
-    const size_t oldSize(m_rowMap.size());
+    const tp::UInt oldSize(m_rowMap.size());
 
     for (const auto srcRow : srcRows)
     {
@@ -88,7 +88,7 @@ void ProxyModel::addSourceRows(const std::deque<ssize_t> &srcRows)
     }
 }
 
-void ProxyModel::removeSourceRow(ssize_t srcRow)
+void ProxyModel::removeSourceRow(tp::SInt srcRow)
 {
     const auto pos = findSourceRow(srcRow);
     if (pos != -1)

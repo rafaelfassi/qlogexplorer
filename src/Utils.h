@@ -22,6 +22,6 @@ std::string join(const std::vector<std::string> &strList, const std::string &del
 
 std::vector<std::string> split(const std::string &str, const std::string &delim);
 
-QString elideLeft(const std::string &str, size_t maxSize);
+QString elideLeft(const std::string &str, tp::UInt maxSize);
 
 } // namespace utl

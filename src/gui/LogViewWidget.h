@@ -29,8 +29,8 @@ class LogViewWidget : public QWidget
     struct VisualRowData
     {
         std::vector<VisualColData> columns;
-        ssize_t number;
-        ssize_t row;
+        tp::SInt number;
+        tp::SInt row;
         QRect rect;
         QRect numberRect;
         QRect numberAreaRect;
@@ -43,18 +43,18 @@ public:
 
     bool canCopy() const;
     AbstractModel *getModel();
-    const std::set<ssize_t> &getMarks();
+    const std::set<tp::SInt> &getMarks();
     void clearMarks();
-    bool hasMark(ssize_t row) const;
+    bool hasMark(tp::SInt row) const;
 
 signals:
-    void rowSelected(ssize_t row);
+    void rowSelected(tp::SInt row);
 
 public slots:
     void updateView();
     void resetColumns();
-    void goToRow(ssize_t row);
-    void markRow(ssize_t row);
+    void goToRow(tp::SInt row);
+    void markRow(tp::SInt row);
     void adjustColumns(ColumnsSize size);
     void copySelected();
     void markSelected();
@@ -79,7 +79,7 @@ protected slots:
     void vScrollBarPosChanged();
     void hScrollBarPosChanged();
     void stabilizedUpdate();
-    void expandColumnToContent(ssize_t columnIdx);
+    void expandColumnToContent(tp::SInt columnIdx);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -90,15 +90,15 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
-    void getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData);
+    void getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt hOffset, VisualRowData &vrData);
     void forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback);
-    ssize_t getMaxRowWidth();
+    tp::SInt getMaxRowWidth();
 
-    ssize_t getFirstPageRow() const;
-    ssize_t getLastPageRow() const;
-    ssize_t getRowByScreenPos(int yPos) const;
-    ssize_t getTextWidth(const std::string &text, bool simplified = false);
-    QString getElidedText(const std::string &text, ssize_t width, bool simplified = false);
+    tp::SInt getFirstPageRow() const;
+    tp::SInt getLastPageRow() const;
+    tp::SInt getRowByScreenPos(int yPos) const;
+    tp::SInt getTextWidth(const std::string &text, bool simplified = false);
+    QString getElidedText(const std::string &text, tp::SInt width, bool simplified = false);
 
     void getColumnsSizeToHeader(tp::ColumnsRef &columnsRef);
     void getColumnsSizeToContent(tp::ColumnsRef &columnsRef);
@@ -108,10 +108,10 @@ protected:
     int getStrStartPos(const QString &text, int left, int *newLeft = nullptr);
     int getStrEndPos(const QString &text, int right, int *newRight = nullptr);
 
-    QString rowToText(ssize_t row);
-    QString getSelectedText(ssize_t row);
-    void removeMark(ssize_t row);
-    void toggleMark(ssize_t row);
+    QString rowToText(tp::SInt row);
+    QString getSelectedText(tp::SInt row);
+    void removeMark(tp::SInt row);
+    void toggleMark(tp::SInt row);
     bool hasPrevMark();
     bool hasNextMark();
 
@@ -141,11 +141,11 @@ private:
     QAction *m_actNextMark;
     QFont m_font;
     QFontMetrics m_fm;
-    ssize_t m_rowHeight = 0;
-    ssize_t m_itemsPerPage = 0;
+    tp::SInt m_rowHeight = 0;
+    tp::SInt m_itemsPerPage = 0;
     QRect m_textAreaRect;
-    std::optional<ssize_t> m_currentRow;
-    std::optional<std::pair<ssize_t, int>> m_startSelect;
-    std::optional<std::pair<ssize_t, int>> m_currentSelec;
-    std::set<ssize_t> m_marks;
+    std::optional<tp::SInt> m_currentRow;
+    std::optional<std::pair<tp::SInt, int>> m_startSelect;
+    std::optional<std::pair<tp::SInt, int>> m_currentSelec;
+    std::set<tp::SInt> m_marks;
 };

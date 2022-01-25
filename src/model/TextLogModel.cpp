@@ -1,6 +1,6 @@
 #include "TextLogModel.h"
 
-constexpr size_t g_maxChunksPerParse(500);
+constexpr tp::UInt g_maxChunksPerParse(500);
 
 TextLogModel::TextLogModel(Conf &conf, QObject *parent) : BaseLogModel(conf, parent)
 {
@@ -97,29 +97,29 @@ bool TextLogModel::parseRow(const std::string &rawText, std::vector<std::string>
     return true;
 }
 
-std::size_t TextLogModel::parseChunks(
+tp::UInt TextLogModel::parseChunks(
     std::istream &is,
     std::vector<Chunk> &chunks,
-    std::size_t fromPos,
-    std::size_t nextRow,
-    std::size_t fileSize)
+    tp::UInt fromPos,
+    tp::UInt nextRow,
+    tp::UInt fileSize)
 {
     std::string buffer;
     buffer.resize(g_chunkSize);
 
-    const size_t totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
+    const tp::UInt totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
     chunks.reserve(totalChunks);
 
-    size_t lastPos(0);
-    size_t lastLineBreakPos(fromPos);
-    size_t nextFirstChunkRow(nextRow);
-    size_t currentRowCount(nextRow);
+    tp::UInt lastPos(0);
+    tp::UInt lastLineBreakPos(fromPos);
+    tp::UInt nextFirstChunkRow(nextRow);
+    tp::UInt currentRowCount(nextRow);
 
     while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
     {
-        size_t chunkStartPos = getFilePos(is);
+        tp::UInt chunkStartPos = getFilePos(is);
         lastPos = chunkStartPos;
-        const size_t readBytes = std::min<size_t>(g_chunkSize, fileSize - lastPos);
+        const tp::UInt readBytes = std::min<size_t>(g_chunkSize, fileSize - lastPos);
         if (readBytes == 0)
         {
             break;

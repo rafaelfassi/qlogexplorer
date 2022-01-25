@@ -16,7 +16,7 @@ public:
     bool matchCase() const { return m_param.matchCase; }
     bool notOp() const { return m_param.notOp; }
     bool hasColumn() const { return m_param.column.has_value(); }
-    size_t getColumn() const { return *m_param.column; }
+    tp::UInt getColumn() const { return *m_param.column; }
 
 protected:
     const SearchParam &m_param;
@@ -210,7 +210,7 @@ const std::string &BaseLogModel::getFileName() const
     return m_fileName;
 }
 
-ssize_t BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
+tp::SInt BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
 {
     const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
@@ -274,7 +274,7 @@ void BaseLogModel::search()
 
     ChunkRows chunkRows;
     std::vector<std::string> rowData;
-    std::size_t row(0);
+    tp::UInt row(0);
     const auto &matchers = makeParamMatchers(m_searchParams);
 
     while (m_searching.load())
@@ -283,9 +283,9 @@ void BaseLogModel::search()
         timer.start();
         qint64 searchTime(0);
 
-        std::size_t startingRow(row);
+        tp::UInt startingRow(row);
 
-        std::shared_ptr<std::deque<ssize_t>> rowsPtr = std::make_shared<std::deque<ssize_t>>();
+        tp::SharedSIntList rowsPtr = std::make_shared<tp::SIntList>();
 
         while ((row < m_rowCount.load()) && m_searching.load(std::memory_order_relaxed))
         {
@@ -317,7 +317,7 @@ void BaseLogModel::search()
             if (!rowsPtr->empty() && timer.hasExpired(1000))
             {
                 emit valueFound(rowsPtr);
-                rowsPtr = std::make_shared<std::deque<ssize_t>>();
+                rowsPtr = std::make_shared<tp::SIntList>();
                 searchTime += timer.restart();
             }
         }
@@ -353,17 +353,17 @@ void BaseLogModel::tryConfigure()
     }
 }
 
-std::size_t BaseLogModel::columnCount() const
+tp::UInt BaseLogModel::columnCount() const
 {
     return m_conf.getColumns().size();
 }
 
-std::size_t BaseLogModel::rowCount() const
+tp::UInt BaseLogModel::rowCount() const
 {
     return m_rowCount.load();
 }
 
-ssize_t BaseLogModel::getRowNum(ssize_t row) const
+tp::SInt BaseLogModel::getRowNum(tp::SInt row) const
 {
     return row;
 }
@@ -530,10 +530,10 @@ WatchingResult BaseLogModel::watchFile()
     return WatchingResult::NormalExit;
 }
 
-ssize_t BaseLogModel::getFileSize(std::istream &is)
+tp::SInt BaseLogModel::getFileSize(std::istream &is)
 {
-    ssize_t fileSize(0);
-    ssize_t oriPos(0);
+    tp::SInt fileSize(0);
+    tp::SInt oriPos(0);
     const bool eof(is.eof());
 
     if (eof)
@@ -564,7 +564,7 @@ ssize_t BaseLogModel::getFileSize(std::istream &is)
     return fileSize < 0 ? 0 : fileSize;
 }
 
-ssize_t BaseLogModel::getFilePos(std::istream &is)
+tp::SInt BaseLogModel::getFilePos(std::istream &is)
 {
     return is.tellg();
 }
@@ -574,7 +574,7 @@ bool BaseLogModel::isEndOfFile(std::istream &is)
     return is.eof();
 }
 
-bool BaseLogModel::moveFilePos(std::istream &is, std::size_t pos)
+bool BaseLogModel::moveFilePos(std::istream &is, tp::UInt pos)
 {
     if (is.eof())
     {
@@ -584,7 +584,7 @@ bool BaseLogModel::moveFilePos(std::istream &is, std::size_t pos)
     return is.good();
 }
 
-ssize_t BaseLogModel::readFile(std::istream &is, std::string &buffer, std::size_t bytes)
+tp::SInt BaseLogModel::readFile(std::istream &is, std::string &buffer, tp::UInt bytes)
 {
     is.read(buffer.data(), bytes);
     return is.gcount();
@@ -596,9 +596,9 @@ void BaseLogModel::loadChunks()
     QElapsedTimer timer;
     timer.start();
 
-    ssize_t fileSize(0);
-    size_t nextRow(0);
-    size_t chunkCount(0);
+    tp::SInt fileSize(0);
+    tp::UInt nextRow(0);
+    tp::UInt chunkCount(0);
 
     {
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
@@ -616,7 +616,7 @@ void BaseLogModel::loadChunks()
     }
 
     std::vector<Chunk> chunks;
-    ssize_t newLastParsedPos(0);
+    tp::SInt newLastParsedPos(0);
 
     do
     {
@@ -636,7 +636,7 @@ void BaseLogModel::loadChunks()
         {
             m_lastParsedPos = newLastParsedPos;
 
-            size_t rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
+            tp::UInt rowCount(m_chunks.empty() ? 0 : (m_chunks.back().getLastRow() + 1));
             if (rowCount != m_rowCount.load())
             {
                 nextRow = rowCount;

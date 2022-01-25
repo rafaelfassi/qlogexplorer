@@ -23,10 +23,10 @@ public:
     void createConnections();
 
 signals:
-    void rowSelected(ssize_t row);
+    void rowSelected(tp::SInt row);
 
 public slots:
-    void addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsPtr);
+    void addSearchResult(tp::SharedSIntList rowsPtr);
     void resetColumns();
 
 private slots:

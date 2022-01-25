@@ -15,7 +15,7 @@ LongScrollBar::~LongScrollBar()
 {
 }
 
-void LongScrollBar::setMax(ssize_t max)
+void LongScrollBar::setMax(tp::SInt max)
 {
     if (max != m_max)
     {
@@ -39,12 +39,12 @@ void LongScrollBar::setMax(ssize_t max)
     }
 }
 
-ssize_t LongScrollBar::getMax() const
+tp::SInt LongScrollBar::getMax() const
 {
     return m_max;
 }
 
-void LongScrollBar::setPos(ssize_t pos)
+void LongScrollBar::setPos(tp::SInt pos)
 {
     if (pos != m_pos)
     {
@@ -53,7 +53,7 @@ void LongScrollBar::setPos(ssize_t pos)
     }
 }
 
-ssize_t LongScrollBar::getPos() const
+tp::SInt LongScrollBar::getPos() const
 {
     return m_pos;
 }
@@ -166,21 +166,21 @@ void LongScrollBar::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_knobGrabbed.has_value())
     {
-        ssize_t newPos(0);
+        tp::SInt newPos(0);
         if (m_orientation == Qt::Vertical)
         {
-            const ssize_t newY =
+            const tp::SInt newY =
                 std::min(std::max(event->pos().y() - m_knobGrabbed.value(), 0), height() - m_knobRect.height());
             newPos = std::round(newY / m_sizePerPos);
         }
         else
         {
-            const ssize_t newX =
+            const tp::SInt newX =
                 std::min(std::max(event->pos().x() - m_knobGrabbed.value(), 0), width() - m_knobRect.width());
             newPos = std::round(newX / m_sizePerPos);
         }
 
-        changePos(std::min<ssize_t>(newPos, m_max));
+        changePos(std::min<tp::SInt>(newPos, m_max));
         updateKnob();
         emit posChanged();
     }
@@ -218,13 +218,13 @@ void LongScrollBar::scrollWithDegrees(int degrees)
 
     if (m_wheelDegrees.second >= 15)
     {
-        const ssize_t steps = m_wheelDegrees.second / 15;
+        const tp::SInt steps = m_wheelDegrees.second / 15;
         movePosSteps(steps * m_wheelDegrees.first);
         m_wheelDegrees.second = 0;
     }
 }
 
-void LongScrollBar::movePosSteps(ssize_t steps)
+void LongScrollBar::movePosSteps(tp::SInt steps)
 {
     if (m_pos + steps > m_max || m_pos + steps < 0)
     {
@@ -250,7 +250,7 @@ void LongScrollBar::updateKnob()
     update();
 }
 
-void LongScrollBar::changeMax(ssize_t max)
+void LongScrollBar::changeMax(tp::SInt max)
 {
     if (max < 0)
     {
@@ -267,7 +267,7 @@ void LongScrollBar::changeMax(ssize_t max)
     }
 }
 
-void LongScrollBar::changePos(ssize_t pos)
+void LongScrollBar::changePos(tp::SInt pos)
 {
     if (pos < 0)
     {

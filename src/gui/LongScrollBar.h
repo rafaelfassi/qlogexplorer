@@ -9,10 +9,10 @@ class LongScrollBar : public QWidget
 public:
     LongScrollBar(Qt::Orientation orientation, QWidget *parent = nullptr);
     ~LongScrollBar();
-    void setMax(ssize_t max);
-    ssize_t getMax() const;
-    void setPos(ssize_t pos);
-    ssize_t getPos() const;
+    void setMax(tp::SInt max);
+    tp::SInt getMax() const;
+    void setPos(tp::SInt pos);
+    tp::SInt getPos() const;
     void setPosPerStep(int positions);
     bool isKnobGrabbed();
     void wheelEvent(QWheelEvent *event) override;
@@ -32,15 +32,15 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
 
     void scrollWithDegrees(int degrees);
-    void movePosSteps(ssize_t steps);
+    void movePosSteps(tp::SInt steps);
     void updateKnob();
-    void changeMax(ssize_t max);
-    void changePos(ssize_t pos);
+    void changeMax(tp::SInt max);
+    void changePos(tp::SInt pos);
 
 private:
     Qt::Orientation m_orientation;
-    ssize_t m_max = 0;
-    ssize_t m_pos = 0;
+    tp::SInt m_max = 0;
+    tp::SInt m_pos = 0;
     QRect m_knobRect;
     std::optional<int> m_knobGrabbed;
     double m_sizePerPos = 1.0;

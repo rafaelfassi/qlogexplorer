@@ -3,8 +3,10 @@
 namespace tp
 {
 
-using Row = ssize_t;
-using Col = int32_t;
+using SInt = ssize_t;
+using UInt = size_t;
+using SIntList = std::deque<tp::SInt>;
+using SharedSIntList = std::shared_ptr<SIntList>;
 
 enum class LogLevel
 {

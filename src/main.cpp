@@ -4,8 +4,9 @@
 
 int main(int argc, char *argv[])
 {
-    qRegisterMetaType<ssize_t>("ssize_t");
-    qRegisterMetaType<std::shared_ptr<std::deque<ssize_t>>>("std::shared_ptr<std::deque<ssize_t> >");
+    qRegisterMetaType<tp::SInt>("tp::SInt");
+    qRegisterMetaType<tp::UInt>("tp::UInt");
+    qRegisterMetaType<tp::SharedSIntList>("tp::SharedSIntList");
     QApplication a(argc, argv);
     MainWindow w;
     w.show();

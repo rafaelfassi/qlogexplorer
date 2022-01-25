@@ -22,7 +22,7 @@ public:
     bool notOp() const;
     bool getIsEnabled() const;
     std::string expression() const;
-    std::optional<std::size_t> column() const;
+    std::optional<tp::UInt> column() const;
 
 signals:
     void searchRequested();

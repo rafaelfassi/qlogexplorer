@@ -135,7 +135,7 @@ std::string SearchParamWidget::expression() const
     return m_txtSearch->text().toStdString();
 }
 
-std::optional<std::size_t> SearchParamWidget::column() const
+std::optional<tp::UInt> SearchParamWidget::column() const
 {
     if (m_cmbColumns->currentIndex() > 0)
     {

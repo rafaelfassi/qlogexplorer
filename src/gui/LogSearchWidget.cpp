@@ -159,7 +159,7 @@ void LogSearchWidget::startSearch()
     }
 }
 
-void LogSearchWidget::addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsPtr)
+void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
 {
     if (m_sourceModel->isSearching())
     {
@@ -188,7 +188,7 @@ void LogSearchWidget::clearResults()
 
 void LogSearchWidget::deleteParamWidget(QWidget *paramWidget)
 {
-    for (std::size_t i = 0; i < m_searchParamWidgets.size(); ++i)
+    for (tp::UInt i = 0; i < m_searchParamWidgets.size(); ++i)
     {
         if (m_searchParamWidgets.at(i) == paramWidget)
         {

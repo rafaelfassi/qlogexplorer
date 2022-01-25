@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "JsonLogModel.h"
 
-constexpr size_t g_maxChunksPerParse(50);
+constexpr tp::UInt g_maxChunksPerParse(50);
 
 std::string toString(const rapidjson::Value &json)
 {
@@ -106,28 +106,28 @@ bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string>
     return true;
 }
 
-std::size_t JsonLogModel::parseChunks(
+tp::UInt JsonLogModel::parseChunks(
     std::istream &is,
     std::vector<Chunk> &chunks,
-    std::size_t fromPos,
-    std::size_t nextRow,
-    std::size_t fileSize)
+    tp::UInt fromPos,
+    tp::UInt nextRow,
+    tp::UInt fileSize)
 {
     std::string buffer;
     buffer.resize(g_chunkSize);
 
-    const size_t totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
+    const tp::UInt totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
     chunks.reserve(totalChunks);
 
-    size_t nextFirstChunkRow(nextRow);
-    size_t currentRowCount(nextRow);
+    tp::UInt nextFirstChunkRow(nextRow);
+    tp::UInt currentRowCount(nextRow);
 
     rapidjson::Reader reader;
     rapidjson::BaseReaderHandler handler;
     rapidjson::IStreamWrapper isw(is);
 
-    size_t chunkStartPos = getFilePos(is);
-    size_t last_pos = chunkStartPos;
+    tp::UInt chunkStartPos = getFilePos(is);
+    tp::UInt last_pos = chunkStartPos;
 
     while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
     {

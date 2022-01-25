@@ -263,7 +263,7 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
     // Gets the visual position of the column
     const auto getVisualPosFunc = [&visibleColumns](int idx)
     {
-        ssize_t visualPos(0);
+        tp::SInt visualPos(0);
         for (const auto &column : visibleColumns)
         {
             if (column.get().idx == idx)

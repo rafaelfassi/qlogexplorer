@@ -8,18 +8,18 @@ class ProxyModel : public AbstractModel
 
 public:
     ProxyModel(AbstractModel *source);
-    ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override;
+    tp::SInt getRow(std::uint64_t row, std::vector<std::string> &rowData) const override;
     tp::Columns &getColumns() override;
     const tp::Columns &getColumns() const override;
-    std::size_t columnCount() const override;
-    std::size_t rowCount() const override;
-    ssize_t getRowNum(ssize_t row) const override;
+    tp::UInt columnCount() const override;
+    tp::UInt rowCount() const override;
+    tp::SInt getRowNum(tp::SInt row) const override;
 
-    ssize_t findSourceRow(ssize_t srcRow) const;
-    bool constainsSourceRow(ssize_t srcRow) const;
-    void addSourceRow(ssize_t srcRow);
-    void addSourceRows(const std::deque<ssize_t> &srcRows);
-    void removeSourceRow(ssize_t srcRow);
+    tp::SInt findSourceRow(tp::SInt srcRow) const;
+    bool constainsSourceRow(tp::SInt srcRow) const;
+    void addSourceRow(tp::SInt srcRow);
+    void addSourceRows(const tp::SIntList &srcRows);
+    void removeSourceRow(tp::SInt srcRow);
     void clear();
 
 signals:
@@ -27,5 +27,5 @@ signals:
 
 private:
     AbstractModel *m_source;
-    std::deque<ssize_t> m_rowMap;
+    tp::SIntList m_rowMap;
 };

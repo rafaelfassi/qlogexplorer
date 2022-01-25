@@ -16,11 +16,11 @@
 #include <limits>
 #include <iostream>
 
-constexpr ssize_t g_scrollBarThickness(25);
-constexpr ssize_t g_defaultMargin(10);
-constexpr ssize_t g_startTextMargin(5);
+constexpr tp::SInt g_scrollBarThickness(25);
+constexpr tp::SInt g_defaultMargin(10);
+constexpr tp::SInt g_startTextMargin(5);
 constexpr auto g_fontName = "times";
-constexpr int g_fontSize = 14;
+constexpr tp::SInt g_fontSize = 14;
 static const QColor g_bgColor(Qt::white);
 static const QColor g_txtColor(Qt::black);
 static const QColor g_selectionBgColor("#4169e1");
@@ -212,7 +212,7 @@ void LogViewWidget::stabilizedUpdate()
 {
     m_stabilizedUpdateTimer->stop();
 
-    const ssize_t newMaxHScrollBar = std::max<ssize_t>(getMaxRowWidth() - m_textAreaRect.width(), 0L);
+    const tp::SInt newMaxHScrollBar = std::max<tp::SInt>(getMaxRowWidth() - m_textAreaRect.width(), 0L);
     if (newMaxHScrollBar != m_hScrollBar->getMax())
     {
         if (!m_vScrollBar->isKnobGrabbed() && !m_hScrollBar->isKnobGrabbed())
@@ -244,7 +244,7 @@ void LogViewWidget::modelCountChanged()
     update();
 }
 
-void LogViewWidget::goToRow(ssize_t row)
+void LogViewWidget::goToRow(tp::SInt row)
 {
     if ((m_model != nullptr) && (row >= 0) && (row < m_model->rowCount()))
     {
@@ -269,7 +269,7 @@ void LogViewWidget::updateDisplaySize()
 {
     if (m_model)
     {
-        ssize_t rowCount(m_model->rowCount());
+        tp::SInt rowCount(m_model->rowCount());
         m_rowHeight = m_fm.height();
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
@@ -309,7 +309,7 @@ void LogViewWidget::resizeEvent(QResizeEvent *event)
 
 void LogViewWidget::mousePressEvent(QMouseEvent *event)
 {
-    const ssize_t row = getRowByScreenPos(event->pos().y());
+    const tp::SInt row = getRowByScreenPos(event->pos().y());
     const int xPos = event->pos().x();
 
     if (event->button() == Qt::LeftButton)
@@ -364,7 +364,7 @@ void LogViewWidget::mouseReleaseEvent(QMouseEvent *)
 {
     // if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
     // {
-    //     const ssize_t row = getRowByScreenPos(event->pos().y());
+    //     const tp::SInt row = getRowByScreenPos(event->pos().y());
     //     if (row >= 0 && (row < m_model->rowCount()))
     //     {
     //         m_currentRow = row;
@@ -378,27 +378,27 @@ void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
 {
     if (m_startSelect.has_value())
     {
-        const ssize_t row = getRowByScreenPos(event->pos().y());
-        const ssize_t xPos = event->pos().x();
+        const tp::SInt row = getRowByScreenPos(event->pos().y());
+        const tp::SInt xPos = event->pos().x();
 
         if (xPos > m_textAreaRect.right())
         {
-            const ssize_t offset = m_textAreaRect.right() - xPos;
+            const tp::SInt offset = m_textAreaRect.right() - xPos;
             m_hScrollBar->setPos(m_hScrollBar->getPos() - offset);
         }
         else if (xPos < m_textAreaRect.left())
         {
-            const ssize_t offset = xPos - m_textAreaRect.left();
+            const tp::SInt offset = xPos - m_textAreaRect.left();
             m_hScrollBar->setPos(m_hScrollBar->getPos() + offset);
         }
         else if (const auto lastRow = getLastPageRow(); row > lastRow)
         {
-            const ssize_t offset = row - lastRow;
+            const tp::SInt offset = row - lastRow;
             m_vScrollBar->setPos(m_vScrollBar->getPos() + offset);
         }
         else if (const auto firstRow = getFirstPageRow(); row < firstRow)
         {
-            const ssize_t offset = firstRow - row;
+            const tp::SInt offset = firstRow - row;
             m_vScrollBar->setPos(m_vScrollBar->getPos() - offset);
         }
 
@@ -415,7 +415,7 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
 {
     const int yPos(event->pos().y());
     const int xPos(event->pos().x());
-    const ssize_t row = getRowByScreenPos(yPos);
+    const tp::SInt row = getRowByScreenPos(yPos);
 
     VisualRowData vrData;
     getVisualRowData(row, m_vScrollBar->getPos(), m_hScrollBar->getPos(), vrData);
@@ -525,11 +525,11 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     m_stabilizedUpdateTimer->start();
 }
 
-void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOffset, VisualRowData &vrData)
+void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt hOffset, VisualRowData &vrData)
 {
     std::vector<std::string> rowData;
-    const ssize_t relativeRow = row - rowOffset;
-    const ssize_t yOffset = m_textAreaRect.top() + (m_rowHeight * relativeRow);
+    const tp::SInt relativeRow = row - rowOffset;
+    const tp::SInt yOffset = m_textAreaRect.top() + (m_rowHeight * relativeRow);
 
     vrData.row = row;
     vrData.number = m_model->getRow(row, rowData);
@@ -574,8 +574,8 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
         for (size_t vIdx = 0; vIdx < m_header->count(); ++vIdx)
         {
             VisualColData vcData;
-            const ssize_t idx = m_header->logicalIndex(vIdx);
-            const ssize_t colWidth = m_header->sectionSize(idx);
+            const tp::SInt idx = m_header->logicalIndex(vIdx);
+            const tp::SInt colWidth = m_header->sectionSize(idx);
             rect.setWidth(colWidth);
             rect.setLeft(rect.left() + g_startTextMargin);
             if (idx < rowData.size())
@@ -601,7 +601,7 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
         for (const auto &colText : rowData)
         {
             VisualColData vcData;
-            const ssize_t colWidth = getTextWidth(colText) + g_defaultMargin;
+            const tp::SInt colWidth = getTextWidth(colText) + g_defaultMargin;
             rect.setWidth(colWidth);
             rect.setLeft(rect.left() + g_startTextMargin);
             vcData.text = QString::fromStdString(colText);
@@ -623,11 +623,11 @@ void LogViewWidget::getVisualRowData(ssize_t row, ssize_t rowOffset, ssize_t hOf
 
 void LogViewWidget::forEachVisualRowInPage(const std::function<bool(VisualRowData &)> &callback)
 {
-    const ssize_t rowsToRender(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
-    for (ssize_t i = 0; i < rowsToRender; ++i)
+    const tp::SInt rowsToRender(std::min<tp::SInt>(m_itemsPerPage, m_model->rowCount()));
+    for (tp::SInt i = 0; i < rowsToRender; ++i)
     {
         VisualRowData vrData;
-        const ssize_t row = i + m_vScrollBar->getPos();
+        const tp::SInt row = i + m_vScrollBar->getPos();
         getVisualRowData(row, m_vScrollBar->getPos(), m_hScrollBar->getPos(), vrData);
         if (!callback(vrData))
         {
@@ -636,45 +636,45 @@ void LogViewWidget::forEachVisualRowInPage(const std::function<bool(VisualRowDat
     }
 }
 
-ssize_t LogViewWidget::getMaxRowWidth()
+tp::SInt LogViewWidget::getMaxRowWidth()
 {
-    ssize_t maxRowWidth(0);
+    tp::SInt maxRowWidth(0);
     const auto offset(m_hScrollBar->getPos());
     forEachVisualRowInPage(
         [&maxRowWidth, offset](VisualRowData &vrData)
         {
             for (const auto &col : vrData.columns)
             {
-                maxRowWidth = std::max<ssize_t>(maxRowWidth, col.rect.right() - vrData.numberAreaRect.right() + offset);
+                maxRowWidth = std::max<tp::SInt>(maxRowWidth, col.rect.right() - vrData.numberAreaRect.right() + offset);
             }
             return true;
         });
     return maxRowWidth;
 }
 
-ssize_t LogViewWidget::getFirstPageRow() const
+tp::SInt LogViewWidget::getFirstPageRow() const
 {
     return m_vScrollBar->getPos();
 }
 
-ssize_t LogViewWidget::getLastPageRow() const
+tp::SInt LogViewWidget::getLastPageRow() const
 {
-    const ssize_t itemsInPage(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
+    const tp::SInt itemsInPage(std::min<tp::SInt>(m_itemsPerPage, m_model->rowCount()));
     return m_vScrollBar->getPos() + itemsInPage - 1;
 }
 
-ssize_t LogViewWidget::getRowByScreenPos(int yPos) const
+tp::SInt LogViewWidget::getRowByScreenPos(int yPos) const
 {
     return m_vScrollBar->getPos() + ((yPos - m_textAreaRect.top()) / m_rowHeight);
 }
 
-ssize_t LogViewWidget::getTextWidth(const std::string &text, bool simplified)
+tp::SInt LogViewWidget::getTextWidth(const std::string &text, bool simplified)
 {
     QString qStr(QString::fromStdString(text));
     return m_fm.horizontalAdvance(simplified ? qStr.simplified() : qStr);
 }
 
-QString LogViewWidget::getElidedText(const std::string &text, ssize_t width, bool simplified)
+QString LogViewWidget::getElidedText(const std::string &text, tp::SInt width, bool simplified)
 {
     QString qStr(QString::fromStdString(text));
     return m_fm.elidedText(simplified ? qStr.simplified() : qStr, Qt::ElideRight, width);
@@ -722,22 +722,22 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
 {
     getColumnsSizeToHeader(columnsRef);
 
-    ssize_t rowsInPage(std::min<ssize_t>(m_itemsPerPage, m_model->rowCount()));
-    const ssize_t elideWith(getTextWidth("..."));
+    tp::SInt rowsInPage(std::min<tp::SInt>(m_itemsPerPage, m_model->rowCount()));
+    const tp::SInt elideWith(getTextWidth("..."));
     std::vector<std::string> rowData;
 
-    for (ssize_t i = 0; i < rowsInPage; ++i)
+    for (tp::SInt i = 0; i < rowsInPage; ++i)
     {
-        ssize_t row = i + m_vScrollBar->getPos();
+        tp::SInt row = i + m_vScrollBar->getPos();
         rowData.clear();
         m_model->getRow(row, rowData);
 
         for (auto &headerColumn : columnsRef)
         {
             auto &column(headerColumn.get());
-            const ssize_t textWidth =
+            const tp::SInt textWidth =
                 getTextWidth(rowData[column.idx], true) + g_startTextMargin + elideWith + g_defaultMargin;
-            column.width = std::max<ssize_t>(column.width, textWidth);
+            column.width = std::max<tp::SInt>(column.width, textWidth);
         }
     }
 }
@@ -746,13 +746,13 @@ void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
 {
     getColumnsSizeToContent(columnsRef);
 
-    std::map<ssize_t, ssize_t> columnsMap;
-    ssize_t remainingWidth(m_textAreaRect.width());
-    ssize_t remainingColumns(columnsRef.size());
-    ssize_t maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
-    std::pair<ssize_t, ssize_t> biggerColumn{0, 0};
+    std::map<tp::SInt, tp::SInt> columnsMap;
+    tp::SInt remainingWidth(m_textAreaRect.width());
+    tp::SInt remainingColumns(columnsRef.size());
+    tp::SInt maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+    std::pair<tp::SInt, tp::SInt> biggerColumn{0, 0};
 
-    ssize_t idx(0);
+    tp::SInt idx(0);
     for (auto &headerColumn : columnsRef)
     {
         auto &column(headerColumn.get());
@@ -762,7 +762,7 @@ void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
             biggerColumn.second = column.width;
         }
 
-        column.width = std::min<ssize_t>(maxWidthPerCol, column.width);
+        column.width = std::min<tp::SInt>(maxWidthPerCol, column.width);
         remainingWidth -= column.width;
         --remainingColumns;
         maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
@@ -800,7 +800,7 @@ void LogViewWidget::adjustColumns(ColumnsSize size)
     m_stabilizedUpdateTimer->start();
 }
 
-void LogViewWidget::expandColumnToContent(ssize_t columnIdx)
+void LogViewWidget::expandColumnToContent(tp::SInt columnIdx)
 {
     if (columnIdx < m_header->getColumns().size())
     {
@@ -935,14 +935,14 @@ void LogViewWidget::gotToLastRow()
 
 void LogViewWidget::goLeft()
 {
-    const ssize_t step = m_textAreaRect.width() / 20L;
+    const tp::SInt step = m_textAreaRect.width() / 20L;
     m_hScrollBar->setPos(m_hScrollBar->getPos() - step);
     update();
 }
 
 void LogViewWidget::goRight()
 {
-    const ssize_t step = m_textAreaRect.width() / 20L;
+    const tp::SInt step = m_textAreaRect.width() / 20L;
     m_hScrollBar->setPos(m_hScrollBar->getPos() + step);
     update();
 }
@@ -964,7 +964,7 @@ bool LogViewWidget::canCopy() const
     return ((m_startSelect.has_value() && m_currentSelec.has_value()) || m_currentRow.has_value());
 }
 
-QString LogViewWidget::rowToText(ssize_t row)
+QString LogViewWidget::rowToText(tp::SInt row)
 {
     QString rowText;
     VisualRowData vrData;
@@ -978,7 +978,7 @@ QString LogViewWidget::rowToText(ssize_t row)
     return rowText;
 }
 
-QString LogViewWidget::getSelectedText(ssize_t row)
+QString LogViewWidget::getSelectedText(tp::SInt row)
 {
     QString selectedText;
     VisualRowData vrData;
@@ -1006,9 +1006,9 @@ void LogViewWidget::copySelected()
         }
         else
         {
-            const ssize_t firstRow = std::min(m_startSelect->first, m_currentSelec->first);
-            const ssize_t lastRow = std::max(m_startSelect->first, m_currentSelec->first);
-            for (ssize_t row = firstRow; row <= lastRow; ++row)
+            const tp::SInt firstRow = std::min(m_startSelect->first, m_currentSelec->first);
+            const tp::SInt lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+            for (tp::SInt row = firstRow; row <= lastRow; ++row)
             {
                 if (!value.isEmpty())
                     value.append('\n');
@@ -1028,12 +1028,12 @@ void LogViewWidget::copySelected()
     }
 }
 
-const std::set<ssize_t> &LogViewWidget::getMarks()
+const std::set<tp::SInt> &LogViewWidget::getMarks()
 {
     return m_marks;
 }
 
-bool LogViewWidget::hasMark(ssize_t row) const
+bool LogViewWidget::hasMark(tp::SInt row) const
 {
     return (m_marks.find(row) != m_marks.end());
 }
@@ -1043,12 +1043,12 @@ void LogViewWidget::clearMarks()
     m_marks.clear();
 }
 
-void LogViewWidget::markRow(ssize_t row)
+void LogViewWidget::markRow(tp::SInt row)
 {
     m_marks.insert(row);
 }
 
-void LogViewWidget::removeMark(ssize_t row)
+void LogViewWidget::removeMark(tp::SInt row)
 {
     if (auto it = m_marks.find(row); it != m_marks.end())
     {
@@ -1056,7 +1056,7 @@ void LogViewWidget::removeMark(ssize_t row)
     }
 }
 
-void LogViewWidget::toggleMark(ssize_t row)
+void LogViewWidget::toggleMark(tp::SInt row)
 {
     if (auto it = m_marks.find(row); it != m_marks.end())
     {
@@ -1108,10 +1108,10 @@ void LogViewWidget::markSelected()
 {
     if (m_startSelect.has_value() && m_currentSelec.has_value())
     {
-        const ssize_t firstRow = std::min(m_startSelect->first, m_currentSelec->first);
-        const ssize_t lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+        const tp::SInt firstRow = std::min(m_startSelect->first, m_currentSelec->first);
+        const tp::SInt lastRow = std::max(m_startSelect->first, m_currentSelec->first);
         bool allMarked(true);
-        for (ssize_t row = firstRow; row <= lastRow; ++row)
+        for (tp::SInt row = firstRow; row <= lastRow; ++row)
         {
             if (!hasMark(row))
             {
@@ -1119,7 +1119,7 @@ void LogViewWidget::markSelected()
                 break;
             }
         }
-        for (ssize_t row = firstRow; row <= lastRow; ++row)
+        for (tp::SInt row = firstRow; row <= lastRow; ++row)
         {
             if (allMarked)
                 removeMark(row);

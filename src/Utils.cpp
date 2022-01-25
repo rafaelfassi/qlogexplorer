@@ -51,7 +51,7 @@ std::vector<std::string> split(const std::string &str, const std::string &delim)
     return res;
 }
 
-QString elideLeft(const std::string &str, size_t maxSize)
+QString elideLeft(const std::string &str, tp::UInt maxSize)
 {
     QString res(str.c_str());
     if ((res.size() > maxSize) && (maxSize > 3))

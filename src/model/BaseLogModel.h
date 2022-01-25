@@ -5,7 +5,7 @@
 #include <thread>
 #include <mutex>
 
-constexpr size_t g_chunkSize = 1024 * 1024;
+constexpr tp::UInt g_chunkSize = 1024 * 1024;
 
 enum class WatchingResult
 {
@@ -19,25 +19,25 @@ enum class WatchingResult
 class Chunk
 {
 public:
-    Chunk(size_t startPos, size_t endPos, size_t firstRow, size_t lastRow)
+    Chunk(size_t startPos, tp::UInt endPos, tp::UInt firstRow, tp::UInt lastRow)
         : m_posRange(std::make_pair(startPos, endPos)),
           m_rowRange(std::make_pair(firstRow, lastRow))
     {
     }
-    size_t getSize() const { return m_posRange.second - m_posRange.first + 1; }
-    size_t getStartPos() const { return m_posRange.first; }
-    size_t getEndPos() const { return m_posRange.second; }
+    tp::UInt getSize() const { return m_posRange.second - m_posRange.first + 1; }
+    tp::UInt getStartPos() const { return m_posRange.first; }
+    tp::UInt getEndPos() const { return m_posRange.second; }
 
-    size_t getRowCount() const { return m_rowRange.second - m_rowRange.first + 1; }
-    size_t getFistRow() const { return m_rowRange.first; }
-    size_t getLastRow() const { return m_rowRange.second; }
+    tp::UInt getRowCount() const { return m_rowRange.second - m_rowRange.first + 1; }
+    tp::UInt getFistRow() const { return m_rowRange.first; }
+    tp::UInt getLastRow() const { return m_rowRange.second; }
 
-    bool countainRow(const size_t &row) const { return ((row >= getFistRow()) && (row <= getLastRow())); }
-    static bool compareRows(const Chunk &c, const size_t &row) { return (c.getLastRow() < row); }
+    bool countainRow(const tp::UInt &row) const { return ((row >= getFistRow()) && (row <= getLastRow())); }
+    static bool compareRows(const Chunk &c, const tp::UInt &row) { return (c.getLastRow() < row); }
 
 private:
-    std::pair<size_t, size_t> m_posRange;
-    std::pair<size_t, size_t> m_rowRange;
+    std::pair<size_t, tp::UInt> m_posRange;
+    std::pair<size_t, tp::UInt> m_rowRange;
 };
 
 class ChunkRows
@@ -61,11 +61,11 @@ public:
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         return (it != m_rows.end() && row == it->first);
     }
-    size_t rowCount() const { return m_rows.size(); }
+    tp::UInt rowCount() const { return m_rows.size(); }
     const Chunk *getChunk() { return m_chunk; }
     const std::vector<RowsData> &data() { return m_rows; }
 
-    static bool compareRows(const RowsData &rowData, const size_t &row) { return (rowData.first < row); }
+    static bool compareRows(const RowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
 
 private:
     const Chunk *m_chunk = nullptr;
@@ -78,7 +78,7 @@ struct SearchParam
     bool matchCase = true;
     bool notOp = false;
     std::string exp;
-    std::optional<std::size_t> column;
+    std::optional<tp::UInt> column;
 };
 using SearchParamLst = std::vector<SearchParam>;
 
@@ -90,12 +90,12 @@ public:
     BaseLogModel(Conf &conf, QObject *parent = 0);
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
-    ssize_t getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
+    tp::SInt getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
     tp::Columns &getColumns() override final;
     const tp::Columns &getColumns() const override final;
-    std::size_t columnCount() const override final;
-    std::size_t rowCount() const override final;
-    ssize_t getRowNum(ssize_t row) const override final;
+    tp::UInt columnCount() const override final;
+    tp::UInt rowCount() const override final;
+    tp::SInt getRowNum(tp::SInt row) const override final;
     void startSearch(const SearchParamLst &params, bool orOp);
     void stopSearch();
     bool isSearching() const;
@@ -107,7 +107,7 @@ public:
 
 signals:
     void parsingProgress(char progress);
-    void valueFound(std::shared_ptr<std::deque<ssize_t>> rowsPtr) const;
+    void valueFound(tp::SharedSIntList rowsPtr) const;
 
 public slots:
     void setFollowing(bool following);
@@ -115,20 +115,20 @@ public slots:
 protected:
     virtual bool configure(Conf &conf, std::istream &is) = 0;
     virtual bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const = 0;
-    virtual std::size_t parseChunks(
+    virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,
-        std::size_t fromPos,
-        std::size_t nextRow,
-        std::size_t fileSize) = 0;
+        tp::UInt fromPos,
+        tp::UInt nextRow,
+        tp::UInt fileSize) = 0;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
 
     // Helping funtions to operate over istream.
-    static ssize_t getFileSize(std::istream &is);
-    static ssize_t getFilePos(std::istream &is);
+    static tp::SInt getFileSize(std::istream &is);
+    static tp::SInt getFilePos(std::istream &is);
     static bool isEndOfFile(std::istream &is);
-    static bool moveFilePos(std::istream &is, std::size_t pos);
-    static ssize_t readFile(std::istream &is, std::string &buffer, std::size_t bytes);
+    static bool moveFilePos(std::istream &is, tp::UInt pos);
+    static tp::SInt readFile(std::istream &is, std::string &buffer, tp::UInt bytes);
 
 private:
     void clear();
@@ -156,5 +156,5 @@ private:
     // Set by m_watchThread and read by main and m_searchThread threads.
     std::atomic_size_t m_rowCount = 0;
     // Accessed only by m_watchThread.
-    std::size_t m_lastParsedPos = 0;
+    tp::UInt m_lastParsedPos = 0;
 };

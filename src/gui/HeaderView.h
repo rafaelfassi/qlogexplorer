@@ -43,7 +43,7 @@ public:
 
 signals:
     void columnsChanged();
-    void expandToContent(ssize_t colIdx);
+    void expandToContent(tp::SInt colIdx);
     void expandAllToContent();
     void expandAllToScreen();
 
