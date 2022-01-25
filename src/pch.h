@@ -11,7 +11,6 @@
 #include <fstream>
 
 // Qt
-#include <QDebug>
 #include <QString>
 #include <QColor>
 #include <QDir>
@@ -26,7 +25,10 @@
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/istreamwrapper.h>
 
+// fmt
+#include <fmt/core.h>
+
 // global includes
-#include "Utils.h"
 #include "Types.h"
+#include "Utils.h"
 #include "Conf.h"

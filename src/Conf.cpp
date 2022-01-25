@@ -5,7 +5,7 @@ Conf::Conf(tp::FileType fileType) : m_fileType(fileType)
 {
 }
 
-Conf::Conf(const std::string& confFileName)
+Conf::Conf(const std::string &confFileName)
 {
     loadFConf(confFileName);
 }
@@ -15,7 +15,7 @@ bool Conf::loadFConf(const std::string &confFileName)
     std::ifstream ifs(confFileName);
     if (!ifs.is_open())
     {
-        qCritical() << "Unable to open" << confFileName.c_str();
+        LOG_ERR("Unable to open {}", confFileName);
         return false;
     }
 
@@ -25,8 +25,7 @@ bool Conf::loadFConf(const std::string &confFileName)
     d.ParseStream(isw);
     if (d.HasParseError())
     {
-        qCritical() << "Error" << d.GetParseError() << "parsing config file " << confFileName.c_str() << "at offset"
-                    << d.GetErrorOffset();
+        LOG_ERR("Error {} parsing config file '{}' at offset {}", d.GetParseError(), confFileName, d.GetErrorOffset());
         return false;
     }
 
@@ -37,12 +36,17 @@ bool Conf::loadFConf(const std::string &confFileName)
 
     if (const auto &it = d.FindMember("fileType"); it != d.MemberEnd())
     {
-        tp::fromStr(it->value.GetString(), m_fileType);
+        m_fileType = tp::fromStr<tp::FileType>(it->value.GetString());
+    }
+
+    if (const auto &it = d.FindMember("regexPattern"); it != d.MemberEnd())
+    {
+        m_regexPattern = it->value.GetString();
     }
 
     if (const auto &colsIt = d.FindMember("columns"); colsIt != d.MemberEnd())
     {
-        for (const auto& col : colsIt->value.GetArray())
+        for (const auto &col : colsIt->value.GetArray())
         {
             tp::Column column;
             if (const auto &cIt = col.FindMember("key"); cIt != col.MemberEnd())
@@ -84,7 +88,7 @@ void Conf::saveConfAs(const std::string &confFileName)
     std::ofstream ofs(confFileName);
     if (!ofs.is_open())
     {
-        qCritical() << "Unable to open" << confFileName.c_str();
+        LOG_ERR("Unable to open {}", confFileName);
         return;
     }
 
@@ -98,7 +102,7 @@ void Conf::saveConf()
 {
     if (m_confFileName.empty())
     {
-        qCritical() << "No config file defined";
+        LOG_ERR("No config file defined");
         return;
     }
     saveConfAs(m_confFileName);
@@ -115,6 +119,7 @@ rapidjson::Document Conf::toJson() const
 
     jDoc.AddMember("configName", m_configName, alloc);
     jDoc.AddMember("fileType", tp::toStr(m_fileType), alloc);
+    jDoc.AddMember("regexPattern", m_regexPattern, alloc);
 
     rapidjson::Value jCols(rapidjson::kArrayType);
     for (const auto &column : m_columns)

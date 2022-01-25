@@ -13,7 +13,7 @@ void enumToStr(const std::vector<std::pair<T, std::string>> &typeMap, const T &t
         str = it->second;
         return;
     }
-    qCritical() << "ColumnType " << static_cast<int>(type) << "not found";
+    LOG_ERR("ColumnType {} not found", static_cast<int>(type));
 }
 
 template <typename T>
@@ -25,7 +25,7 @@ void enumFromStr(const std::vector<std::pair<T, std::string>> &typeMap, const st
         type = it->first;
         return;
     }
-    qCritical() << "ColumnType " << str.c_str() << "not found";
+    LOG_ERR("ColumnType '{}' not found", str);
 }
 
 template <typename T>
@@ -59,6 +59,19 @@ void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const 
             flags |= it->first;
         }
     }
+}
+
+static const std::vector<std::pair<LogLevel, std::string>> g_logLevelMap = {
+    {LogLevel::Info, "INFO"},
+    {LogLevel::Warning, "WARN"},
+    {LogLevel::Error, "ERROR"}};
+void toStr(const LogLevel &type, std::string &str)
+{
+    enumToStr<LogLevel>(g_logLevelMap, type, str);
+}
+void fromStr(const std::string &str, LogLevel &type)
+{
+    enumFromStr<LogLevel>(g_logLevelMap, str, type);
 }
 
 static const std::vector<std::pair<FileType, std::string>> g_fileTypeMap = {

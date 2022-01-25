@@ -6,6 +6,15 @@ namespace tp
 using Row = ssize_t;
 using Col = int32_t;
 
+enum class LogLevel
+{
+    Info,
+    Warning,
+    Error
+};
+void toStr(const LogLevel &type, std::string &str);
+void fromStr(const std::string &str, LogLevel &type);
+
 enum class FileType
 {
     None,

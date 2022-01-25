@@ -52,6 +52,7 @@ signals:
 
 public slots:
     void updateView();
+    void resetColumns();
     void goToRow(ssize_t row);
     void markRow(ssize_t row);
     void adjustColumns(ColumnsSize size);

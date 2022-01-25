@@ -102,6 +102,7 @@ public:
     bool isWatching() const;
     void start();
     void stop();
+    void reconfigure();
     bool isFollowing() const;
 
 signals:
@@ -130,6 +131,7 @@ protected:
     static ssize_t readFile(std::istream &is, std::string &buffer, std::size_t bytes);
 
 private:
+    void clear();
     void loadChunks();
     bool loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const;
     void keepWatching();

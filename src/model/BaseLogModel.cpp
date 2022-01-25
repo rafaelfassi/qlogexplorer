@@ -156,7 +156,7 @@ bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vecto
             }
             else
             {
-                qCritical() << "Filter column is bigger than row columns";
+                LOG_ERR("Filter column is bigger than row columns");
             }
         }
         else
@@ -195,7 +195,7 @@ BaseLogModel::~BaseLogModel()
 {
     if (m_watching.load())
     {
-        qCritical() << "stop() must be called on the derivated class destructor";
+        LOG_ERR("stop() must be called on the derivated class destructor");
         stop();
     }
 
@@ -221,7 +221,7 @@ ssize_t BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowDat
             loadChunkRowsByRow(row, m_cachedChunkRows);
             if (!m_cachedChunkRows.contains(row))
             {
-                qCritical() << "Row" << row << "not found in the cache";
+                LOG_ERR("Row {} not found in the cache", row);
                 return -1;
             }
         }
@@ -270,7 +270,7 @@ bool BaseLogModel::isSearching() const
 
 void BaseLogModel::search()
 {
-    qDebug() << "Starting to search";
+    LOG_INF("Starting to search");
 
     ChunkRows chunkRows;
     std::vector<std::string> rowData;
@@ -329,7 +329,7 @@ void BaseLogModel::search()
 
         if (row > startingRow)
         {
-            qDebug() << "Searching finished after" << searchTime / 1000 << "seconds";
+            LOG_INF("Searching finished after {} seconds", searchTime / 1000);
         }
 
         if (m_searching.load())
@@ -391,6 +391,21 @@ void BaseLogModel::stop()
     stopSearch();
 }
 
+void BaseLogModel::reconfigure()
+{
+    stop();
+    m_configured.store(false);
+    start();
+}
+
+void BaseLogModel::clear()
+{
+    m_rowCount.store(0);
+    m_lastParsedPos = 0;
+    m_cachedChunkRows = ChunkRows();
+    m_chunks.clear();
+}
+
 bool BaseLogModel::isFollowing() const
 {
     return m_following.load();
@@ -417,7 +432,7 @@ void BaseLogModel::keepWatching()
             case WatchingResult::UnknownFailure:
                 break;
             default:
-                qCritical() << "Unknown WatchingResult";
+                LOG_ERR("Unknown WatchingResult");
                 break;
         }
 
@@ -441,11 +456,7 @@ void BaseLogModel::keepWatching()
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
                 m_ifs.close();
                 m_ifs = std::move(newIfs);
-
-                m_rowCount.store(0);
-                m_lastParsedPos = 0;
-                m_cachedChunkRows = ChunkRows();
-                m_chunks.clear();
+                clear();
             }
         }
     }
@@ -455,7 +466,7 @@ WatchingResult BaseLogModel::watchFile()
 {
     if (!m_ifs.is_open())
     {
-        qDebug() << "File is not opened: " << m_fileName.c_str();
+        LOG_WAR("File '{}' is not opened", m_fileName);
         return WatchingResult::FileClosed;
     }
 
@@ -465,7 +476,7 @@ WatchingResult BaseLogModel::watchFile()
 
         if (!std::filesystem::exists(m_fileName))
         {
-            qDebug() << "File does not exist: " << m_fileName.c_str();
+            LOG_WAR("File '{}' does not exist", m_fileName);
             return WatchingResult::FileNotFound;
         }
         else
@@ -482,7 +493,7 @@ WatchingResult BaseLogModel::watchFile()
             {
                 if (fileSize < m_lastParsedPos)
                 {
-                    qDebug() << "File was recreated: " << m_fileName.c_str();
+                    LOG_WAR("File '{}' was recreated", m_fileName);
                     return WatchingResult::FileRecreated;
                 }
 
@@ -490,7 +501,7 @@ WatchingResult BaseLogModel::watchFile()
                 m_ifs.peek();
                 if (m_ifs.fail())
                 {
-                    qDebug() << "File is on fail status: " << m_fileName.c_str();
+                    LOG_ERR("File '{}' is on fail status", m_fileName);
                     return WatchingResult::UnknownFailure;
                 }
 
@@ -581,7 +592,7 @@ ssize_t BaseLogModel::readFile(std::istream &is, std::string &buffer, std::size_
 
 void BaseLogModel::loadChunks()
 {
-    qDebug() << "Starting to parse chunks for" << m_fileName.c_str();
+    LOG_INF("Starting to parse chunks for '{}'", m_fileName);
     QElapsedTimer timer;
     timer.start();
 
@@ -593,7 +604,7 @@ void BaseLogModel::loadChunks()
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
         if (!m_ifs.good())
         {
-            qCritical() << "The ifstream is not good";
+            LOG_ERR("The ifstream is not good");
             return;
         }
         fileSize = getFileSize(m_ifs);
@@ -637,7 +648,7 @@ void BaseLogModel::loadChunks()
     } while (m_watching.load(std::memory_order_relaxed) && (newLastParsedPos < fileSize));
 
     chunkCount = m_chunks.size() - chunkCount;
-    qDebug() << chunkCount << "chunks parsed in" << timer.elapsed() / 1000 << "seconds";
+    LOG_INF("{} chunks parsed in {} seconds", chunkCount, timer.elapsed() / 1000);
 }
 
 bool BaseLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
@@ -649,8 +660,10 @@ bool BaseLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
         loadChunkRows(m_ifs, tmpChunkRows);
         if (tmpChunkRows.rowCount() != chunk->getRowCount())
         {
-            qCritical() << "The cached chunk rows" << tmpChunkRows.rowCount() << "does not match the chunk info"
-                        << chunk->getRowCount();
+            LOG_ERR(
+                "The cached chunk rows {} does not match the chunk info {}",
+                tmpChunkRows.rowCount(),
+                chunk->getRowCount());
         }
         chunkRows = std::move(tmpChunkRows);
         return true;

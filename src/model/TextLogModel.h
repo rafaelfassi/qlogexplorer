@@ -20,4 +20,7 @@ protected:
         std::size_t nextRow,
         std::size_t fileSize) override;
     virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const override;
+
+private:
+    QRegularExpression m_rx;
 };

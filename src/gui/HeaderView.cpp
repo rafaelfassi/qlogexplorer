@@ -2,7 +2,6 @@
 #include "HeaderView.h"
 #include "QMouseEvent"
 #include <QMenu>
-#include <QDebug>
 
 // HeaderModel ----------------------------------------------------------------
 
@@ -47,6 +46,7 @@ QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation,
 void priv::HeaderModel::setColumns(tp::Columns &columns)
 {
     beginResetModel();
+    m_columns.clear();
     m_columns.insert(m_columns.begin(), columns.begin(), columns.end());
     endResetModel();
 }
@@ -141,7 +141,7 @@ void HeaderView::changedColumnsCount(int, int)
         }
         else if (column.idx != idx)
         {
-            qCritical() << "Column idx mismatch" << idx << column.idx;
+            LOG_ERR("Column idx mismatch {} - {}", idx, column.idx);
         }
 
         if (column.pos < 0)
@@ -202,9 +202,9 @@ void HeaderView::setBgColor(const QColor &color)
 
 void HeaderView::getVisibleColumns(tp::ColumnsRef &columnsRef, bool orderByPos)
 {
-    auto& columns(m_headerModel->m_columns);
+    auto &columns(m_headerModel->m_columns);
 
-    if(!orderByPos)
+    if (!orderByPos)
     {
         for (auto &column : columns)
         {

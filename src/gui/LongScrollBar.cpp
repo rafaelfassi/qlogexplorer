@@ -1,7 +1,6 @@
 #include "LongScrollBar.h"
 #include <QPaintEvent>
 #include <QPainter>
-#include <QDebug>
 #include <cmath>
 #include <limits>
 #include <iostream>
@@ -91,14 +90,10 @@ void LongScrollBar::updateDisplaySizeV()
     const double newHeight(height());
     const double maxPos(std::max(m_max, 1L));
 
-    // qDebug() << "height" << height();
-
     m_sizePerPos = newHeight / maxPos;
     int knobHeight = std::min(std::max<double>(m_sizePerPos, newHeight / 8.0), newHeight / 2.0);
-    // qDebug() << "knobHeight" << knobHeight;
 
     m_sizePerPos = (newHeight - knobHeight) / maxPos;
-    // qDebug() << "m_sizePerPos" << m_sizePerPos;
 
     m_knobRect.setHeight(knobHeight);
     m_knobRect.setWidth(width());
@@ -109,14 +104,10 @@ void LongScrollBar::updateDisplaySizeH()
     const double newWidth(width());
     const double maxPos(std::max(m_max, 1L));
 
-    // qDebug() << "height" << height();
-
     m_sizePerPos = newWidth / maxPos;
     int knobWidth = std::min(std::max<double>(m_sizePerPos, newWidth / 8.0), newWidth / 2.0);
-    // qDebug() << "knobWidth" << knobWidth;
 
     m_sizePerPos = (newWidth - knobWidth) / maxPos;
-    // qDebug() << "m_sizePerPos" << m_sizePerPos;
 
     m_knobRect.setWidth(knobWidth);
     m_knobRect.setHeight(height());
@@ -136,8 +127,6 @@ void LongScrollBar::paintEvent(QPaintEvent *event)
 
     QPainter devicePainter(this);
     devicePainter.eraseRect(rect());
-
-    // qDebug() << "paintEvent: m_knobRect" << m_knobRect;
 
     devicePainter.fillRect(rect(), QColor("lightGray"));
     if (m_max > 0)
@@ -163,8 +152,6 @@ void LongScrollBar::mousePressEvent(QMouseEvent *event)
     {
         m_knobGrabbed = std::nullopt;
     }
-    // m_knobGrabbed = m_knobRect.contains(event->pos());
-    // qDebug() << "mousePressEvent: m_knobGrabbed" << m_knobGrabbed;
 }
 
 void LongScrollBar::mouseReleaseEvent(QMouseEvent *event)
@@ -172,7 +159,6 @@ void LongScrollBar::mouseReleaseEvent(QMouseEvent *event)
     if (m_knobGrabbed.has_value())
     {
         m_knobGrabbed = std::nullopt;
-        // qDebug() << "mouseReleaseEvent: m_knobGrabbed" << m_knobGrabbed;
     }
 }
 
@@ -230,8 +216,6 @@ void LongScrollBar::scrollWithDegrees(int degrees)
         m_wheelDegrees.second = std::abs(degrees);
     }
 
-    // qDebug() << "scrollWithDegrees: " << m_wheelDegrees.first*m_wheelDegrees.second;
-
     if (m_wheelDegrees.second >= 15)
     {
         const ssize_t steps = m_wheelDegrees.second / 15;
@@ -280,7 +264,6 @@ void LongScrollBar::changeMax(ssize_t max)
             changePos(max);
         }
         m_max = max;
-        // qDebug() << "Max changed:" << m_max;
     }
 }
 
@@ -298,6 +281,5 @@ void LongScrollBar::changePos(ssize_t pos)
     if (m_pos != pos)
     {
         m_pos = pos;
-        // qDebug() << "Pos changed:" << m_pos;
     }
 }

@@ -168,6 +168,16 @@ void LogSearchWidget::addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsP
     }
 }
 
+void LogSearchWidget::resetColumns()
+{
+    for (auto paramWidget : m_searchParamWidgets)
+    {
+        paramWidget->deleteLater();
+    }
+    m_searchParamWidgets.clear();
+    m_searchResults->resetColumns();
+}
+
 void LogSearchWidget::clearResults()
 {
     m_sourceModel->stopSearch();
@@ -182,7 +192,6 @@ void LogSearchWidget::deleteParamWidget(QWidget *paramWidget)
     {
         if (m_searchParamWidgets.at(i) == paramWidget)
         {
-            qDebug() << "Removing param" << i;
             m_searchParamWidgets.removeAt(i);
             paramWidget->deleteLater();
             return;

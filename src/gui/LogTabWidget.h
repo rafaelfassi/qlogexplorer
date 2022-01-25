@@ -13,12 +13,14 @@ class LogTabWidget : public QWidget
 public:
     LogTabWidget(Conf *conf, QWidget *parent = nullptr);
     ~LogTabWidget();
+    void updateColumns();
+    Conf &getConf();
+
+protected:
     void createActions();
     void createMenus();
     void createToolBars();
     void createConnections();
-
-    Conf& getConf();
 
 private:
     BaseLogModel *m_logModel;

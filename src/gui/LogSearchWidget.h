@@ -27,6 +27,7 @@ signals:
 
 public slots:
     void addSearchResult(std::shared_ptr<std::deque<ssize_t>> rowsPtr);
+    void resetColumns();
 
 private slots:
     void addSearchParam();

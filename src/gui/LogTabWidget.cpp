@@ -5,7 +5,6 @@
 #include "JsonLogModel.h"
 #include "LongScrollBar.h"
 #include <QTableView>
-#include <QDebug>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -65,10 +64,17 @@ void LogTabWidget::createActions()
 
 void LogTabWidget::createConnections()
 {
-
 }
 
-Conf& LogTabWidget::getConf()
+void LogTabWidget::updateColumns()
+{
+    m_conf->clearColumns();
+    m_logViewWidget->resetColumns();
+    m_logSearchWidget->resetColumns();
+    m_logModel->reconfigure();
+}
+
+Conf &LogTabWidget::getConf()
 {
     return *m_conf;
 }

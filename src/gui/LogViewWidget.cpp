@@ -10,7 +10,6 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QMenu>
-#include <QDebug>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <cmath>
@@ -291,6 +290,12 @@ void LogViewWidget::updateView()
 {
     updateDisplaySize();
     update();
+}
+
+void LogViewWidget::resetColumns()
+{
+    tp::Columns emptyColumns;
+    m_header->setColumns(emptyColumns);
 }
 
 void LogViewWidget::resizeEvent(QResizeEvent *event)
@@ -685,11 +690,15 @@ void LogViewWidget::configureColumns()
             m_header->setVisible(false);
             m_btnExpandColumns->setVisible(false);
             m_btnFitColumns->setEnabled(false);
-            m_btnFitColumns->setIcon(QIcon());
-            m_btnFitColumns->setToolTip("");
+            m_textAreaRect.setTop(0);
+            // m_btnFitColumns->setIcon(QIcon());
+            // m_btnFitColumns->setToolTip("");
         }
         else
         {
+            m_header->setVisible(true);
+            m_btnExpandColumns->setVisible(true);
+            m_btnFitColumns->setEnabled(true);
             m_textAreaRect.setTop(m_header->height());
             adjustColumns(ColumnsSize::Headers);
         }

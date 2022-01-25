@@ -145,7 +145,7 @@ std::size_t JsonLogModel::parseChunks(
         }
         else
         {
-            qCritical() << "Error parsing json file at pos" << res.Offset();
+            LOG_ERR("Error parsing json file at pos {}", res.Offset());
             return std::max(last_pos, fileSize);
         }
 

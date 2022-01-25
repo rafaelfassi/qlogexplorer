@@ -1,9 +1,15 @@
 #include "pch.h"
 #include "Utils.h"
+#include <iostream>
 #include <sstream>
 
 namespace utl
 {
+
+void log(const char* file, const std::uint32_t line, tp::LogLevel level, const std::string &msg)
+{
+    std::cout << "[" << tp::toStr<tp::LogLevel>(level) << "] " << file << ":" << line << ": " << msg << std::endl;
+}
 
 std::string toStr(const rapidjson::Value &json)
 {
@@ -11,6 +17,11 @@ std::string toStr(const rapidjson::Value &json)
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     json.Accept(writer);
     return buffer.GetString();
+}
+
+std::string toStr(const QString& str)
+{
+    return str.toStdString();
 }
 
 std::string join(const std::vector<std::string> &strList, const std::string &delim)

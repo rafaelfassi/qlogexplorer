@@ -1,5 +1,4 @@
 #include "TextLogModel.h"
-#include <QDebug>
 
 constexpr size_t g_maxChunksPerParse(500);
 
@@ -14,14 +13,87 @@ TextLogModel::~TextLogModel()
 
 bool TextLogModel::configure(Conf &conf, std::istream &is)
 {
-    conf.addColumn(tp::Column());
-    return true;
+    if (conf.getRegexPattern().empty())
+    {
+        if (conf.getColumns().empty())
+        {
+            conf.addColumn(tp::Column());
+        }
+        if (m_rx.isValid())
+        {
+            m_rx.setPattern(QString());
+        }
+    }
+    else
+    {
+        m_rx.setPattern(conf.getRegexPattern().c_str());
+        if (!m_rx.isValid())
+        {
+            LOG_ERR("Invalid regex pattern: '{}'", conf.getRegexPattern());
+        }
 
+        if (conf.getColumns().empty())
+        {
+            const auto groupsCount = m_rx.captureCount();
+            const auto &namedGroups = m_rx.namedCaptureGroups();
+            for (auto g = 1; g <= groupsCount; ++g)
+            {
+                tp::Column cl;
+                cl.key = std::to_string(g);
+                cl.type = tp::ColumnType::Str;
+
+                if (g < namedGroups.size())
+                {
+                    cl.name = namedGroups.at(g).toStdString();
+                }
+
+                if (cl.name.empty())
+                {
+                    cl.name = cl.key;
+                }
+
+                cl.idx = g - 1;
+                cl.pos = cl.idx;
+                cl.width = -1;
+                conf.addColumn(std::move(cl));
+            }
+        }
+    }
+
+    return !conf.getColumns().empty();
 }
 
 bool TextLogModel::parseRow(const std::string &rawText, std::vector<std::string> &rowData) const
 {
-    rowData.emplace_back(rawText);
+    if (m_rx.pattern().isEmpty())
+    {
+        rowData.emplace_back(rawText);
+    }
+    else
+    {
+        QRegularExpressionMatch match = m_rx.match(rawText.c_str());
+        if (match.hasMatch())
+        {
+            for (const auto &col : getColumns())
+            {
+                try
+                {
+                    const auto group = std::stoi(col.key);
+                    rowData.push_back(match.captured(group).toStdString());
+                }
+                catch (const std::exception &e)
+                {
+                    LOG_ERR("Invalid regex group: {}", col.key);
+                    rowData.push_back(std::string());
+                }
+            }
+        }
+        else
+        {
+            rowData.emplace_back(rawText);
+        }
+    }
+
     return true;
 }
 
