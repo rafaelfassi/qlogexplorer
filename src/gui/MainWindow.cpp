@@ -62,7 +62,7 @@ void MainWindow::createActions()
     m_actSaveConf->setEnabled(false);
     m_actSaveConfAs = new QAction(tr("Save Configuration As..."), this);
     m_actSaveConfAs->setEnabled(false);
-    m_actEdtRegex = new QAction(tr("Regular Expressions"), this);
+    m_actEdtRegex = new QAction(tr("Regular Expression"), this);
     m_actEdtRegex->setEnabled(false);
 
     m_actRecentFiles.resize(g_maxRecentFiles);
@@ -318,8 +318,7 @@ QString MainWindow::makeRecentFileName(const std::string &recentFile)
         typeStr = fileType.c_str();
     }
 
-    const QString &shortFilename = QFileInfo(fileName.c_str()).fileName();
-    return QString("%1 As [%2]").arg(shortFilename, typeStr);
+    return QString("%1 As [%2]").arg(utl::elideLeft(fileName, 60), typeStr);
 }
 
 void MainWindow::openFile(tp::FileType type)

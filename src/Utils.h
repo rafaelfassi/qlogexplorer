@@ -7,19 +7,21 @@
 namespace utl
 {
 
-static constexpr const char* getSrcFile(const char* const path)
+static constexpr const char *getSrcFile(const char *const path)
 {
-  return path + sizeof(APP_BASE_SRC_DIR);
+    return path + sizeof(APP_BASE_SRC_DIR);
 }
 
-void log(const char* file, const std::uint32_t line, tp::LogLevel level, const std::string &msg);
+void log(const char *file, const std::uint32_t line, tp::LogLevel level, const std::string &msg);
 
 std::string toStr(const rapidjson::Value &json);
 
-std::string toStr(const QString& str);
+std::string toStr(const QString &str);
 
 std::string join(const std::vector<std::string> &strList, const std::string &delim);
 
 std::vector<std::string> split(const std::string &str, const std::string &delim);
+
+QString elideLeft(const std::string &str, size_t maxSize);
 
 } // namespace utl

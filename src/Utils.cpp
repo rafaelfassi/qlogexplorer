@@ -6,7 +6,7 @@
 namespace utl
 {
 
-void log(const char* file, const std::uint32_t line, tp::LogLevel level, const std::string &msg)
+void log(const char *file, const std::uint32_t line, tp::LogLevel level, const std::string &msg)
 {
     std::cout << "[" << tp::toStr<tp::LogLevel>(level) << "] " << file << ":" << line << ": " << msg << std::endl;
 }
@@ -19,7 +19,7 @@ std::string toStr(const rapidjson::Value &json)
     return buffer.GetString();
 }
 
-std::string toStr(const QString& str)
+std::string toStr(const QString &str)
 {
     return str.toStdString();
 }
@@ -51,4 +51,15 @@ std::vector<std::string> split(const std::string &str, const std::string &delim)
     return res;
 }
 
+QString elideLeft(const std::string &str, size_t maxSize)
+{
+    QString res(str.c_str());
+    if ((res.size() > maxSize) && (maxSize > 3))
+    {
+        res = res.mid(res.size() - maxSize + 3);
+        res.prepend("...");
+    }
+    return res;
 }
+
+} // namespace utl
