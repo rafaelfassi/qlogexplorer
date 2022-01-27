@@ -3,13 +3,13 @@
 #include "RegexMatcher.h"
 #include "SubStringMatcher.h"
 
-ParamsMatcher::ParamsMatcher(const tp::SearchParamLst &params, bool orOp)
+ParamsMatcher::ParamsMatcher(const tp::SearchParams &params, bool orOp)
     : m_matchers(makeMatchers(params)),
       m_orOp(orOp)
 {
 }
 
-void ParamsMatcher::setParams(const tp::SearchParamLst &params, bool orOp)
+void ParamsMatcher::setParams(const tp::SearchParams &params, bool orOp)
 {
     m_matchers = makeMatchers(params);
     m_orOp = orOp;
@@ -25,7 +25,7 @@ bool ParamsMatcher::matchInRow(const tp::RowData &rowData)
     return matchInRow(m_matchers, m_orOp, rowData);
 }
 
-Matchers ParamsMatcher::makeMatchers(const tp::SearchParamLst &params)
+Matchers ParamsMatcher::makeMatchers(const tp::SearchParams &params)
 {
     Matchers matchers;
     matchers.reserve(params.size());

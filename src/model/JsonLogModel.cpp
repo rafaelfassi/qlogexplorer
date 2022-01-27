@@ -116,7 +116,7 @@ tp::UInt JsonLogModel::parseChunks(
     std::string buffer;
     buffer.resize(g_chunkSize);
 
-    const tp::UInt totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
+    const tp::UInt totalChunks(std::max<tp::UInt>((fileSize - fromPos) / g_chunkSize, 1));
     chunks.reserve(totalChunks);
 
     tp::UInt nextFirstChunkRow(nextRow);

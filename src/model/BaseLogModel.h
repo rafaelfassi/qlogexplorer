@@ -20,7 +20,7 @@ enum class WatchingResult
 class Chunk
 {
 public:
-    Chunk(size_t startPos, tp::UInt endPos, tp::UInt firstRow, tp::UInt lastRow)
+    Chunk(tp::UInt startPos, tp::UInt endPos, tp::UInt firstRow, tp::UInt lastRow)
         : m_posRange(std::make_pair(startPos, endPos)),
           m_rowRange(std::make_pair(firstRow, lastRow))
     {
@@ -37,40 +37,40 @@ public:
     static bool compareRows(const Chunk &c, const tp::UInt &row) { return (c.getLastRow() < row); }
 
 private:
-    std::pair<size_t, tp::UInt> m_posRange;
-    std::pair<size_t, tp::UInt> m_rowRange;
+    std::pair<tp::UInt, tp::UInt> m_posRange;
+    std::pair<tp::UInt, tp::UInt> m_rowRange;
 };
 
 class ChunkRows
 {
 public:
-    using RowsData = std::pair<size_t, std::string>;
+    using ChunkRowsData = std::pair<tp::UInt, std::string>;
 
     ChunkRows(const Chunk &chunk) : m_chunk(&chunk) {}
     ChunkRows() = default;
-    void add(size_t row, const std::string &content) { m_rows.emplace_back(row, content); }
-    void reserve(size_t size) { m_rows.reserve(size); }
-    const std::string &get(size_t row) const
+    void add(tp::UInt row, const std::string &content) { m_rows.emplace_back(row, content); }
+    void reserve(tp::UInt size) { m_rows.reserve(size); }
+    const std::string &get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         if ((it != m_rows.end()) && (row == it->first))
             return it->second;
         throw std::runtime_error("Row not found");
     }
-    bool contains(size_t row) const
+    bool contains(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         return (it != m_rows.end() && row == it->first);
     }
     tp::UInt rowCount() const { return m_rows.size(); }
     const Chunk *getChunk() { return m_chunk; }
-    const std::vector<RowsData> &data() { return m_rows; }
+    const std::vector<ChunkRowsData> &data() { return m_rows; }
 
-    static bool compareRows(const RowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
+    static bool compareRows(const ChunkRowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
 
 private:
     const Chunk *m_chunk = nullptr;
-    std::vector<RowsData> m_rows;
+    std::vector<ChunkRowsData> m_rows;
 };
 
 class BaseLogModel : public AbstractModel
@@ -87,7 +87,7 @@ public:
     tp::UInt columnCount() const override final;
     tp::UInt rowCount() const override final;
     tp::SInt getRowNum(tp::SInt row) const override final;
-    void startSearch(const tp::SearchParamLst &params, bool orOp);
+    void startSearch(const tp::SearchParams &params, bool orOp);
     void stopSearch();
     bool isSearching() const;
     bool isWatching() const;
@@ -124,7 +124,7 @@ protected:
 private:
     void clear();
     void loadChunks();
-    bool loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const;
+    bool loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const;
     void keepWatching();
     WatchingResult watchFile();
     void search();

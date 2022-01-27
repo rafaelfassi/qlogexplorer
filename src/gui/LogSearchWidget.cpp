@@ -130,7 +130,7 @@ void LogSearchWidget::startSearch()
         clearResults();
     }
 
-    tp::SearchParamLst params;
+    tp::SearchParams params;
 
     for (auto paramWidget : m_searchParamWidgets)
     {
@@ -146,12 +146,11 @@ void LogSearchWidget::startSearch()
             else
                 param.type = tp::SearchType::SubString;
 
-            int flags = tp::SearchFlags::NoSearchFlags;
             if (paramWidget->matchCase())
-                flags |= tp::SearchFlags::MatchCase;
+                param.flags.set(tp::SearchFlag::MatchCase);
+
             if (paramWidget->notOp())
-                flags |= tp::SearchFlags::NotOperator;
-            param.flags = flags;
+                param.flags.set(tp::SearchFlag::NotOperator);
 
             params.push_back(std::move(param));
         }

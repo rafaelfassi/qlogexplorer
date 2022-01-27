@@ -6,13 +6,13 @@ class ParamsMatcher
 {
 public:
     ParamsMatcher() = default;
-    ParamsMatcher(const tp::SearchParamLst &params, bool orOp);
+    ParamsMatcher(const tp::SearchParams &params, bool orOp);
 
-    void setParams(const tp::SearchParamLst &params, bool orOp);
+    void setParams(const tp::SearchParams &params, bool orOp);
     bool match(const std::string &text);
     bool matchInRow(const tp::RowData &rowData);
 
-    static Matchers makeMatchers(const tp::SearchParamLst &params);
+    static Matchers makeMatchers(const tp::SearchParams &params);
     static bool match(const Matchers &matchers, bool orOp, const std::string &text);
     static bool matchInRow(const Matchers &matchers, bool orOp, const tp::RowData &rowData);
 

@@ -9,8 +9,27 @@ using SIntList = std::deque<tp::SInt>;
 using RowData = std::vector<std::string>;
 using SharedSIntList = std::shared_ptr<SIntList>;
 
+template <typename EnumT> class Flags
+{
+    static_assert(std::is_enum_v<EnumT>, "Flags can only be specialized for enum types");
+    using UnderlyingTp = std::make_unsigned_t<std::underlying_type_t<EnumT>>;
+
+public:
+    Flags() = default;
+    Flags(EnumT e) { set(e); }
+    void set(EnumT e, bool value = true) { m_bits.set(underlying(e), value); }
+    void reset() noexcept { m_bits.reset(); }
+    bool none() const noexcept { return m_bits.none(); }
+    bool has(EnumT e) const { return m_bits.test(underlying(e)); }
+
+private:
+    static constexpr UnderlyingTp underlying(EnumT e) { return static_cast<UnderlyingTp>(e); }
+    std::bitset<sizeof(UnderlyingTp) * CHAR_BIT> m_bits;
+};
+
 enum class LogLevel
 {
+    None,
     Info,
     Warning,
     Error
@@ -29,23 +48,25 @@ void fromStr(const std::string &str, FileType &type);
 
 enum class SearchType
 {
+    None,
     Regex,
     SubString
 };
 void toStr(const SearchType &type, std::string &str);
 void fromStr(const std::string &str, SearchType &type);
 
-enum SearchFlags
+enum class SearchFlag
 {
-    NoSearchFlags = 0x00,
-    MatchCase = 0x01,
-    NotOperator = 0x02
+    MatchCase,
+    NotOperator
 };
-void toStr(const SearchFlags &, const int &flags, std::string &str);
-void fromStr(const SearchFlags &, const std::string &str, int &flags);
+using SearchFlags = Flags<SearchFlag>;
+void toStr(const SearchFlags &flags, std::string &str);
+void fromStr(const std::string &str, SearchFlags &flags);
 
 enum class ColumnType
 {
+    None,
     Str,
     Int,
     UInt,
@@ -71,12 +92,12 @@ using ColumnsRef = std::vector<std::reference_wrapper<Column>>;
 
 struct SearchParam
 {
-    SearchType type = SearchType::Regex;
-    int flags = SearchFlags::NoSearchFlags;
+    SearchType type = SearchType::None;
+    SearchFlags flags;
     std::string pattern;
     std::optional<tp::UInt> column;
 };
-using SearchParamLst = std::vector<SearchParam>;
+using SearchParams = std::vector<SearchParam>;
 
 struct HighlighterParam
 {
@@ -93,11 +114,16 @@ template <typename T> std::string toStr(const T &type)
     return str;
 }
 
-template <typename T> T fromStr(const std::string& str)
+template <typename T> T fromStr(const std::string &str)
 {
-    T type;;
+    T type;
     fromStr(str, type);
     return type;
+}
+
+template <typename T> SInt toInt(const T &type)
+{
+    return static_cast<SInt>(type);
 }
 
 } // namespace tp

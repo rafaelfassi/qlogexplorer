@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "LogTabWidget.h"
 #include "LogViewWidget.h"
 #include "LogSearchWidget.h"
@@ -29,6 +30,9 @@ LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_con
         case tp::FileType::Json:
             m_logModel = new JsonLogModel(*conf, this);
             break;
+        default:
+            LOG_ERR("Invalid FileType {}", tp::toInt(conf->getFileType()));
+            m_logModel = new TextLogModel(*conf, this);
     }
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);

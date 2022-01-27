@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "LongScrollBar.h"
 #include <QPaintEvent>
 #include <QPainter>

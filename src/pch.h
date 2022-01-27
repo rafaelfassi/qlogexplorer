@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <bitset>
 #include <set>
 #include <map>
 #include <memory>

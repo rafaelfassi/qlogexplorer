@@ -67,7 +67,7 @@ const tp::Columns &BaseLogModel::getColumns() const
     return m_conf.getColumns();
 }
 
-void BaseLogModel::startSearch(const tp::SearchParamLst &params, bool orOp)
+void BaseLogModel::startSearch(const tp::SearchParams &params, bool orOp)
 {
     stopSearch();
     m_paramsMatcher.setParams(params, orOp);
@@ -471,7 +471,7 @@ void BaseLogModel::loadChunks()
     LOG_INF("{} chunks parsed in {} seconds", chunkCount, timer.elapsed() / 1000);
 }
 
-bool BaseLogModel::loadChunkRowsByRow(size_t row, ChunkRows &chunkRows) const
+bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
 {
     const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
     if ((chunk != m_chunks.end()) && chunk->countainRow(row))

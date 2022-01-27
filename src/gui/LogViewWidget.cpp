@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "HeaderView.h"
 #include "LogViewWidget.h"
 #include "LongScrollBar.h"
@@ -571,7 +572,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
 
     if (m_header->isVisible())
     {
-        for (size_t vIdx = 0; vIdx < m_header->count(); ++vIdx)
+        for (int vIdx = 0; vIdx < m_header->count(); ++vIdx)
         {
             VisualColData vcData;
             const tp::SInt idx = m_header->logicalIndex(vIdx);

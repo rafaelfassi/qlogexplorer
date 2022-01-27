@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextLogModel.h"
 
 constexpr tp::UInt g_maxChunksPerParse(500);
@@ -108,7 +109,7 @@ tp::UInt TextLogModel::parseChunks(
     std::string buffer;
     buffer.resize(g_chunkSize);
 
-    const tp::UInt totalChunks(std::max<size_t>((fileSize - fromPos) / g_chunkSize, 1));
+    const tp::UInt totalChunks(std::max<tp::UInt>((fileSize - fromPos) / g_chunkSize, 1));
     chunks.reserve(totalChunks);
 
     tp::UInt lastPos(0);
@@ -120,7 +121,7 @@ tp::UInt TextLogModel::parseChunks(
     {
         tp::UInt chunkStartPos = getFilePos(is);
         lastPos = chunkStartPos;
-        const tp::UInt readBytes = std::min<size_t>(g_chunkSize, fileSize - lastPos);
+        const tp::UInt readBytes = std::min<tp::UInt>(g_chunkSize, fileSize - lastPos);
         if (readBytes == 0)
         {
             break;
@@ -128,7 +129,7 @@ tp::UInt TextLogModel::parseChunks(
 
         readFile(is, buffer, readBytes);
 
-        for (size_t i = 0; i < readBytes; ++i)
+        for (tp::UInt i = 0; i < readBytes; ++i)
         {
             ++lastPos;
             if (buffer[i] == '\n')

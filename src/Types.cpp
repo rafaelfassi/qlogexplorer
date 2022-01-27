@@ -13,7 +13,8 @@ void enumToStr(const std::vector<std::pair<T, std::string>> &typeMap, const T &t
         str = it->second;
         return;
     }
-    LOG_ERR("ColumnType {} not found", static_cast<int>(type));
+    LOG_ERR("ColumnType {} not found", toInt(type));
+    str = "NONE";
 }
 
 template <typename T>
@@ -26,15 +27,17 @@ void enumFromStr(const std::vector<std::pair<T, std::string>> &typeMap, const st
         return;
     }
     LOG_ERR("ColumnType '{}' not found", str);
+    type = static_cast<T>(0);
 }
 
 template <typename T>
-void flagsToStr(const std::vector<std::pair<T, std::string>> &flagsMap, const int &flags, std::string &str)
+void flagsToStr(const std::vector<std::pair<T, std::string>> &flagsMap, const Flags<T> &flags, std::string &str)
 {
+    str.clear();
     std::vector<std::string> strFlags;
     for (const auto &flag : flagsMap)
     {
-        if (flags & flag.first)
+        if (flags.has(flag.first))
         {
             strFlags.emplace_back(flag.second);
         }
@@ -46,9 +49,9 @@ void flagsToStr(const std::vector<std::pair<T, std::string>> &flagsMap, const in
 }
 
 template <typename T>
-void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const std::string &str, int &flags)
+void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const std::string &str, Flags<T> &flags)
 {
-    flags = 0;
+    flags.reset();
     const std::vector<std::string> &strFlags = utl::split(str, "|");
     for (const auto &strFlag : strFlags)
     {
@@ -56,7 +59,7 @@ void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const 
             std::find_if(flagsMap.begin(), flagsMap.end(), [&strFlag](const auto &p) { return (p.second == strFlag); });
         if (it != flagsMap.end())
         {
-            flags |= it->first;
+            flags.set(it->first);
         }
     }
 }
@@ -114,19 +117,18 @@ void fromStr(const std::string &str, ColumnType &type)
     enumFromStr<ColumnType>(g_columnTypeMap, str, type);
 }
 
-static const std::vector<std::pair<SearchFlags, std::string>> g_searchFlagsMap = {
-    {SearchFlags::NoSearchFlags, "NONE"},
-    {SearchFlags::MatchCase, "MATCH_CASE"},
-    {SearchFlags::NotOperator, "NOT"}};
+static const std::vector<std::pair<SearchFlag, std::string>> g_searchFlagsMap = {
+    {SearchFlag::MatchCase, "MATCH_CASE"},
+    {SearchFlag::NotOperator, "NOT"}};
 
-void toStr(const SearchFlags &, const int &flags, std::string &str)
+void toStr(const SearchFlags &flags, std::string &str)
 {
-    flagsToStr<SearchFlags>(g_searchFlagsMap, flags, str);
+    flagsToStr<SearchFlag>(g_searchFlagsMap, flags, str);
 }
 
-void fromStr(const SearchFlags &, const std::string &str, int &flags)
+void fromStr(const std::string &str, SearchFlags &flags)
 {
-    flagsFromStr<SearchFlags>(g_searchFlagsMap, str, flags);
+    flagsFromStr<SearchFlag>(g_searchFlagsMap, str, flags);
 }
 
 } // namespace tp
