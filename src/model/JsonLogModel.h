@@ -12,7 +12,7 @@ public:
 
 protected:
     bool configure(Conf &conf, std::istream &is) override;
-    bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const override;
+    bool parseRow(const std::string &rawText, tp::RowData &rowData) const override;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,

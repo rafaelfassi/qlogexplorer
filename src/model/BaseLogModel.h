@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AbstractModel.h"
+#include "ParamsMatcher.h"
 #include <fstream>
 #include <thread>
 #include <mutex>
@@ -72,16 +73,6 @@ private:
     std::vector<RowsData> m_rows;
 };
 
-struct SearchParam
-{
-    bool isRegex = false;
-    bool matchCase = true;
-    bool notOp = false;
-    std::string exp;
-    std::optional<tp::UInt> column;
-};
-using SearchParamLst = std::vector<SearchParam>;
-
 class BaseLogModel : public AbstractModel
 {
     Q_OBJECT
@@ -90,13 +81,13 @@ public:
     BaseLogModel(Conf &conf, QObject *parent = 0);
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
-    tp::SInt getRow(std::uint64_t row, std::vector<std::string> &rowData) const override final;
+    tp::SInt getRow(std::uint64_t row, tp::RowData &rowData) const override final;
     tp::Columns &getColumns() override final;
     const tp::Columns &getColumns() const override final;
     tp::UInt columnCount() const override final;
     tp::UInt rowCount() const override final;
     tp::SInt getRowNum(tp::SInt row) const override final;
-    void startSearch(const SearchParamLst &params, bool orOp);
+    void startSearch(const tp::SearchParamLst &params, bool orOp);
     void stopSearch();
     bool isSearching() const;
     bool isWatching() const;
@@ -114,7 +105,7 @@ public slots:
 
 protected:
     virtual bool configure(Conf &conf, std::istream &is) = 0;
-    virtual bool parseRow(const std::string &rawText, std::vector<std::string> &rowData) const = 0;
+    virtual bool parseRow(const std::string &rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,
@@ -144,8 +135,7 @@ private:
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
     std::vector<Chunk> m_chunks;
-    SearchParamLst m_searchParams;
-    bool m_searchWithOrOperator;
+    ParamsMatcher m_paramsMatcher;
     std::thread m_searchThread;
     std::thread m_watchThread;
     // Control flags that are set in the main thread and read by other threads.

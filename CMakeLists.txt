@@ -45,6 +45,19 @@ set(MODEL_SOURCES
     src/model/ProxyModel.cpp
 )
 
+set(MATCH_HEADERS
+    src/match/BaseMatcher.h
+    src/match/RegexMatcher.h
+    src/match/SubStringMatcher.h
+    src/match/ParamsMatcher.h
+)
+
+set(MATCH_SOURCES
+    src/match/RegexMatcher.cpp
+    src/match/SubStringMatcher.cpp
+    src/match/ParamsMatcher.cpp
+)
+
 set(GUI_HEADERS
     src/gui/MainWindow.h
     src/gui/LongScrollBar.h
@@ -69,6 +82,8 @@ add_executable(${PROJECT_NAME}
     ${MAIN_SOURCES}
     ${MODEL_HEADERS}
     ${MODEL_SOURCES}
+    ${MATCH_HEADERS}
+    ${MATCH_SOURCES}
     ${GUI_HEADERS}
     ${GUI_SOURCES}
 )
@@ -77,6 +92,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE
     src
     src/model
+    src/match
     src/gui
 )
 

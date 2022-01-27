@@ -67,7 +67,7 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
     return !conf.getColumns().empty();
 }
 
-bool JsonLogModel::parseRow(const std::string &rawText, std::vector<std::string> &rowData) const
+bool JsonLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const
 {
     rapidjson::Document d;
     d.Parse<rapidjson::kParseStopWhenDoneFlag>(rawText.c_str());

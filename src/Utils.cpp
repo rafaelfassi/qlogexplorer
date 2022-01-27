@@ -51,6 +51,20 @@ std::vector<std::string> split(const std::string &str, const std::string &delim)
     return res;
 }
 
+std::string toUpper(const std::string &text)
+{
+    // Way more farter, but works only for ascii characters.
+    // std::string res(text);
+    // for (auto it = res.begin(); it != res.end(); ++it)
+    //     if (*it >= 'a' && *it <= 'z')
+    //         *it &= ~0x20;
+    // return res;
+
+    std::string res(text);
+    std::transform(text.begin(), text.end(), res.begin(), [](int c) { return std::toupper(c); });
+    return res;
+}
+
 QString elideLeft(const std::string &str, tp::UInt maxSize)
 {
     QString res(str.c_str());

@@ -527,7 +527,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
 
 void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt hOffset, VisualRowData &vrData)
 {
-    std::vector<std::string> rowData;
+    tp::RowData rowData;
     const tp::SInt relativeRow = row - rowOffset;
     const tp::SInt yOffset = m_textAreaRect.top() + (m_rowHeight * relativeRow);
 
@@ -724,7 +724,7 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
 
     tp::SInt rowsInPage(std::min<tp::SInt>(m_itemsPerPage, m_model->rowCount()));
     const tp::SInt elideWith(getTextWidth("..."));
-    std::vector<std::string> rowData;
+    tp::RowData rowData;
 
     for (tp::SInt i = 0; i < rowsInPage; ++i)
     {

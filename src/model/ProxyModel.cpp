@@ -7,7 +7,7 @@ ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(
     connect(m_source, &AbstractModel::modelConfigured, this, &AbstractModel::modelConfigured);
 }
 
-tp::SInt ProxyModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
+tp::SInt ProxyModel::getRow(std::uint64_t row, tp::RowData &rowData) const
 {
     if (row < m_rowMap.size())
     {

@@ -1,187 +1,9 @@
 #include "pch.h"
 #include "BaseLogModel.h"
-#include <QElapsedTimer>
-#include <QRegularExpression>
 #include <sstream>
 #include <filesystem>
 #include <algorithm>
 #include <regex>
-
-class BaseParamMatcher
-{
-public:
-    BaseParamMatcher(const SearchParam &param) : m_param(param) {}
-    virtual bool match(const std::string &text) = 0;
-    bool isRegex() const { return m_param.isRegex; }
-    bool matchCase() const { return m_param.matchCase; }
-    bool notOp() const { return m_param.notOp; }
-    bool hasColumn() const { return m_param.column.has_value(); }
-    tp::UInt getColumn() const { return *m_param.column; }
-
-protected:
-    const SearchParam &m_param;
-};
-
-// Very slow compared to QRegularExpression that uses JIT.
-// class RegexParamMatcher : public BaseParamMatcher
-// {
-// public:
-//     RegexParamMatcher(const SearchParam &param) : BaseParamMatcher(param), m_rx(param.exp, getOpts())
-//     {
-//         std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
-//         if (!param.matchCase)
-//         {
-//             opts |= std::regex::icase;
-//         }
-//     }
-
-//     std::regex::flag_type getOpts()
-//     {
-//         std::regex::flag_type opts(std::regex::ECMAScript | std::regex::nosubs);
-//         if (!m_param.matchCase)
-//         {
-//             opts |= std::regex::icase;
-//         }
-//         return opts;
-//     }
-
-//     bool match(const std::string &text) override
-//     {
-//         return std::regex_search(text, m_match, m_rx);
-//     }
-
-// private:
-//     const std::regex m_rx;
-//     std::smatch m_match;
-// };
-
-class RegexParamMatcher : public BaseParamMatcher
-{
-public:
-    RegexParamMatcher(const SearchParam &param) : BaseParamMatcher(param), m_rx(param.exp.c_str(), getOpts()) {}
-
-    QRegularExpression::PatternOptions getOpts()
-    {
-        QRegularExpression::PatternOptions opts = QRegularExpression::DontCaptureOption;
-        if (!m_param.matchCase)
-        {
-            opts |= QRegularExpression::CaseInsensitiveOption;
-        }
-        return opts;
-    }
-
-    bool match(const std::string &text) override { return m_rx.match(text.c_str()).hasMatch(); }
-
-private:
-    const QRegularExpression m_rx;
-};
-
-class TextParamMatcher : public BaseParamMatcher
-{
-public:
-    TextParamMatcher(const SearchParam &param)
-        : BaseParamMatcher(param),
-          m_textToSearch(param.matchCase ? m_param.exp : capitalize(m_param.exp))
-    {
-    }
-
-    std::string capitalize(const std::string &text)
-    {
-        std::string res(text);
-        std::transform(text.begin(), text.end(), res.begin(), [](int c) { return std::toupper(c); });
-        return res;
-    }
-
-    // Way more farter, but works only for ascii characters.
-    // std::string capitalize(const std::string &text)
-    // {
-    //     std::string res(text);
-    //     for (auto it = res.begin(); it != res.end(); ++it)
-    //         if (*it >= 'a' && *it <= 'z')
-    //             *it &= ~0x20;
-    //     return res;
-    // }
-
-    bool match(const std::string &text) override
-    {
-        if (m_param.matchCase)
-            return (text.find(m_textToSearch) != std::string::npos);
-        else
-            return (capitalize(text).find(m_textToSearch) != std::string::npos);
-    }
-
-private:
-    const std::string m_textToSearch;
-};
-
-using ParamMatchers = std::vector<std::unique_ptr<BaseParamMatcher>>;
-
-ParamMatchers makeParamMatchers(const SearchParamLst &params)
-{
-    ParamMatchers matchers;
-    matchers.reserve(params.size());
-
-    for (const auto &param : params)
-    {
-        if (param.isRegex)
-        {
-            matchers.emplace_back(std::make_unique<RegexParamMatcher>(param));
-        }
-        else
-        {
-            matchers.emplace_back(std::make_unique<TextParamMatcher>(param));
-        }
-    }
-    return matchers;
-}
-
-bool matchParamsInRow(const ParamMatchers &matchers, bool orOp, const std::vector<std::string> &rowData)
-{
-    std::uint32_t cnt(0);
-
-    for (const auto &matcher : matchers)
-    {
-        if (matcher->hasColumn())
-        {
-            if (matcher->getColumn() < rowData.size())
-            {
-                bool matched = matcher->match(rowData[matcher->getColumn()]);
-                if (matcher->notOp())
-                    matched = !matched;
-                if (matched)
-                {
-                    if ((++cnt == matchers.size()) || orOp)
-                        return true;
-                }
-            }
-            else
-            {
-                LOG_ERR("Filter column is bigger than row columns");
-            }
-        }
-        else
-        {
-            bool matched(false);
-            for (const auto &columnData : rowData)
-            {
-                if (matcher->match(columnData))
-                {
-                    matched = true;
-                    break;
-                }
-            }
-            if (matcher->notOp())
-                matched = !matched;
-            if (matched)
-            {
-                if ((++cnt == matchers.size()) || orOp)
-                    return true;
-            }
-        }
-    }
-
-    return false;
-}
 
 BaseLogModel::BaseLogModel(Conf &conf, QObject *parent)
     : AbstractModel(parent),
@@ -210,7 +32,7 @@ const std::string &BaseLogModel::getFileName() const
     return m_fileName;
 }
 
-tp::SInt BaseLogModel::getRow(std::uint64_t row, std::vector<std::string> &rowData) const
+tp::SInt BaseLogModel::getRow(std::uint64_t row, tp::RowData &rowData) const
 {
     const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
@@ -245,11 +67,10 @@ const tp::Columns &BaseLogModel::getColumns() const
     return m_conf.getColumns();
 }
 
-void BaseLogModel::startSearch(const SearchParamLst &params, bool orOp)
+void BaseLogModel::startSearch(const tp::SearchParamLst &params, bool orOp)
 {
     stopSearch();
-    m_searchParams = params;
-    m_searchWithOrOperator = orOp;
+    m_paramsMatcher.setParams(params, orOp);
     m_searching.store(true);
     m_searchThread = std::thread(&BaseLogModel::search, this);
 }
@@ -273,9 +94,8 @@ void BaseLogModel::search()
     LOG_INF("Starting to search");
 
     ChunkRows chunkRows;
-    std::vector<std::string> rowData;
+    tp::RowData rowData;
     tp::UInt row(0);
-    const auto &matchers = makeParamMatchers(m_searchParams);
 
     while (m_searching.load())
     {
@@ -300,7 +120,7 @@ void BaseLogModel::search()
             for (const auto &[currRow, rawText] : chunkRows.data())
             {
                 parseRow(rawText, rowData);
-                if (matchParamsInRow(matchers, m_searchWithOrOperator, rowData))
+                if (m_paramsMatcher.matchInRow(rowData))
                 {
                     rowsPtr->push_back(currRow);
                 }

@@ -63,7 +63,7 @@ bool TextLogModel::configure(Conf &conf, std::istream &is)
     return !conf.getColumns().empty();
 }
 
-bool TextLogModel::parseRow(const std::string &rawText, std::vector<std::string> &rowData) const
+bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const
 {
     if (m_rx.pattern().isEmpty())
     {
@@ -91,6 +91,7 @@ bool TextLogModel::parseRow(const std::string &rawText, std::vector<std::string>
         else
         {
             rowData.emplace_back(rawText);
+            rowData.resize(columnCount());
         }
     }
 

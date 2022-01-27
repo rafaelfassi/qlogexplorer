@@ -6,6 +6,7 @@ namespace tp
 using SInt = ssize_t;
 using UInt = size_t;
 using SIntList = std::deque<tp::SInt>;
+using RowData = std::vector<std::string>;
 using SharedSIntList = std::shared_ptr<SIntList>;
 
 enum class LogLevel
@@ -68,12 +69,18 @@ struct Column
 using Columns = std::vector<Column>;
 using ColumnsRef = std::vector<std::reference_wrapper<Column>>;
 
+struct SearchParam
+{
+    SearchType type = SearchType::Regex;
+    int flags = SearchFlags::NoSearchFlags;
+    std::string pattern;
+    std::optional<tp::UInt> column;
+};
+using SearchParamLst = std::vector<SearchParam>;
+
 struct HighlighterParam
 {
-    std::optional<int32_t> column;
-    SearchType type;
-    std::string pattern;
-    SearchFlags flags;
+    SearchParam searchParam;
     QColor textColor;
     QColor bgColor;
 };
