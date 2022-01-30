@@ -37,8 +37,10 @@ LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_con
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);
     m_logViewWidget->setMinimumSize(400, 200);
+    m_logViewWidget->configure(conf);
 
     m_logSearchWidget = new LogSearchWidget(m_logViewWidget, m_logModel, this);
+    m_logSearchWidget->configure(conf);
 
     QSplitter *splitter = new QSplitter(parent);
     splitter->setOrientation(Qt::Vertical);

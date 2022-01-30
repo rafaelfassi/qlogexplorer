@@ -17,6 +17,9 @@ class LogSearchWidget : public QWidget
 public:
     LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
     ~LogSearchWidget();
+    void configure(Conf *conf);
+
+private:
     void createActions();
     void createMenus();
     void createToolBars();

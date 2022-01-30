@@ -18,6 +18,8 @@ std::string toStr(const rapidjson::Value &json);
 
 std::string toStr(const QString &str);
 
+std::string toStr(const QColor &color);
+
 std::string join(const std::vector<std::string> &strList, const std::string &delim);
 
 std::vector<std::string> split(const std::string &str, const std::string &delim);

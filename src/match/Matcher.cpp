@@ -1,50 +1,53 @@
 #include "pch.h"
-#include "ParamsMatcher.h"
+#include "Matcher.h"
 #include "RegexMatcher.h"
 #include "SubStringMatcher.h"
 
-ParamsMatcher::ParamsMatcher(const tp::SearchParams &params, bool orOp)
-    : m_matchers(makeMatchers(params)),
-      m_orOp(orOp)
+void Matcher::setParam(const tp::SearchParam &param)
 {
+    m_matchers.clear();
+    makeMatcher(param, m_matchers);
 }
 
-void ParamsMatcher::setParams(const tp::SearchParams &params, bool orOp)
+void Matcher::setParams(const tp::SearchParams &params, bool orOp)
 {
-    m_matchers = makeMatchers(params);
+    m_matchers.clear();
+    makeMatchers(params, m_matchers);
     m_orOp = orOp;
 }
 
-bool ParamsMatcher::match(const std::string &text)
+bool Matcher::match(const std::string &text) const
 {
     return match(m_matchers, m_orOp, text);
 }
 
-bool ParamsMatcher::matchInRow(const tp::RowData &rowData)
+bool Matcher::matchInRow(const tp::RowData &rowData) const
 {
     return matchInRow(m_matchers, m_orOp, rowData);
 }
 
-Matchers ParamsMatcher::makeMatchers(const tp::SearchParams &params)
+void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
 {
-    Matchers matchers;
-    matchers.reserve(params.size());
-
-    for (const auto &param : params)
+    if (param.type == tp::SearchType::Regex)
     {
-        if (param.type == tp::SearchType::Regex)
-        {
-            matchers.emplace_back(std::make_unique<RegexMatcher>(param));
-        }
-        else
-        {
-            matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
-        }
+        matchers.emplace_back(std::make_unique<RegexMatcher>(param));
     }
-    return matchers;
+    else
+    {
+        matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
+    }
 }
 
-bool ParamsMatcher::match(const Matchers &matchers, bool orOp, const std::string &text)
+void Matcher::makeMatchers(const tp::SearchParams &params, Matchers &matchers)
+{
+    matchers.reserve(params.size());
+    for (const auto &param : params)
+    {
+        makeMatcher(param, matchers);
+    }
+}
+
+bool Matcher::match(const Matchers &matchers, bool orOp, const std::string &text)
 {
     std::uint32_t cnt(0);
 
@@ -68,7 +71,7 @@ bool ParamsMatcher::match(const Matchers &matchers, bool orOp, const std::string
     return false;
 }
 
-bool ParamsMatcher::matchInRow(const Matchers &matchers, bool orOp, const tp::RowData &rowData)
+bool Matcher::matchInRow(const Matchers &matchers, bool orOp, const tp::RowData &rowData)
 {
     std::uint32_t cnt(0);
 

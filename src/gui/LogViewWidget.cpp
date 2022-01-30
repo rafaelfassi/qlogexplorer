@@ -15,7 +15,6 @@
 #include <QVBoxLayout>
 #include <cmath>
 #include <limits>
-#include <iostream>
 
 constexpr tp::SInt g_scrollBarThickness(25);
 constexpr tp::SInt g_defaultMargin(10);
@@ -492,15 +491,22 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                     std::to_string(vrData.number + 1).c_str());
             }
 
+            QColor currentTextColor(g_txtColor);
             painter.setClipping(true);
-            painter.setPen(g_txtColor);
 
             // Selected line
             if (vrData.selected)
             {
                 painter.fillRect(vrData.rect, g_selectionBgColor);
-                painter.setPen(g_selectionTxtColor);
+                currentTextColor = g_selectionTxtColor;
             }
+            else if (vrData.highlighter != nullptr)
+            {
+                painter.fillRect(vrData.rect, vrData.highlighter->getBgColor());
+                currentTextColor = vrData.highlighter->getTextColor();
+            }
+
+            painter.setPen(currentTextColor);
 
             // Draw Row Data
             for (const auto &colData : vrData.columns)
@@ -516,7 +522,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                     painter.fillRect(selRect, g_selectionBgColor);
                     painter.setPen(g_selectionTxtColor);
                     painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
-                    painter.setPen(g_txtColor);
+                    painter.setPen(currentTextColor);
                     painter.setClipRect(m_textAreaRect);
                 }
             }
@@ -541,6 +547,15 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
 
     vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
     vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin * 2, m_rowHeight);
+
+    for (const auto &highlighter : m_highlighters)
+    {
+        if (highlighter.matchInRow(rowData))
+        {
+            vrData.highlighter = &highlighter;
+            break;
+        }
+    }
 
     std::optional<QRect> selectText;
     if (m_startSelect.has_value() && m_currentSelec.has_value())
@@ -681,6 +696,15 @@ QString LogViewWidget::getElidedText(const std::string &text, tp::SInt width, bo
     return m_fm.elidedText(simplified ? qStr.simplified() : qStr, Qt::ElideRight, width);
 }
 
+void LogViewWidget::configure(Conf *conf)
+{
+    m_highlighters.clear();
+    for (const auto & param : conf->getHighlighterParams())
+    {
+        m_highlighters.push_back(Highlighter(param));
+    }
+}
+
 void LogViewWidget::configureColumns()
 {
     if ((m_header->count() == 0) && !m_model->getColumns().empty())
@@ -707,12 +731,12 @@ void LogViewWidget::configureColumns()
     }
 }
 
-void LogViewWidget::getColumnsSizeToHeader(tp::ColumnsRef &columnsRef)
+void LogViewWidget::getColumnsSizeToHeader(tp::ColumnsRef &columnsRef, bool discardConfig)
 {
     for (auto &headerColumn : columnsRef)
     {
         auto &column(headerColumn.get());
-        if (column.width < 0)
+        if (discardConfig || (column.width < 0))
         {
             column.width = getTextWidth(column.name) + g_startTextMargin + g_defaultMargin;
         }
@@ -721,7 +745,7 @@ void LogViewWidget::getColumnsSizeToHeader(tp::ColumnsRef &columnsRef)
 
 void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
 {
-    getColumnsSizeToHeader(columnsRef);
+    getColumnsSizeToHeader(columnsRef, true);
 
     tp::SInt rowsInPage(std::min<tp::SInt>(m_itemsPerPage, m_model->rowCount()));
     const tp::SInt elideWith(getTextWidth("..."));

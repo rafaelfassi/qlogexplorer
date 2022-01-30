@@ -78,6 +78,11 @@ LogSearchWidget::~LogSearchWidget()
 {
 }
 
+void LogSearchWidget::configure(Conf *conf)
+{
+    m_searchResults->configure(conf);
+}
+
 void LogSearchWidget::createActions()
 {
     m_actAddSearchParam = new QAction(tr("Add Search Parameter"), this);

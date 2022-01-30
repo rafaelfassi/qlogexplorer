@@ -4,7 +4,6 @@
 #include <QPainter>
 #include <cmath>
 #include <limits>
-#include <iostream>
 
 LongScrollBar::LongScrollBar(Qt::Orientation orientation, QWidget *parent) : QWidget(parent), m_orientation(orientation)
 {

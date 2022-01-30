@@ -9,7 +9,8 @@ using SIntList = std::deque<tp::SInt>;
 using RowData = std::vector<std::string>;
 using SharedSIntList = std::shared_ptr<SIntList>;
 
-template <typename EnumT> class Flags
+class BaseFlags{};
+template <typename EnumT> class Flags : public BaseFlags
 {
     static_assert(std::is_enum_v<EnumT>, "Flags can only be specialized for enum types");
     using UnderlyingTp = std::make_unsigned_t<std::underlying_type_t<EnumT>>;
@@ -79,13 +80,13 @@ void fromStr(const std::string &str, ColumnType &type);
 
 struct Column
 {
-    int32_t idx = -1;
-    int32_t pos = -1;
+    SInt idx = -1;
+    SInt pos = -1;
     std::string key;
     std::string name;
     std::string format;
     ColumnType type = ColumnType::Str;
-    int32_t width = -1;
+    SInt width = -1;
 };
 using Columns = std::vector<Column>;
 using ColumnsRef = std::vector<std::reference_wrapper<Column>>;

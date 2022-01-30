@@ -56,8 +56,8 @@ MainWindow::~MainWindow()
 void MainWindow::createActions()
 {
     m_openFile = new QAction(tr("Open"), this);
-    m_openFileAsText = new QAction(tr("Plain Text File"), this);
-    m_openFileAsJson = new QAction(tr("Json Log File"), this);
+    m_openFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
+    m_openFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
     m_actSaveConf = new QAction(tr("Save Configuration"), this);
     m_actSaveConf->setEnabled(false);
     m_actSaveConfAs = new QAction(tr("Save Configuration As..."), this);

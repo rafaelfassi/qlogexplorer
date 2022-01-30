@@ -24,6 +24,7 @@ public:
     tp::Columns &getColumns() { return m_columns; }
     void clearColumns() { m_columns.clear(); }
     void addColumn(tp::Column &&column) { m_columns.emplace_back(column); }
+    tp::HighlighterParams &getHighlighterParams() { return m_highlighterParams; }
 
 private:
     tp::FileType m_fileType;
@@ -32,5 +33,5 @@ private:
     std::string m_fileName;
     std::string m_regexPattern;
     tp::Columns m_columns;
-    tp::HighlighterParams highlighterParams;
+    tp::HighlighterParams m_highlighterParams;
 };

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "AbstractModel.h"
-#include "ParamsMatcher.h"
-#include <fstream>
+#include "Matcher.h"
 #include <thread>
 #include <mutex>
 
@@ -135,7 +134,7 @@ private:
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
     std::vector<Chunk> m_chunks;
-    ParamsMatcher m_paramsMatcher;
+    Matcher m_matcher;
     std::thread m_searchThread;
     std::thread m_watchThread;
     // Control flags that are set in the main thread and read by other threads.

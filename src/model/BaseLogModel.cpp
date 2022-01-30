@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "BaseLogModel.h"
-#include <sstream>
 #include <filesystem>
-#include <algorithm>
-#include <regex>
 
 BaseLogModel::BaseLogModel(Conf &conf, QObject *parent)
     : AbstractModel(parent),
@@ -70,7 +67,7 @@ const tp::Columns &BaseLogModel::getColumns() const
 void BaseLogModel::startSearch(const tp::SearchParams &params, bool orOp)
 {
     stopSearch();
-    m_paramsMatcher.setParams(params, orOp);
+    m_matcher.setParams(params, orOp);
     m_searching.store(true);
     m_searchThread = std::thread(&BaseLogModel::search, this);
 }
@@ -120,7 +117,7 @@ void BaseLogModel::search()
             for (const auto &[currRow, rawText] : chunkRows.data())
             {
                 parseRow(rawText, rowData);
-                if (m_paramsMatcher.matchInRow(rowData))
+                if (m_matcher.matchInRow(rowData))
                 {
                     rowsPtr->push_back(currRow);
                 }

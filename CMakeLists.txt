@@ -49,13 +49,13 @@ set(MATCH_HEADERS
     src/match/BaseMatcher.h
     src/match/RegexMatcher.h
     src/match/SubStringMatcher.h
-    src/match/ParamsMatcher.h
+    src/match/Matcher.h
 )
 
 set(MATCH_SOURCES
     src/match/RegexMatcher.cpp
     src/match/SubStringMatcher.cpp
-    src/match/ParamsMatcher.cpp
+    src/match/Matcher.cpp
 )
 
 set(GUI_HEADERS
@@ -66,6 +66,7 @@ set(GUI_HEADERS
     src/gui/LogSearchWidget.h
     src/gui/LogTabWidget.h
     src/gui/HeaderView.h
+    src/gui/Highlighter.h
 )
 
 set(GUI_SOURCES
@@ -76,6 +77,7 @@ set(GUI_SOURCES
     src/gui/LogSearchWidget.cpp
     src/gui/LogTabWidget.cpp
     src/gui/HeaderView.cpp
+    src/gui/Highlighter.cpp
 )
 
 add_executable(${PROJECT_NAME}

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Utils.h"
 #include <iostream>
-#include <sstream>
 
 namespace utl
 {
@@ -22,6 +21,11 @@ std::string toStr(const rapidjson::Value &json)
 std::string toStr(const QString &str)
 {
     return str.toStdString();
+}
+
+std::string toStr(const QColor &color)
+{
+    return toStr(color.name());
 }
 
 std::string join(const std::vector<std::string> &strList, const std::string &delim)

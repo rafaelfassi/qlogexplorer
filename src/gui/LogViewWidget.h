@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include "Highlighter.h"
 
 class AbstractModel;
 class HeaderView;
@@ -35,6 +36,7 @@ class LogViewWidget : public QWidget
         QRect numberRect;
         QRect numberAreaRect;
         bool selected = false;
+        const Highlighter *highlighter = nullptr;
     };
 
 public:
@@ -46,6 +48,7 @@ public:
     const std::set<tp::SInt> &getMarks();
     void clearMarks();
     bool hasMark(tp::SInt row) const;
+    void configure(Conf *conf);
 
 signals:
     void rowSelected(tp::SInt row);
@@ -100,7 +103,7 @@ protected:
     tp::SInt getTextWidth(const std::string &text, bool simplified = false);
     QString getElidedText(const std::string &text, tp::SInt width, bool simplified = false);
 
-    void getColumnsSizeToHeader(tp::ColumnsRef &columnsRef);
+    void getColumnsSizeToHeader(tp::ColumnsRef &columnsRef, bool discardConfig = false);
     void getColumnsSizeToContent(tp::ColumnsRef &columnsRef);
     void getColumnsSizeToScreen(tp::ColumnsRef &columnsRef);
 
@@ -148,4 +151,5 @@ private:
     std::optional<std::pair<tp::SInt, int>> m_startSelect;
     std::optional<std::pair<tp::SInt, int>> m_currentSelec;
     std::set<tp::SInt> m_marks;
+    std::vector<Highlighter> m_highlighters;
 };
