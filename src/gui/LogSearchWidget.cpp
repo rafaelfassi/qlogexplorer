@@ -194,7 +194,7 @@ void LogSearchWidget::clearResults()
 {
     m_sourceModel->stopSearch();
     m_proxyModel->clear();
-    m_searchResults->clearMarks();
+    m_searchResults->clearBookmarks();
     m_searchResults->updateView();
 }
 
@@ -221,18 +221,18 @@ void LogSearchWidget::sourceModelConfigured()
 
 void LogSearchWidget::addMarksFromMainLog()
 {
-    for (const auto searchResultsRow : m_searchResults->getMarks())
+    for (const auto searchResultsRow : m_searchResults->getBookmarks())
     {
-        m_mainLog->markRow(m_proxyModel->getRowNum(searchResultsRow));
+        m_mainLog->addBookmark(m_proxyModel->getRowNum(searchResultsRow));
     }
 
-    for (const auto mainLogRow : m_mainLog->getMarks())
+    for (const auto mainLogRow : m_mainLog->getBookmarks())
     {
         m_proxyModel->addSourceRow(mainLogRow);
         const auto row = m_proxyModel->findSourceRow(mainLogRow);
         if (row != -1)
         {
-            m_searchResults->markRow(row);
+            m_searchResults->addBookmark(row);
         }
     }
     m_mainLog->updateView();

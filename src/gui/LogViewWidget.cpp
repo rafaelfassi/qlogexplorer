@@ -13,13 +13,14 @@
 #include <QMenu>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QTextLayout>
 #include <cmath>
 #include <limits>
 
 constexpr tp::SInt g_scrollBarThickness(25);
 constexpr tp::SInt g_defaultMargin(10);
 constexpr tp::SInt g_startTextMargin(5);
-constexpr auto g_fontName = "times";
+constexpr auto g_fontName = "Monospace";
 constexpr tp::SInt g_fontSize = 14;
 static const QColor g_bgColor(Qt::white);
 static const QColor g_txtColor(Qt::black);
@@ -148,20 +149,20 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_actCopy->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actCopy);
 
-    m_actMark = new QAction("Toggle Mark", this);
-    m_actMark->setShortcut(Qt::CTRL + Qt::Key_M);
-    m_actMark->setShortcutContext(Qt::WidgetShortcut);
-    addAction(m_actMark);
+    m_actBookmark = new QAction("Toggle Bookmark", this);
+    m_actBookmark->setShortcut(Qt::CTRL + Qt::Key_M);
+    m_actBookmark->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actBookmark);
 
-    m_actPrevMark = new QAction("Previous Mark", this);
-    m_actPrevMark->setShortcut(Qt::CTRL + Qt::Key_Up);
-    m_actPrevMark->setShortcutContext(Qt::WidgetShortcut);
-    addAction(m_actPrevMark);
+    m_actPrevBookmark = new QAction("Previous Bookmark", this);
+    m_actPrevBookmark->setShortcut(Qt::CTRL + Qt::Key_Up);
+    m_actPrevBookmark->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actPrevBookmark);
 
-    m_actNextMark = new QAction("Next Mark", this);
-    m_actNextMark->setShortcut(Qt::CTRL + Qt::Key_Down);
-    m_actNextMark->setShortcutContext(Qt::WidgetShortcut);
-    addAction(m_actNextMark);
+    m_actNextBookmark = new QAction("Next Bookmark", this);
+    m_actNextBookmark->setShortcut(Qt::CTRL + Qt::Key_Down);
+    m_actNextBookmark->setShortcutContext(Qt::WidgetShortcut);
+    addAction(m_actNextBookmark);
 
     setFocusPolicy(Qt::StrongFocus);
     setFocus();
@@ -178,9 +179,9 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
     connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
     connect(m_actCopy, &QAction::triggered, this, &LogViewWidget::copySelected);
-    connect(m_actMark, &QAction::triggered, this, &LogViewWidget::markSelected);
-    connect(m_actPrevMark, &QAction::triggered, this, &LogViewWidget::goToPrevMark);
-    connect(m_actNextMark, &QAction::triggered, this, &LogViewWidget::goToNextMark);
+    connect(m_actBookmark, &QAction::triggered, this, &LogViewWidget::bookmarkSelected);
+    connect(m_actPrevBookmark, &QAction::triggered, this, &LogViewWidget::goToPrevBookmark);
+    connect(m_actNextBookmark, &QAction::triggered, this, &LogViewWidget::goToNextBookmark);
     connect(m_actGoUp, &QAction::triggered, this, &LogViewWidget::goToPrevRow);
     connect(m_actGoDown, &QAction::triggered, this, &LogViewWidget::goToNextRow);
     connect(m_actGoPrevPage, &QAction::triggered, this, &LogViewWidget::goToPrevPage);
@@ -191,6 +192,12 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_actGoRight, &QAction::triggered, this, &LogViewWidget::goRight);
     connect(m_actGoFullLeft, &QAction::triggered, this, &LogViewWidget::goFullLeft);
     connect(m_actGoFullRight, &QAction::triggered, this, &LogViewWidget::goFullRight);
+
+    m_availableMarks.emplace_back("#000000", "#7fffd4");
+    m_availableMarks.emplace_back("#000000", "#87cefa");
+    m_availableMarks.emplace_back("#000000", "#fff8dc");
+    m_availableMarks.emplace_back("#ffffff", "#9932cc");
+    m_availableMarks.emplace_back("#ffffff", "#ff8c00");
 }
 
 LogViewWidget::~LogViewWidget()
@@ -253,12 +260,12 @@ void LogViewWidget::goToRow(tp::SInt row)
             m_vScrollBar->setPos(row - (m_itemsPerPage / 2));
         }
 
-        m_currentRow = row;
+        m_selectedRow = row;
 
-        if (m_startSelect.has_value() || m_currentSelec.has_value())
+        if (m_selectStart.has_value() || m_selectEnd.has_value())
         {
-            m_startSelect = std::nullopt;
-            m_currentSelec = std::nullopt;
+            m_selectStart = std::nullopt;
+            m_selectEnd = std::nullopt;
         }
 
         update();
@@ -314,60 +321,95 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
 
     if (event->button() == Qt::LeftButton)
     {
-        if (m_startSelect.has_value() && (event->modifiers() == Qt::ShiftModifier))
+        if (m_selectStart.has_value() && (event->modifiers() == Qt::ShiftModifier))
         {
             // Selects many rows by clicking with shift.
-            m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
+            m_selectEnd = std::make_pair(row, xPos + m_hScrollBar->getPos());
         }
         else
         {
-
-            m_startSelect = std::make_pair(row, xPos + m_hScrollBar->getPos());
-            m_currentSelec = std::nullopt;
-            if (m_currentRow != row)
-            {
-                m_currentRow = row;
-                emit rowSelected(m_model->getRowNum(row));
-            }
+            m_selectStart = std::make_pair(row, xPos + m_hScrollBar->getPos());
+            m_selectEnd = std::nullopt;
+            m_selectedText = std::nullopt;
+            m_selectedRow = row;
+            emit rowSelected(m_model->getRowNum(row));
         }
         update();
     }
     else
     {
-        if (!m_currentSelec.has_value() && (m_currentRow != row))
+        if (!m_selectEnd.has_value() && (m_selectedRow != row))
         {
-            m_currentRow = row;
+            m_selectedRow = row;
             emit rowSelected(m_model->getRowNum(row));
         }
 
         // As an alternative implementation, it could not include the not available actions into the menu.
         m_actCopy->setEnabled(canCopy());
-        m_actPrevMark->setEnabled(hasPrevMark());
-        m_actNextMark->setEnabled(hasNextMark());
+        m_actPrevBookmark->setEnabled(hasPrevBookmark());
+        m_actNextBookmark->setEnabled(hasNextBookmark());
 
         QMenu menu(this);
         menu.addAction(m_actCopy);
         menu.addSeparator();
-        menu.addAction(m_actMark);
-        menu.addAction(m_actPrevMark);
-        menu.addAction(m_actNextMark);
+        menu.addAction(m_actBookmark);
+        menu.addAction(m_actPrevBookmark);
+        menu.addAction(m_actNextBookmark);
+
+        menu.addSeparator();
+
+        auto markAllMenu = menu.addMenu("Mark All");
+        markAllMenu->setEnabled(hasTextSelected());
+
+        auto unmarkAllMenu = menu.addMenu("Unmark All");
+        unmarkAllMenu->setEnabled(!m_markedTexts.empty());
+
+        int markCnt(0);
+        for (const auto &mark : m_availableMarks)
+        {
+            QPixmap pixmap(24, 24);
+            pixmap.fill(mark.bg);
+            QIcon icon(pixmap);
+
+            ++markCnt;
+
+            if (markAllMenu->isEnabled() && m_selectedText.has_value())
+            {
+                auto actMark = markAllMenu->addAction(icon, QString("Using style %1").arg(markCnt));
+                connect(actMark, &QAction::triggered, [this, &mark]() { this->addTextMark(*m_selectedText, mark); });
+            }
+
+            if (unmarkAllMenu->isEnabled())
+            {
+                const auto it = std::find_if(
+                    m_markedTexts.begin(),
+                    m_markedTexts.end(),
+                    [&mark](const TextSelection &sel) { return sel.color.bg == mark.bg; });
+                if (it != m_markedTexts.end())
+                {
+                    auto actUnmark = unmarkAllMenu->addAction(icon, QString("Style %1").arg(markCnt));
+                    connect(actUnmark, &QAction::triggered, [this, &mark]() { this->removeTextMarks(mark); });
+                }
+            }
+        }
+
         menu.exec(event->globalPos());
 
         // Let the action enabled for the shortcuts
         m_actCopy->setEnabled(true);
-        m_actPrevMark->setEnabled(true);
-        m_actNextMark->setEnabled(true);
+        m_actPrevBookmark->setEnabled(true);
+        m_actNextBookmark->setEnabled(true);
     }
 }
 
 void LogViewWidget::mouseReleaseEvent(QMouseEvent *)
 {
-    // if (!m_currentSelec.has_value() && (event->button() == Qt::LeftButton))
+    // if (!m_selectEnd.has_value() && (event->button() == Qt::LeftButton))
     // {
     //     const tp::SInt row = getRowByScreenPos(event->pos().y());
     //     if (row >= 0 && (row < m_model->rowCount()))
     //     {
-    //         m_currentRow = row;
+    //         m_selectedRow = row;
     //         update();
     //         emit rowSelected(m_model->getRowNum(row));
     //     }
@@ -376,7 +418,7 @@ void LogViewWidget::mouseReleaseEvent(QMouseEvent *)
 
 void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if (m_startSelect.has_value())
+    if (m_selectStart.has_value())
     {
         const tp::SInt row = getRowByScreenPos(event->pos().y());
         const tp::SInt xPos = event->pos().x();
@@ -402,12 +444,18 @@ void LogViewWidget::mouseMoveEvent(QMouseEvent *event)
             m_vScrollBar->setPos(m_vScrollBar->getPos() - offset);
         }
 
-        m_currentSelec = std::make_pair(row, xPos + m_hScrollBar->getPos());
+        m_selectEnd = std::make_pair(row, xPos + m_hScrollBar->getPos());
+        if (m_selectEnd->first == m_selectStart->first)
+        {
+            m_selectedText = getTextSelection(m_selectEnd->first);
+        }
+
         update();
     }
-    else if (m_currentSelec.has_value())
+    else if (m_selectEnd.has_value())
     {
-        m_currentSelec = std::nullopt;
+        m_selectEnd = std::nullopt;
+        m_selectedText = std::nullopt;
     }
 }
 
@@ -425,28 +473,27 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
 
     for (const auto &col : vrData.columns)
     {
-        if (!col.rect.contains(event->pos()))
+        if (!col.can.rect.contains(event->pos()))
             continue;
 
-        const int textXPos = xPos - col.rect.left();
-        const int chPos = getStrStartPos(col.text, textXPos);
-        const auto wS = std::find_if(col.text.rbegin() + col.text.size() - chPos, col.text.rend(), isSeparator);
-        const auto wE = std::find_if(col.text.begin() + chPos, col.text.end(), isSeparator);
-        const auto sPos = std::distance(col.text.begin(), wS.base());
-        const auto ePos = std::distance(col.text.begin(), wE);
+        const int textXPos = xPos - col.can.rect.left();
+        const int chPos = getStrStartPos(textXPos);
+        const auto wS =
+            std::find_if(col.can.text.rbegin() + col.can.text.size() - chPos, col.can.text.rend(), isSeparator);
+        const auto wE = std::find_if(col.can.text.begin() + chPos, col.can.text.end(), isSeparator);
+        const auto sPos = std::distance(col.can.text.begin(), wS.base());
+        const auto ePos = std::distance(col.can.text.begin(), wE);
 
-        QString selText = col.text.mid(sPos, ePos - sPos);
+        QString selText = col.can.text.mid(sPos, ePos - sPos);
         if (selText.isEmpty())
             break;
 
-        const int selSize = m_fm.horizontalAdvance(selText);
-        const int prevTextSize = m_fm.horizontalAdvance(col.text.mid(0, sPos));
-        const int startSel = m_hScrollBar->getPos() + col.rect.left() + prevTextSize;
-        const int lMargin = (m_fm.horizontalAdvance(selText.front()) / 2);
-        const int rMargin = (m_fm.horizontalAdvance(selText.back()) / 3);
+        auto can = makeSelCanFromStrPos(col.can, sPos, ePos - sPos);
+        can.rect.translate(m_hScrollBar->getPos(), 0);
 
-        m_startSelect = std::make_pair(row, startSel + lMargin);
-        m_currentSelec = std::make_pair(row, startSel - rMargin + selSize);
+        m_selectStart = std::make_pair(row, can.rect.left() + getCharMarging());
+        m_selectEnd = std::make_pair(row, can.rect.right() - getCharMarging());
+        m_selectedText = selText;
         update();
         break;
     }
@@ -483,7 +530,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
             {
                 painter.setClipping(false);
                 painter.setPen(g_headerTxtColor);
-                const QColor &bgColor = hasMark(vrData.row) ? g_markBgColor : g_headerBgColor;
+                const QColor &bgColor = hasBookmark(vrData.row) ? g_markBgColor : g_headerBgColor;
                 painter.fillRect(vrData.numberAreaRect, bgColor);
                 painter.drawText(
                     vrData.numberRect,
@@ -491,38 +538,48 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                     std::to_string(vrData.number + 1).c_str());
             }
 
-            QColor currentTextColor(g_txtColor);
+            QColor rowTextColor(g_txtColor);
             painter.setClipping(true);
 
             // Selected line
             if (vrData.selected)
             {
                 painter.fillRect(vrData.rect, g_selectionBgColor);
-                currentTextColor = g_selectionTxtColor;
+                rowTextColor = g_selectionTxtColor;
             }
             else if (vrData.highlighter != nullptr)
             {
                 painter.fillRect(vrData.rect, vrData.highlighter->getBgColor());
-                currentTextColor = vrData.highlighter->getTextColor();
+                rowTextColor = vrData.highlighter->getTextColor();
             }
 
-            painter.setPen(currentTextColor);
+            painter.setPen(rowTextColor);
 
             // Draw Row Data
             for (const auto &colData : vrData.columns)
             {
                 // Draw column text
-                painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
+                painter.drawText(colData.can.rect, Qt::AlignTop | Qt::AlignLeft, colData.can.text);
+
+                for (const auto &markedText : colData.markedTexts)
+                {
+                    painter.setClipRect(markedText.can.rect.intersected(m_textAreaRect));
+                    painter.fillRect(markedText.can.rect, markedText.color.bg);
+                    painter.setPen(markedText.color.fg);
+                    painter.drawText(colData.can.rect, Qt::AlignTop | Qt::AlignLeft, colData.can.text);
+                    painter.setPen(rowTextColor);
+                    painter.setClipRect(m_textAreaRect);
+                }
 
                 if (colData.selection.has_value())
                 {
                     // Draw selected text
-                    const auto &[selRect, selText] = colData.selection.value();
-                    painter.setClipRect(selRect.intersected(m_textAreaRect));
-                    painter.fillRect(selRect, g_selectionBgColor);
-                    painter.setPen(g_selectionTxtColor);
-                    painter.drawText(colData.rect, Qt::AlignTop | Qt::AlignLeft, colData.text);
-                    painter.setPen(currentTextColor);
+                    const auto &selText = colData.selection.value();
+                    painter.setClipRect(selText.can.rect.intersected(m_textAreaRect));
+                    painter.fillRect(selText.can.rect, selText.color.bg);
+                    painter.setPen(selText.color.fg);
+                    painter.drawText(colData.can.rect, Qt::AlignTop | Qt::AlignLeft, colData.can.text);
+                    painter.setPen(rowTextColor);
                     painter.setClipRect(m_textAreaRect);
                 }
             }
@@ -548,7 +605,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
     vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
     vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin * 2, m_rowHeight);
 
-    for (const auto &highlighter : m_highlighters)
+    for (const auto &highlighter : m_highlightersRows)
     {
         if (highlighter.matchInRow(rowData))
         {
@@ -558,10 +615,10 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
     }
 
     std::optional<QRect> selectText;
-    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    if (m_selectStart.has_value() && m_selectEnd.has_value())
     {
-        const auto &[sRow, sPos] = m_startSelect.value();
-        const auto &[eRow, ePos] = m_currentSelec.value();
+        const auto &[sRow, sPos] = m_selectStart.value();
+        const auto &[eRow, ePos] = m_selectEnd.value();
         const auto fRow = std::min(sRow, eRow);
         const auto lRow = std::max(sRow, eRow);
         if (row >= fRow && row <= lRow)
@@ -580,7 +637,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             }
         }
     }
-    else if (m_currentRow.has_value() && m_currentRow.value() == row)
+    else if (m_selectedRow.has_value() && m_selectedRow.value() == row)
     {
         vrData.selected = true;
     }
@@ -594,20 +651,25 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             const tp::SInt colWidth = m_header->sectionSize(idx);
             rect.setWidth(colWidth);
             rect.setLeft(rect.left() + g_startTextMargin);
+            vcData.can.rect = rect;
             if (idx < rowData.size())
             {
-                vcData.text = getElidedText(rowData[idx], colWidth - g_defaultMargin, true);
+                const QString &colText(rowData[idx].c_str());
+                vcData.can.text = getElidedText(colText, colWidth - g_defaultMargin, true);
                 if (selectText.has_value() && rect.contains(selectText.value()))
                 {
-                    QRect selRect;
-                    const auto &selText = getSelectedText(vcData.text, rect, selectText.value(), selRect);
-                    if (!selText.isEmpty() && selRect.isValid())
+                    const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
+                    if (!can.text.isEmpty() && can.rect.isValid())
                     {
-                        vcData.selection = std::make_pair(selRect, selText);
+                        TextSelection textSelection;
+                        textSelection.can = can;
+                        textSelection.color.bg = g_selectionBgColor;
+                        textSelection.color.fg = g_selectionTxtColor;
+                        vcData.selection = std::move(textSelection);
                     }
                 }
+                vcData.markedTexts = findMarkedText(TextCan(rect, colText));
             }
-            vcData.rect = rect;
             vrData.columns.emplace_back(std::move(vcData));
             rect.moveLeft(rect.left() + rect.width());
         }
@@ -620,17 +682,20 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             const tp::SInt colWidth = getTextWidth(colText) + g_defaultMargin;
             rect.setWidth(colWidth);
             rect.setLeft(rect.left() + g_startTextMargin);
-            vcData.text = QString::fromStdString(colText);
+            vcData.can.text = QString::fromStdString(colText);
+            vcData.can.rect = rect;
             if (selectText.has_value() && rect.contains(selectText.value()))
             {
-                QRect selRect;
-                const auto &selText = getSelectedText(vcData.text, rect, selectText.value(), selRect);
-                if (!selText.isEmpty() && selRect.isValid())
+                const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
+                if (!can.text.isEmpty() && can.rect.isValid())
                 {
-                    vcData.selection = std::make_pair(selRect, selText);
+                    TextSelection textSelection;
+                    textSelection.can = can;
+                    textSelection.color.bg = g_selectionBgColor;
+                    textSelection.color.fg = g_selectionTxtColor;
+                    vcData.selection = std::move(textSelection);
                 }
             }
-            vcData.rect = rect;
             vrData.columns.emplace_back(std::move(vcData));
             rect.moveLeft(rect.left() + rect.width());
         }
@@ -661,7 +726,8 @@ tp::SInt LogViewWidget::getMaxRowWidth()
         {
             for (const auto &col : vrData.columns)
             {
-                maxRowWidth = std::max<tp::SInt>(maxRowWidth, col.rect.right() - vrData.numberAreaRect.right() + offset);
+                maxRowWidth =
+                    std::max<tp::SInt>(maxRowWidth, col.can.rect.right() - vrData.numberAreaRect.right() + offset);
             }
             return true;
         });
@@ -690,18 +756,17 @@ tp::SInt LogViewWidget::getTextWidth(const std::string &text, bool simplified)
     return m_fm.horizontalAdvance(simplified ? qStr.simplified() : qStr);
 }
 
-QString LogViewWidget::getElidedText(const std::string &text, tp::SInt width, bool simplified)
+QString LogViewWidget::getElidedText(const QString &text, tp::SInt width, bool simplified)
 {
-    QString qStr(QString::fromStdString(text));
-    return m_fm.elidedText(simplified ? qStr.simplified() : qStr, Qt::ElideRight, width);
+    return m_fm.elidedText(simplified ? text.simplified() : text, Qt::ElideRight, width);
 }
 
 void LogViewWidget::configure(Conf *conf)
 {
-    m_highlighters.clear();
-    for (const auto & param : conf->getHighlighterParams())
+    m_highlightersRows.clear();
+    for (const auto &param : conf->getHighlighterParams())
     {
-        m_highlighters.push_back(Highlighter(param));
+        m_highlightersRows.push_back(Highlighter(param));
     }
 }
 
@@ -836,90 +901,210 @@ void LogViewWidget::expandColumnToContent(tp::SInt columnIdx)
     }
 }
 
-int LogViewWidget::getStrStartPos(const QString &text, int left, int *newLeft)
+qreal LogViewWidget::getCharSize()
 {
-    // Not the best implementation, but it allows variable-width fonts as well.
-    int sX(0);
-    int eX(m_fm.horizontalAdvance(text));
-    int sPos(0);
-    int x(sX);
-    int p(sPos);
-    QString tmpStr(text);
-
-    while (x < left && !tmpStr.isEmpty())
-    {
-        sX = x;
-        sPos = p;
-        tmpStr = text.mid(++p);
-        x = eX - m_fm.horizontalAdvance(tmpStr);
-    }
-
-    if (newLeft)
-        *newLeft = sX;
-    return sPos;
+    QFontMetricsF fm(m_font);
+    return fm.horizontalAdvance('a');
 }
 
-int LogViewWidget::getStrEndPos(const QString &text, int right, int *newRight)
+qreal LogViewWidget::getCharMarging()
 {
-    int eX(m_fm.horizontalAdvance(text));
-    int ePos(text.size());
-    int x(eX);
-    int p(ePos);
-    QString tmpStr(text);
-
-    x = eX;
-    p = ePos;
-    tmpStr = text;
-    while (x > right && !tmpStr.isEmpty())
-    {
-        eX = x;
-        ePos = p;
-        tmpStr = tmpStr.mid(0, --p);
-        x = m_fm.horizontalAdvance(tmpStr);
-    }
-
-    if (newRight)
-        *newRight = eX;
-    return ePos;
+    return getCharSize() / 4.0;
 }
 
-QString LogViewWidget::getSelectedText(
-    const QString &text,
-    const QRect &textRect,
-    const QRect &selRect,
-    QRect &resultRect)
+std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
 {
-    if (text.isEmpty() || selRect.isNull() || !selRect.isValid())
+    QFontMetricsF fm(m_font);
+    std::vector<TextSelection> resVec;
+
+    // const auto findAndMarkFunc = [&, this](const QString &text, const QColor &bgColor, const QColor &txtColor)
+    // {
+    //     if (!text.isEmpty())
+    //     {
+    //         auto idx = can.text.indexOf(text);
+    //         while (idx != -1)
+    //         {
+    //             auto strBefore = can.text.mid(0, idx);
+    //             const auto ssX = fm.horizontalAdvance(strBefore);
+    //             const auto esX = fm.horizontalAdvance(text) + ssX;
+    //             int sX, eX;
+    //             int pIni = getStrStartPos(ssX + 1, &sX);
+    //             int pFin = getStrEndPos(esX - 1, &eX);
+
+    //             TextSelection selText;
+    //             selText.can.rect = can.rect;
+    //             selText.can.rect.setLeft(selText.can.rect.left() + sX);
+    //             selText.can.rect.setWidth(eX - sX);
+    //             selText.can.rect = selText.can.rect.intersected(can.rect);
+    //             selText.color.bg = bgColor;
+    //             selText.color.text = txtColor;
+    //             selText.can.text = text;
+    //             resVec.emplace_back(std::move(selText));
+    //             idx = can.text.indexOf(text, ++idx);
+    //         }
+    //     }
+    // };
+
+    const auto findAndMarkFunc = [&, this](const QString &text, const QColor &bgColor, const QColor &txtColor)
     {
-        resultRect = QRect();
-        return QString();
+        if (!text.isEmpty())
+        {
+            auto idx = can.text.indexOf(text);
+            while (idx != -1)
+            {
+                const auto &selCan = makeSelCanFromStrPos(can, idx, text.size());
+
+                TextSelection selText;
+                selText.can = selCan;
+                selText.color.bg = bgColor;
+                selText.color.fg = txtColor;
+                resVec.emplace_back(std::move(selText));
+
+                idx = can.text.indexOf(text, ++idx);
+            }
+        }
+    };
+
+    for (const auto &markedText : m_markedTexts)
+    {
+        findAndMarkFunc(markedText.can.text, markedText.color.bg, markedText.color.fg);
     }
 
-    const int selStart = selRect.left() - textRect.left();
-    const int selEnd = selRect.right() - textRect.left();
+    if (m_selectedText.has_value())
+    {
+        findAndMarkFunc(m_selectedText.value(), "#008000", g_selectionTxtColor);
+    }
 
-    int sX;
-    int eX;
-    const int sPos = getStrStartPos(text, selStart, &sX);
-    const int ePos = getStrEndPos(text, selEnd, &eX);
+    return resVec;
+}
+
+TextCan LogViewWidget::makeSelCanFromStrPos(const TextCan &can, int fromPos, int len)
+{
+    int sX = getStrWidthUntilPos(fromPos);
+    int eX = getStrWidthUntilPos(fromPos + len);
+
+    TextCan selCan;
+    selCan = can;
+    selCan.rect.setLeft(selCan.rect.left() + sX);
+    selCan.rect.setWidth(eX - sX);
+    selCan.rect = selCan.rect.intersected(can.rect);
+
+    return selCan;
+}
+
+TextCan LogViewWidget::makeSelCanFromSelRect(const TextCan &can, const QRect &selRect)
+{
+    TextCan selCan;
+
+    if (can.text.isEmpty() || selRect.isNull() || !selRect.isValid())
+    {
+        return selCan;
+    }
+
+    const int selStart = selRect.left() - can.rect.left();
+    const int selEnd = selRect.right() - can.rect.left();
+
+    int sX, eX;
+    const int sPos = getStrStartPos(selStart, &sX);
+    const int ePos = getStrEndPos(selEnd, &eX, can.text.size());
 
     if (eX <= sX || ePos <= sPos)
     {
-        resultRect = QRect();
-        return QString();
+        return selCan;
     }
 
-    resultRect = textRect;
-    resultRect.setLeft(textRect.left() + sX);
-    resultRect.setRight(textRect.left() + eX);
-    return text.mid(sPos, ePos - sPos);
+    selCan.rect = can.rect;
+    selCan.rect.setLeft(can.rect.left() + sX);
+    selCan.rect.setRight(can.rect.left() + eX);
+    selCan.text = can.text.mid(sPos, ePos - sPos);
+    return selCan;
 }
+
+int LogViewWidget::getStrWidthUntilPos(int pos, int maxWidth)
+{
+    QFontMetricsF fm(m_font);
+    const auto chSize = fm.horizontalAdvance('a');
+    int strWidth = chSize * pos;
+    if (strWidth > maxWidth)
+        return maxWidth / chSize;
+    else
+        return strWidth;
+}
+
+int LogViewWidget::getStrStartPos(int left, int *newLeft)
+{
+    QFontMetricsF fm(m_font);
+    const auto charWidth = fm.horizontalAdvance('a');
+    const int pos = left / charWidth;
+    if (newLeft)
+        *newLeft = (pos * charWidth);
+
+    return pos;
+}
+
+// int LogViewWidget::getStrStartPos(const QString &text, int left, int *newLeft)
+// {
+//     // Not the best implementation, but it allows variable-width fonts as well.
+//     int sX(0);
+//     int eX(m_fm.horizontalAdvance(text));
+//     int sPos(0);
+//     int x(sX);
+//     int p(sPos);
+//     QString tmpStr(text);
+
+//     while (x < left && !tmpStr.isEmpty())
+//     {
+//         sX = x;
+//         sPos = p;
+//         tmpStr = text.mid(++p);
+//         x = eX - m_fm.horizontalAdvance(tmpStr);
+//     }
+
+//     if (newLeft)
+//         *newLeft = sX;
+//     return sPos;
+// }
+
+int LogViewWidget::getStrEndPos(int right, int *newRight, int maxSize)
+{
+    QFontMetricsF fm(m_font);
+    const auto charWidth = fm.horizontalAdvance('a');
+    const int pos = std::min<int>((right / charWidth) + 1, maxSize);
+    if (newRight)
+        *newRight = pos * charWidth;
+
+    return pos;
+}
+
+// int LogViewWidget::getStrEndPos(const QString &text, int right, int *newRight)
+// {
+//     int eX(m_fm.horizontalAdvance(text));
+//     int ePos(text.size());
+//     int x(eX);
+//     int p(ePos);
+//     QString tmpStr(text);
+
+//     x = eX;
+//     p = ePos;
+//     tmpStr = text;
+//     while (x > right && !tmpStr.isEmpty())
+//     {
+//         eX = x;
+//         ePos = p;
+//         tmpStr = tmpStr.mid(0, --p);
+//         x = m_fm.horizontalAdvance(tmpStr);
+//     }
+
+//     if (newRight)
+//         *newRight = eX;
+//     return ePos;
+// }
 
 void LogViewWidget::goToPrevRow()
 {
-    if (m_currentRow.value_or(0L) < 1L)
+    if (m_selectedRow.value_or(0L) < 1L)
         return;
-    *m_currentRow -= 1;
+    *m_selectedRow -= 1;
     m_vScrollBar->setPos(m_vScrollBar->getPos() - 1);
     update();
 }
@@ -927,9 +1112,9 @@ void LogViewWidget::goToPrevRow()
 void LogViewWidget::goToNextRow()
 {
     const auto lastRow = m_model->rowCount() - 1;
-    if (m_currentRow.value_or(lastRow) >= lastRow)
+    if (m_selectedRow.value_or(lastRow) >= lastRow)
         return;
-    *m_currentRow += 1;
+    *m_selectedRow += 1;
     m_vScrollBar->setPos(m_vScrollBar->getPos() + 1);
     update();
 }
@@ -986,7 +1171,7 @@ void LogViewWidget::goFullRight()
 
 bool LogViewWidget::canCopy() const
 {
-    return ((m_startSelect.has_value() && m_currentSelec.has_value()) || m_currentRow.has_value());
+    return ((m_selectStart.has_value() && m_selectEnd.has_value()) || m_selectedRow.has_value());
 }
 
 QString LogViewWidget::rowToText(tp::SInt row)
@@ -998,41 +1183,41 @@ QString LogViewWidget::rowToText(tp::SInt row)
     {
         if (!rowText.isEmpty())
             rowText.append('\t');
-        rowText.append(col.text);
+        rowText.append(col.can.text);
     }
     return rowText;
 }
 
-QString LogViewWidget::getSelectedText(tp::SInt row)
+QString LogViewWidget::getTextSelection(tp::SInt row)
 {
-    QString selectedText;
+    QString textSelection;
     VisualRowData vrData;
     getVisualRowData(row, 0, 0, vrData);
     for (const auto &col : vrData.columns)
     {
         if (col.selection.has_value())
         {
-            selectedText = col.selection->second;
+            textSelection = col.selection->can.text;
             break;
         }
     }
-    return selectedText;
+    return textSelection;
 }
 
 void LogViewWidget::copySelected()
 {
     QString value;
 
-    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    if (m_selectStart.has_value() && m_selectEnd.has_value())
     {
-        if (m_startSelect->first == m_currentSelec->first)
+        if (m_selectStart->first == m_selectEnd->first)
         {
-            value = getSelectedText(m_startSelect->first);
+            value = getTextSelection(m_selectStart->first);
         }
         else
         {
-            const tp::SInt firstRow = std::min(m_startSelect->first, m_currentSelec->first);
-            const tp::SInt lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+            const tp::SInt firstRow = std::min(m_selectStart->first, m_selectEnd->first);
+            const tp::SInt lastRow = std::max(m_selectStart->first, m_selectEnd->first);
             for (tp::SInt row = firstRow; row <= lastRow; ++row)
             {
                 if (!value.isEmpty())
@@ -1041,9 +1226,9 @@ void LogViewWidget::copySelected()
             }
         }
     }
-    else if (m_currentRow.has_value())
+    else if (m_selectedRow.has_value())
     {
-        value = rowToText(m_currentRow.value());
+        value = rowToText(m_selectedRow.value());
     }
 
     if (!value.isEmpty())
@@ -1053,92 +1238,92 @@ void LogViewWidget::copySelected()
     }
 }
 
-const std::set<tp::SInt> &LogViewWidget::getMarks()
+const std::set<tp::SInt> &LogViewWidget::getBookmarks()
 {
-    return m_marks;
+    return m_bookMarks;
 }
 
-bool LogViewWidget::hasMark(tp::SInt row) const
+bool LogViewWidget::hasBookmark(tp::SInt row) const
 {
-    return (m_marks.find(row) != m_marks.end());
+    return (m_bookMarks.find(row) != m_bookMarks.end());
 }
 
-void LogViewWidget::clearMarks()
+void LogViewWidget::clearBookmarks()
 {
-    m_marks.clear();
+    m_bookMarks.clear();
 }
 
-void LogViewWidget::markRow(tp::SInt row)
+void LogViewWidget::addBookmark(tp::SInt row)
 {
-    m_marks.insert(row);
+    m_bookMarks.insert(row);
 }
 
-void LogViewWidget::removeMark(tp::SInt row)
+void LogViewWidget::removeBookmark(tp::SInt row)
 {
-    if (auto it = m_marks.find(row); it != m_marks.end())
+    if (auto it = m_bookMarks.find(row); it != m_bookMarks.end())
     {
-        m_marks.erase(it);
+        m_bookMarks.erase(it);
     }
 }
 
-void LogViewWidget::toggleMark(tp::SInt row)
+void LogViewWidget::toggleBookmark(tp::SInt row)
 {
-    if (auto it = m_marks.find(row); it != m_marks.end())
+    if (auto it = m_bookMarks.find(row); it != m_bookMarks.end())
     {
-        m_marks.erase(it);
+        m_bookMarks.erase(it);
         return;
     }
-    m_marks.insert(row);
+    m_bookMarks.insert(row);
 }
 
-bool LogViewWidget::hasPrevMark()
+bool LogViewWidget::hasPrevBookmark()
 {
-    if (!m_currentRow.has_value())
+    if (!m_selectedRow.has_value())
         return false;
-    return (m_marks.lower_bound(m_currentRow.value()) != m_marks.begin());
+    return (m_bookMarks.lower_bound(m_selectedRow.value()) != m_bookMarks.begin());
 }
 
-bool LogViewWidget::hasNextMark()
+bool LogViewWidget::hasNextBookmark()
 {
-    if (!m_currentRow.has_value())
+    if (!m_selectedRow.has_value())
         return false;
-    return (m_marks.upper_bound(m_currentRow.value()) != m_marks.end());
+    return (m_bookMarks.upper_bound(m_selectedRow.value()) != m_bookMarks.end());
 }
 
-void LogViewWidget::goToPrevMark()
+void LogViewWidget::goToPrevBookmark()
 {
-    if (m_currentRow.has_value())
+    if (m_selectedRow.has_value())
     {
-        auto it = m_marks.lower_bound(m_currentRow.value());
-        if (it != m_marks.begin())
+        auto it = m_bookMarks.lower_bound(m_selectedRow.value());
+        if (it != m_bookMarks.begin())
         {
             goToRow(*(--it));
         }
     }
 }
 
-void LogViewWidget::goToNextMark()
+void LogViewWidget::goToNextBookmark()
 {
-    if (m_currentRow.has_value())
+    if (m_selectedRow.has_value())
     {
-        const auto it = m_marks.upper_bound(m_currentRow.value());
-        if (it != m_marks.end())
+        const auto it = m_bookMarks.upper_bound(m_selectedRow.value());
+        if (it != m_bookMarks.end())
         {
             goToRow(*it);
         }
     }
 }
 
-void LogViewWidget::markSelected()
+void LogViewWidget::bookmarkSelected()
 {
-    if (m_startSelect.has_value() && m_currentSelec.has_value())
+    if (m_selectStart.has_value() && m_selectEnd.has_value())
     {
-        const tp::SInt firstRow = std::min(m_startSelect->first, m_currentSelec->first);
-        const tp::SInt lastRow = std::max(m_startSelect->first, m_currentSelec->first);
+        const tp::SInt firstRow = std::min(m_selectStart->first, m_selectEnd->first);
+        const tp::SInt lastRow = std::max(m_selectStart->first, m_selectEnd->first);
         bool allMarked(true);
         for (tp::SInt row = firstRow; row <= lastRow; ++row)
         {
-            if (!hasMark(row))
+            if (!hasBookmark(row))
             {
                 allMarked = false;
                 break;
@@ -1147,15 +1332,37 @@ void LogViewWidget::markSelected()
         for (tp::SInt row = firstRow; row <= lastRow; ++row)
         {
             if (allMarked)
-                removeMark(row);
+                removeBookmark(row);
             else
-                markRow(row);
+                addBookmark(row);
         }
     }
-    else if (m_currentRow.has_value())
+    else if (m_selectedRow.has_value())
     {
-        toggleMark(m_currentRow.value());
+        toggleBookmark(m_selectedRow.value());
     }
 
+    update();
+}
+
+bool LogViewWidget::hasTextSelected()
+{
+    return (m_selectedText.has_value() && !m_selectedText->isEmpty());
+}
+
+void LogViewWidget::addTextMark(const QString &text, const SectionColor &selColor)
+{
+    m_markedTexts.emplace_back(TextCan(text), selColor);
+    update();
+}
+
+void LogViewWidget::removeTextMarks(const SectionColor &selColor)
+{
+    m_markedTexts.erase(
+        std::remove_if(
+            m_markedTexts.begin(),
+            m_markedTexts.end(),
+            [&selColor](const TextSelection &mark) { return (mark.color.bg == selColor.bg); }),
+        m_markedTexts.end());
     update();
 }

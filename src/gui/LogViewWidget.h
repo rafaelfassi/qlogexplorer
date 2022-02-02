@@ -16,15 +16,40 @@ enum class ColumnsSize
     Screen
 };
 
+struct TextCan
+{
+    TextCan() = default;
+    TextCan(const QString &_text) : text(_text) {}
+    TextCan(const QRect &_rect, const QString &_text = {}) : rect(_rect), text(_text) {}
+    QRect rect;
+    QString text;
+};
+
+struct SectionColor
+{
+    SectionColor() = default;
+    SectionColor(const QColor &_fg, const QColor &_bg) : fg(_fg), bg(_bg) {}
+    QColor fg;
+    QColor bg;
+};
+
+struct TextSelection
+{
+    TextSelection() = default;
+    TextSelection(const TextCan &_can, const SectionColor &_color) : can(_can), color(_color) {}
+    TextCan can;
+    SectionColor color;
+};
+
 class LogViewWidget : public QWidget
 {
     Q_OBJECT
 
     struct VisualColData
     {
-        QString text;
-        QRect rect;
-        std::optional<std::pair<QRect, QString>> selection;
+        TextCan can;
+        std::optional<TextSelection> selection;
+        std::vector<TextSelection> markedTexts;
     };
 
     struct VisualRowData
@@ -45,9 +70,9 @@ public:
 
     bool canCopy() const;
     AbstractModel *getModel();
-    const std::set<tp::SInt> &getMarks();
-    void clearMarks();
-    bool hasMark(tp::SInt row) const;
+    const std::set<tp::SInt> &getBookmarks();
+    void clearBookmarks();
+    bool hasBookmark(tp::SInt row) const;
     void configure(Conf *conf);
 
 signals:
@@ -57,10 +82,10 @@ public slots:
     void updateView();
     void resetColumns();
     void goToRow(tp::SInt row);
-    void markRow(tp::SInt row);
+    void addBookmark(tp::SInt row);
     void adjustColumns(ColumnsSize size);
     void copySelected();
-    void markSelected();
+    void bookmarkSelected();
     void goToPrevRow();
     void goToNextRow();
     void goToPrevPage();
@@ -71,8 +96,10 @@ public slots:
     void goRight();
     void goFullLeft();
     void goFullRight();
-    void goToPrevMark();
-    void goToNextMark();
+    void goToPrevBookmark();
+    void goToNextBookmark();
+    void addTextMark(const QString &text, const SectionColor &selColor);
+    void removeTextMarks(const SectionColor &selColor);
 
 protected slots:
     void configureColumns();
@@ -101,22 +128,28 @@ protected:
     tp::SInt getLastPageRow() const;
     tp::SInt getRowByScreenPos(int yPos) const;
     tp::SInt getTextWidth(const std::string &text, bool simplified = false);
-    QString getElidedText(const std::string &text, tp::SInt width, bool simplified = false);
+    QString getElidedText(const QString &text, tp::SInt width, bool simplified = false);
 
     void getColumnsSizeToHeader(tp::ColumnsRef &columnsRef, bool discardConfig = false);
     void getColumnsSizeToContent(tp::ColumnsRef &columnsRef);
     void getColumnsSizeToScreen(tp::ColumnsRef &columnsRef);
 
-    QString getSelectedText(const QString &text, const QRect &textRect, const QRect &selRect, QRect &resultRect);
-    int getStrStartPos(const QString &text, int left, int *newLeft = nullptr);
-    int getStrEndPos(const QString &text, int right, int *newRight = nullptr);
+    qreal getCharSize();
+    qreal getCharMarging();
+    std::vector<TextSelection> findMarkedText(const TextCan &can);
+    TextCan makeSelCanFromStrPos(const TextCan &can, int fromPos, int len);
+    TextCan makeSelCanFromSelRect(const TextCan &can, const QRect &selRect);
+    int getStrWidthUntilPos(int pos, int maxWidth = std::numeric_limits<int>::max());
+    int getStrStartPos(int left, int *newLeft = nullptr);
+    int getStrEndPos(int right, int *newRight = nullptr, int maxSize = std::numeric_limits<int>::max());
 
     QString rowToText(tp::SInt row);
-    QString getSelectedText(tp::SInt row);
-    void removeMark(tp::SInt row);
-    void toggleMark(tp::SInt row);
-    bool hasPrevMark();
-    bool hasNextMark();
+    QString getTextSelection(tp::SInt row);
+    void removeBookmark(tp::SInt row);
+    void toggleBookmark(tp::SInt row);
+    bool hasPrevBookmark();
+    bool hasNextBookmark();
+    bool hasTextSelected();
 
 private:
     AbstractModel *m_model;
@@ -139,17 +172,20 @@ private:
     QAction *m_actGoFullLeft;
     QAction *m_actGoFullRight;
     QAction *m_actCopy;
-    QAction *m_actMark;
-    QAction *m_actPrevMark;
-    QAction *m_actNextMark;
+    QAction *m_actBookmark;
+    QAction *m_actPrevBookmark;
+    QAction *m_actNextBookmark;
     QFont m_font;
     QFontMetrics m_fm;
     tp::SInt m_rowHeight = 0;
     tp::SInt m_itemsPerPage = 0;
     QRect m_textAreaRect;
-    std::optional<tp::SInt> m_currentRow;
-    std::optional<std::pair<tp::SInt, int>> m_startSelect;
-    std::optional<std::pair<tp::SInt, int>> m_currentSelec;
-    std::set<tp::SInt> m_marks;
-    std::vector<Highlighter> m_highlighters;
+    std::optional<tp::SInt> m_selectedRow;
+    std::optional<QString> m_selectedText;
+    std::optional<std::pair<tp::SInt, int>> m_selectStart;
+    std::optional<std::pair<tp::SInt, int>> m_selectEnd;
+    std::set<tp::SInt> m_bookMarks;
+    std::vector<Highlighter> m_highlightersRows;
+    std::vector<TextSelection> m_markedTexts;
+    std::vector<SectionColor> m_availableMarks;
 };
