@@ -45,7 +45,7 @@ struct is_streamable<
     enable_if_t<
         std::is_arithmetic<T>::value || std::is_array<T>::value ||
         std::is_pointer<T>::value || std::is_same<T, char8_type>::value ||
-        std::is_convertible<T, fmt::basic_string_view<Char>>::value ||
+        std::is_same<T, std::basic_string<Char>>::value ||
         std::is_same<T, std_string_view<Char>>::value ||
         (std::is_convertible<T, int>::value && !std::is_enum<T>::value)>>
     : std::false_type {};
@@ -78,33 +78,25 @@ void format_value(buffer<Char>& buf, const T& value,
   output.exceptions(std::ios_base::failbit | std::ios_base::badbit);
   buf.try_resize(buf.size());
 }
-}  // namespace detail
 
 // Formats an object of type T that has an overloaded ostream operator<<.
-template <typename Char>
-struct basic_ostream_formatter : formatter<basic_string_view<Char>, Char> {
-  template <typename T, typename OutputIt>
-  auto format(const T& value, basic_format_context<OutputIt, Char>& ctx) const
+template <typename T, typename Char>
+struct fallback_formatter<T, Char, enable_if_t<is_streamable<T, Char>::value>>
+    : private formatter<basic_string_view<Char>, Char> {
+  using formatter<basic_string_view<Char>, Char>::parse;
+
+  template <typename OutputIt>
+  auto format(const T& value, basic_format_context<OutputIt, Char>& ctx)
       -> OutputIt {
     auto buffer = basic_memory_buffer<Char>();
     format_value(buffer, value, ctx.locale());
     return formatter<basic_string_view<Char>, Char>::format(
         {buffer.data(), buffer.size()}, ctx);
   }
-};
 
-using ostream_formatter = basic_ostream_formatter<char>;
-
-namespace detail {
-
-// Formats an object of type T that has an overloaded ostream operator<<.
-template <typename T, typename Char>
-struct fallback_formatter<T, Char, enable_if_t<is_streamable<T, Char>::value>>
-    : basic_ostream_formatter<Char> {
-  using basic_ostream_formatter<Char>::format;
   // DEPRECATED!
   template <typename OutputIt>
-  auto format(const T& value, basic_printf_context<OutputIt, Char>& ctx) const
+  auto format(const T& value, basic_printf_context<OutputIt, Char>& ctx)
       -> OutputIt {
     auto buffer = basic_memory_buffer<Char>();
     format_value(buffer, value, ctx.locale());
