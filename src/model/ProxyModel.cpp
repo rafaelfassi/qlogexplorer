@@ -3,7 +3,6 @@
 
 #include "pch.h"
 #include "ProxyModel.h"
-#include <execution>
 
 ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(source)
 {
@@ -66,7 +65,7 @@ void ProxyModel::addSourceRow(tp::SInt srcRow)
     if (!constainsSourceRow(srcRow))
     {
         m_rowMap.push_back(srcRow);
-        std::sort(std::execution::par, m_rowMap.begin(), m_rowMap.end());
+        PARALLEL_SORT(m_rowMap.begin(), m_rowMap.end());
         emit countChanged();
     }
 }
@@ -83,7 +82,7 @@ void ProxyModel::addSourceRows(const tp::SIntList &srcRows)
         }
     }
 
-    std::sort(std::execution::par, m_rowMap.begin(), m_rowMap.end());
+    PARALLEL_SORT(m_rowMap.begin(), m_rowMap.end());
 
     if (m_rowMap.size() != oldSize)
     {

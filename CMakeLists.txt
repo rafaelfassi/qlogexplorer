@@ -16,6 +16,7 @@ add_definitions(-DAPP_BASE_SRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(TBB)
 
 add_definitions(-fPIC)
 
@@ -105,10 +106,11 @@ target_link_libraries(${PROJECT_NAME}
     Qt${QT_VERSION_MAJOR}::Widgets
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PRIVATE
-    -ltbb
-    -lfmt
-)
+if(TBB_FOUND)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
+    add_definitions(-DHAS_TBB_ENABLED)
+else()
+    MESSAGE(STATUS "TBB not found. Configure TBB to improve performance.")
+endif()
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)

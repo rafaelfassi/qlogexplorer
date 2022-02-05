@@ -89,7 +89,7 @@ void LongScrollBar::updateDisplaySize()
 void LongScrollBar::updateDisplaySizeV()
 {
     const double newHeight(height());
-    const double maxPos(std::max(m_max, 1L));
+    const double maxPos(std::max<tp::SInt>(m_max, 1L));
 
     m_sizePerPos = newHeight / maxPos;
     int knobHeight = std::min(std::max<double>(m_sizePerPos, newHeight / 8.0), newHeight / 2.0);
@@ -103,7 +103,7 @@ void LongScrollBar::updateDisplaySizeV()
 void LongScrollBar::updateDisplaySizeH()
 {
     const double newWidth(width());
-    const double maxPos(std::max(m_max, 1L));
+    const double maxPos(std::max<tp::SInt>(m_max, 1L));
 
     m_sizePerPos = newWidth / maxPos;
     int knobWidth = std::min(std::max<double>(m_sizePerPos, newWidth / 8.0), newWidth / 2.0);

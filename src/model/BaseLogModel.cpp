@@ -3,13 +3,12 @@
 
 #include "pch.h"
 #include "BaseLogModel.h"
-#include <filesystem>
 
 BaseLogModel::BaseLogModel(Conf &conf, QObject *parent)
     : AbstractModel(parent),
       m_conf(conf),
       m_fileName(conf.getFileName()),
-      m_ifs(m_fileName)
+      m_ifs(m_fileName, std::ifstream::in | std::ifstream::binary)
 {
 }
 
@@ -262,7 +261,7 @@ void BaseLogModel::keepWatching()
 
             do
             {
-                newIfs.open(m_fileName, std::ifstream::in);
+                newIfs.open(m_fileName, std::ifstream::in | std::ifstream::binary);
                 if (newIfs.good())
                 {
                     break;
@@ -293,8 +292,7 @@ WatchingResult BaseLogModel::watchFile()
     while (m_watching.load())
     {
         bool mustLoadChunks(false);
-
-        if (!std::filesystem::exists(m_fileName))
+        if (!QFile::exists(m_fileName.c_str()))
         {
             LOG_WAR("File '{}' does not exist", m_fileName);
             return WatchingResult::FileNotFound;
@@ -440,7 +438,7 @@ void BaseLogModel::loadChunks()
 
     do
     {
-        std::ifstream ifs(m_fileName);
+        std::ifstream ifs(m_fileName, std::ifstream::in | std::ifstream::binary);
         moveFilePos(ifs, m_lastParsedPos);
         newLastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, nextRow, fileSize);
         const std::lock_guard<std::mutex> lock(m_ifsMutex);

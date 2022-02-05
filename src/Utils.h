@@ -3,6 +3,13 @@
 
 #pragma once
 
+#ifdef HAS_TBB_ENABLED
+#include <execution>
+#define PARALLEL_SORT(it_first, it_last) std::sort(std::execution::par, it_first, it_last);
+#else
+#define PARALLEL_SORT(it_first, it_last) std::sort(it_first, it_last);
+#endif
+
 #define LOG_INF(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Info, fmt::format(__VA_ARGS__))
 #define LOG_WAR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Warning, fmt::format(__VA_ARGS__))
 #define LOG_ERR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Error, fmt::format(__VA_ARGS__))
@@ -31,6 +38,6 @@ std::string toUpper(const std::string &text);
 
 QString elideLeft(const std::string &str, tp::UInt maxSize);
 
-QVariant toVariant(const tp::Column& column, const QString& text);
+QVariant toVariant(const tp::Column &column, const QString &text);
 
 } // namespace utl

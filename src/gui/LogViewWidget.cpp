@@ -21,8 +21,8 @@
 constexpr tp::SInt g_scrollBarThickness(25);
 constexpr tp::SInt g_defaultMargin(10);
 constexpr tp::SInt g_startTextMargin(5);
-constexpr auto g_fontName = "Monospace";
-constexpr tp::SInt g_fontSize = 14;
+constexpr auto g_fontName = "DejaVu Sans Mono";
+constexpr tp::SInt g_fontSize = 12;
 static const SectionColor g_textAreaColor(Qt::black, Qt::white);
 static const SectionColor g_selectionColor(Qt::white, "#4169e1");
 static const SectionColor g_selectionMarkColor(Qt::white, "#008000");
@@ -837,7 +837,7 @@ void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
     std::map<tp::SInt, tp::SInt> columnsMap;
     tp::SInt remainingWidth(m_textAreaRect.width());
     tp::SInt remainingColumns(columnsRef.size());
-    tp::SInt maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+    tp::SInt maxWidthPerCol = remainingWidth / std::max<tp::SInt>(remainingColumns, 1L);
     std::pair<tp::SInt, tp::SInt> biggerColumn{0, 0};
 
     tp::SInt idx(0);
@@ -853,7 +853,7 @@ void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
         column.width = std::min<tp::SInt>(maxWidthPerCol, column.width);
         remainingWidth -= column.width;
         --remainingColumns;
-        maxWidthPerCol = remainingWidth / std::max(remainingColumns, 1L);
+        maxWidthPerCol = remainingWidth / std::max<tp::SInt>(remainingColumns, 1L);
         ++idx;
     }
 

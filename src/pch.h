@@ -20,6 +20,7 @@
 #include <QString>
 #include <QColor>
 #include <QDir>
+#include <QFile>
 #include <QVariant>
 #include <QDateTime>
 #include <QElapsedTimer>
@@ -27,14 +28,15 @@
 
 // rapidjson
 #define RAPIDJSON_HAS_STDSTRING 1
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/istreamwrapper.h>
+#include <3rdparty/rapidjson/document.h>
+#include <3rdparty/rapidjson/stringbuffer.h>
+#include <3rdparty/rapidjson/writer.h>
+#include <3rdparty/rapidjson/prettywriter.h>
+#include <3rdparty/rapidjson/istreamwrapper.h>
 
 // fmt
-#include <fmt/core.h>
+#define FMT_HEADER_ONLY 1
+#include <3rdparty/fmt/core.h>
 
 // global includes
 #include "Types.h"

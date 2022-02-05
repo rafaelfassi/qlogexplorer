@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>fonts/DejaVuSansMono.ttf</file>
         <file>images/case_sensitive_icon.png</file>
         <file>images/delete_icon.png</file>
         <file>images/regex_icon.png</file>
