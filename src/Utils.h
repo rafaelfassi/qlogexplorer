@@ -1,3 +1,6 @@
+// Copyright (C) 2022 Rafael Fassi Lobao
+// This file is part of qlogviewer project licensed under GPL-3.0
+
 #pragma once
 
 #define LOG_INF(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Info, fmt::format(__VA_ARGS__))

@@ -1,3 +1,6 @@
+// Copyright (C) 2022 Rafael Fassi Lobao
+// This file is part of qlogviewer project licensed under GPL-3.0
+
 #pragma once
 
 // STL
