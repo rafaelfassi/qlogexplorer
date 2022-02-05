@@ -696,6 +696,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                     vcData.selection = std::move(textSelection);
                 }
             }
+            vcData.markedTexts = findMarkedText(vcData.can);
             vrData.columns.emplace_back(std::move(vcData));
             rect.moveLeft(rect.left() + rect.width());
         }
