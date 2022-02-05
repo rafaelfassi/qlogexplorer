@@ -2,8 +2,6 @@
 #include "LongScrollBar.h"
 #include <QPaintEvent>
 #include <QPainter>
-#include <cmath>
-#include <limits>
 
 LongScrollBar::LongScrollBar(Qt::Orientation orientation, QWidget *parent) : QWidget(parent), m_orientation(orientation)
 {

@@ -14,8 +14,6 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTextLayout>
-#include <cmath>
-#include <limits>
 
 constexpr tp::SInt g_scrollBarThickness(25);
 constexpr tp::SInt g_defaultMargin(10);
@@ -172,10 +170,10 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     connect(m_stabilizedUpdateTimer, &QTimer::timeout, this, &LogViewWidget::stabilizedUpdate);
     connect(m_header, &HeaderView::columnsChanged, this, &LogViewWidget::headerChanged);
     connect(m_header, &HeaderView::expandToContent, this, &LogViewWidget::expandColumnToContent);
-    connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
-    connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
-    connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Content); });
-    connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsSize::Screen); });
+    connect(m_header, &HeaderView::expandAllToContent, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
+    connect(m_header, &HeaderView::expandAllToScreen, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
+    connect(m_btnExpandColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Content); });
+    connect(m_btnFitColumns, &QPushButton::clicked, this, [this]() { this->adjustColumns(ColumnsFit::Screen); });
     connect(m_actCopy, &QAction::triggered, this, &LogViewWidget::copySelected);
     connect(m_actBookmark, &QAction::triggered, this, &LogViewWidget::bookmarkSelected);
     connect(m_actPrevBookmark, &QAction::triggered, this, &LogViewWidget::goToPrevBookmark);
@@ -526,7 +524,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         {
             // Draw Line Number
             {
-                const auto& lineNumColor = hasBookmark(vrData.row) ? g_bookmarkColor : g_headerColor;
+                const auto &lineNumColor = hasBookmark(vrData.row) ? g_bookmarkColor : g_headerColor;
                 painter.setClipping(false);
                 painter.setPen(lineNumColor.fg);
                 painter.fillRect(vrData.numberAreaRect, lineNumColor.bg);
@@ -787,7 +785,7 @@ void LogViewWidget::configureColumns()
             m_btnExpandColumns->setVisible(true);
             m_btnFitColumns->setEnabled(true);
             m_textAreaRect.setTop(m_header->height());
-            adjustColumns(ColumnsSize::Headers);
+            adjustColumns(ColumnsFit::Headers);
         }
         updateView();
     }
@@ -862,20 +860,20 @@ void LogViewWidget::getColumnsSizeToScreen(tp::ColumnsRef &columnsRef)
     }
 }
 
-void LogViewWidget::adjustColumns(ColumnsSize size)
+void LogViewWidget::adjustColumns(ColumnsFit fit)
 {
     tp::ColumnsRef headerColumns;
     m_header->getVisibleColumns(headerColumns);
 
-    switch (size)
+    switch (fit)
     {
-        case ColumnsSize::Headers:
+        case ColumnsFit::Headers:
             getColumnsSizeToHeader(headerColumns);
             break;
-        case ColumnsSize::Content:
+        case ColumnsFit::Content:
             getColumnsSizeToContent(headerColumns);
             break;
-        case ColumnsSize::Screen:
+        case ColumnsFit::Screen:
             getColumnsSizeToScreen(headerColumns);
             break;
         default:

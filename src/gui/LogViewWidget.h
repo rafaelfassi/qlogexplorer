@@ -9,7 +9,7 @@ class LongScrollBar;
 class QPushButton;
 class QVBoxLayout;
 
-enum class ColumnsSize
+enum class ColumnsFit
 {
     Headers,
     Content,
@@ -83,7 +83,7 @@ public slots:
     void resetColumns();
     void goToRow(tp::SInt row);
     void addBookmark(tp::SInt row);
-    void adjustColumns(ColumnsSize size);
+    void adjustColumns(ColumnsFit fit);
     void copySelected();
     void bookmarkSelected();
     void goToPrevRow();

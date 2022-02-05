@@ -47,7 +47,7 @@ LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_con
     splitter->addWidget(m_logViewWidget);
     splitter->addWidget(m_logSearchWidget);
 
-    splitter->setStretchFactor(0, 6);
+    splitter->setStretchFactor(0, 4);
     splitter->setStretchFactor(1, 1);
 
     QVBoxLayout *vLayout = new QVBoxLayout();

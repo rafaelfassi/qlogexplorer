@@ -10,6 +10,8 @@
 #include <map>
 #include <memory>
 #include <fstream>
+#include <limits>
+#include <cmath>
 
 // Qt
 #include <QString>
