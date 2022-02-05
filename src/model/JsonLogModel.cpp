@@ -22,6 +22,8 @@ JsonLogModel::~JsonLogModel()
 
 bool JsonLogModel::configure(Conf &conf, std::istream &is)
 {
+    tp::SInt idx(0);
+
     if (conf.getColumns().empty())
     {
         rapidjson::IStreamWrapper isw(is);
@@ -29,7 +31,6 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
         d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
         if (!d.HasParseError())
         {
-            int32_t idx(0);
             for (auto i = d.MemberBegin(); i != d.MemberEnd(); ++i)
             {
                 tp::Column cl;
@@ -61,6 +62,13 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
                 cl.width = -1;
                 conf.addColumn(std::move(cl));
             }
+        }
+    }
+    else
+    {
+        for (auto& col : conf.getColumns())
+        {
+            col.idx = idx++;
         }
     }
 

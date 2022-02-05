@@ -91,7 +91,8 @@ void fromStr(const std::string &str, FileType &type)
 
 static const std::vector<std::pair<SearchType, std::string>> g_searchTypeMap = {
     {SearchType::Regex, "REGEX"},
-    {SearchType::SubString, "SUB_STR"}};
+    {SearchType::SubString, "SUB_STR"},
+    {SearchType::Range, "RANGE"}};
 void toStr(const SearchType &type, std::string &str)
 {
     enumToStr<SearchType>(g_searchTypeMap, type, str);

@@ -10,7 +10,7 @@ public:
     bool matchCase() const { return m_param.flags.has(tp::SearchFlag::MatchCase); }
     bool notOp() const { return m_param.flags.has(tp::SearchFlag::NotOperator); }
     bool hasColumn() const { return m_param.column.has_value(); }
-    tp::UInt getColumn() const { return m_param.column.value(); }
+    tp::UInt getColumn() const { return m_param.column.value().idx; }
 
 protected:
     const tp::SearchParam m_param;

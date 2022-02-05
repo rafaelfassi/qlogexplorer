@@ -28,4 +28,6 @@ std::string toUpper(const std::string &text);
 
 QString elideLeft(const std::string &str, tp::UInt maxSize);
 
+QVariant toVariant(const tp::Column& column, const QString& text);
+
 } // namespace utl

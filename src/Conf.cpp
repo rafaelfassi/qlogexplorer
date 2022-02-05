@@ -80,6 +80,7 @@ bool Conf::loadFConf(const std::string &confFileName)
             column.key = GetValueOpt<std::string>(col, "key").value_or(std::string());
             column.name = GetValueOpt<std::string>(col, "name").value_or(std::string());
             column.type = GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
+            column.format = GetValueOpt<std::string>(col, "format").value_or(std::string());
             column.width = GetValueOpt<tp::SInt>(col, "width").value_or(-1L);
             column.pos = GetValueOpt<tp::SInt>(col, "pos").value_or(-1L);
             m_columns.emplace_back(std::move(column));
@@ -157,6 +158,7 @@ rapidjson::Document Conf::toJson() const
         jCol.AddMember("key", column.key, alloc);
         jCol.AddMember("name", column.name, alloc);
         jCol.AddMember("type", tp::toStr(column.type), alloc);
+        jCol.AddMember("format", column.format, alloc);
         jCol.AddMember("width", column.width, alloc);
         jCols.GetArray().PushBack(jCol, alloc);
     }
@@ -172,7 +174,7 @@ rapidjson::Document Conf::toJson() const
         jHigh.AddMember("options", tp::toStr(hParam.searchParam.flags), alloc);
         jHigh.AddMember("pattern", hParam.searchParam.pattern, alloc);
         if (hParam.searchParam.column.has_value())
-            jHigh.AddMember("column", hParam.searchParam.column.value(), alloc);
+            jHigh.AddMember("column", hParam.searchParam.column.value().idx, alloc);
         jHighlighters.GetArray().PushBack(jHigh, alloc);
     }
     jDoc.AddMember("highlighters", jHighlighters, alloc);

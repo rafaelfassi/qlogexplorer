@@ -18,7 +18,7 @@ bool TextLogModel::configure(Conf &conf, std::istream &is)
     {
         if (conf.getColumns().empty())
         {
-            conf.addColumn(tp::Column());
+            conf.addColumn(tp::Column(0));
         }
         if (m_rx.isValid())
         {
@@ -57,6 +57,14 @@ bool TextLogModel::configure(Conf &conf, std::istream &is)
                 cl.pos = cl.idx;
                 cl.width = -1;
                 conf.addColumn(std::move(cl));
+            }
+        }
+        else
+        {
+            tp::SInt idx(0);
+            for (auto& col : conf.getColumns())
+            {
+                col.idx = idx++;
             }
         }
     }

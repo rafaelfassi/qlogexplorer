@@ -2,6 +2,7 @@
 #include "Matcher.h"
 #include "RegexMatcher.h"
 #include "SubStringMatcher.h"
+#include "RangeMatcher.h"
 
 void Matcher::setParam(const tp::SearchParam &param)
 {
@@ -28,14 +29,20 @@ bool Matcher::matchInRow(const tp::RowData &rowData) const
 
 void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
 {
-    if (param.type == tp::SearchType::Regex)
+    switch (param.type)
     {
+    case tp::SearchType::Regex:
         matchers.emplace_back(std::make_unique<RegexMatcher>(param));
-    }
-    else
-    {
+        break;
+    case tp::SearchType::SubString:
         matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
-    }
+        break;
+    case tp::SearchType::Range:
+        matchers.emplace_back(std::make_unique<RangeMatcher>(param));
+        break;
+    default:
+        LOG_ERR("invalid SearchType {}", tp::toInt(param.type));
+    };
 }
 
 void Matcher::makeMatchers(const tp::SearchParams &params, Matchers &matchers)

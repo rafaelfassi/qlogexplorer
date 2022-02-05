@@ -15,6 +15,8 @@
 #include <QString>
 #include <QColor>
 #include <QDir>
+#include <QVariant>
+#include <QDateTime>
 #include <QElapsedTimer>
 #include <QRegularExpression>
 

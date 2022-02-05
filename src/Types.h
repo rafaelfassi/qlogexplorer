@@ -9,7 +9,9 @@ using SIntList = std::deque<tp::SInt>;
 using RowData = std::vector<std::string>;
 using SharedSIntList = std::shared_ptr<SIntList>;
 
-class BaseFlags{};
+class BaseFlags
+{
+};
 template <typename EnumT> class Flags : public BaseFlags
 {
     static_assert(std::is_enum_v<EnumT>, "Flags can only be specialized for enum types");
@@ -51,7 +53,8 @@ enum class SearchType
 {
     None,
     Regex,
-    SubString
+    SubString,
+    Range
 };
 void toStr(const SearchType &type, std::string &str);
 void fromStr(const std::string &str, SearchType &type);
@@ -80,6 +83,8 @@ void fromStr(const std::string &str, ColumnType &type);
 
 struct Column
 {
+    Column() = default;
+    Column(SInt _idx) : idx(_idx), pos(_idx) {}
     SInt idx = -1;
     SInt pos = -1;
     std::string key;
@@ -96,7 +101,7 @@ struct SearchParam
     SearchType type = SearchType::None;
     SearchFlags flags;
     std::string pattern;
-    std::optional<tp::UInt> column;
+    std::optional<Column> column;
 };
 using SearchParams = std::vector<SearchParam>;
 

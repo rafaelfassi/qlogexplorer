@@ -142,21 +142,10 @@ void LogSearchWidget::startSearch()
         if (paramWidget->getIsEnabled() && !paramWidget->expression().empty())
         {
             tp::SearchParam param;
-
             param.pattern = paramWidget->expression();
             param.column = paramWidget->column();
-
-            if (paramWidget->isRegex())
-                param.type = tp::SearchType::Regex;
-            else
-                param.type = tp::SearchType::SubString;
-
-            if (paramWidget->matchCase())
-                param.flags.set(tp::SearchFlag::MatchCase);
-
-            if (paramWidget->notOp())
-                param.flags.set(tp::SearchFlag::NotOperator);
-
+            param.type = paramWidget->getSearchType();
+            param.flags = paramWidget->getSearchFlags();
             params.push_back(std::move(param));
         }
     }

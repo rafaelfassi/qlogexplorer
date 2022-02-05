@@ -33,6 +33,10 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     btnRegex->setFocusPolicy(Qt::NoFocus);
     btnRegex->setDefaultAction(m_actRegex);
 
+    QToolButton *btnRange = new QToolButton(this);
+    btnRange->setFocusPolicy(Qt::NoFocus);
+    btnRange->setDefaultAction(m_actRange);
+
     QToolButton *btnNotOp = new QToolButton(this);
     btnNotOp->setFocusPolicy(Qt::NoFocus);
     btnNotOp->setDefaultAction(m_actNotOp);
@@ -53,6 +57,7 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     hLayout->addWidget(m_cmbColumns);
     hLayout->addWidget(btnMatchCase);
     hLayout->addWidget(btnRegex);
+    hLayout->addWidget(btnRange);
     hLayout->addWidget(btnNotOp);
     hLayout->addWidget(m_txtSearch);
     hLayout->addWidget(btnDisableMe);
@@ -63,6 +68,8 @@ SearchParamWidget::SearchParamWidget(AbstractModel *model, QWidget *parent) : QW
     // setContentsMargins(0,0,0,0);
 
     createConnections();
+
+    updateOptions();
 }
 
 SearchParamWidget::~SearchParamWidget()
@@ -78,6 +85,10 @@ void SearchParamWidget::createActions()
     m_actRegex = new QAction(tr("Regular Expression"), this);
     m_actRegex->setIcon(QIcon(":/images/regex_icon.png"));
     m_actRegex->setCheckable(true);
+
+    m_actRange = new QAction(tr("Range match (from -> to)"), this);
+    m_actRange->setIcon(QIcon(":/images/range_icon.png"));
+    m_actRange->setCheckable(true);
 
     m_actNotOp = new QAction(tr("Not (invert the match)"), this);
     m_actNotOp->setIcon(QIcon(":/images/not_icon.png"));
@@ -95,34 +106,54 @@ void SearchParamWidget::createConnections()
 {
     connect(m_txtSearch, &QLineEdit::returnPressed, this, &SearchParamWidget::searchRequested);
     connect(m_actRemoveMe, &QAction::triggered, this, [this]() { emit deleteRequested(this); });
+    connect(m_actRange, &QAction::triggered, this, &SearchParamWidget::updateOptions);
+    connect(m_cmbColumns, QOverload<int>::of(&QComboBox::currentIndexChanged), [this]() { updateOptions(); });
 }
 
-void SearchParamWidget::setColumns(const tp::Columns  &columns)
+void SearchParamWidget::updateOptions()
 {
+    m_actRange->setEnabled(m_cmbColumns->currentIndex() > 0);
+    if (!m_actRange->isEnabled())
+        m_actRange->setChecked(false);
+
+    bool rangeActive(m_actRange->isEnabled() && m_actRange->isChecked());
+    m_actMatchCase->setEnabled(!rangeActive);
+    m_actRegex->setEnabled(!rangeActive);
+}
+
+void SearchParamWidget::setColumns(const tp::Columns &columns)
+{
+    m_columns = columns;
+
     if ((columns.size() == 1) && columns.front().key.empty())
     {
         return;
     }
 
-    for (const auto &column : columns)
+    for (const auto &column : m_columns)
     {
         m_cmbColumns->addItem(QString::fromStdString(column.name));
     }
 }
 
-bool SearchParamWidget::matchCase() const
+tp::SearchType SearchParamWidget::getSearchType()
 {
-    return m_actMatchCase->isChecked();
+    if (m_actRange->isEnabled() && m_actRange->isChecked())
+        return tp::SearchType::Range;
+    else if (m_actRegex->isEnabled() && m_actRegex->isChecked())
+        return tp::SearchType::Regex;
+    else
+        return tp::SearchType::SubString;
 }
 
-bool SearchParamWidget::isRegex() const
+tp::SearchFlags SearchParamWidget::getSearchFlags()
 {
-    return m_actRegex->isChecked();
-}
-
-bool SearchParamWidget::notOp() const
-{
-    return m_actNotOp->isChecked();
+    tp::SearchFlags flags;
+    if (m_actMatchCase->isEnabled() && m_actMatchCase->isChecked())
+        flags.set(tp::SearchFlag::MatchCase);
+    if (m_actNotOp->isEnabled() && m_actNotOp->isChecked())
+        flags.set(tp::SearchFlag::NotOperator);
+    return flags;
 }
 
 bool SearchParamWidget::getIsEnabled() const
@@ -135,11 +166,12 @@ std::string SearchParamWidget::expression() const
     return m_txtSearch->text().toStdString();
 }
 
-std::optional<tp::UInt> SearchParamWidget::column() const
+std::optional<tp::Column> SearchParamWidget::column() const
 {
-    if (m_cmbColumns->currentIndex() > 0)
+    const auto colIdx = m_cmbColumns->currentIndex() - 1;
+    if (colIdx >= 0 & colIdx < m_columns.size())
     {
-        return m_cmbColumns->currentIndex() - 1;
+        return m_columns.at(colIdx);
     }
 
     return std::nullopt;

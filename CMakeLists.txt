@@ -49,12 +49,14 @@ set(MATCH_HEADERS
     src/match/BaseMatcher.h
     src/match/RegexMatcher.h
     src/match/SubStringMatcher.h
+    src/match/RangeMatcher.h
     src/match/Matcher.h
 )
 
 set(MATCH_SOURCES
     src/match/RegexMatcher.cpp
     src/match/SubStringMatcher.cpp
+    src/match/RangeMatcher.cpp
     src/match/Matcher.cpp
 )
 
