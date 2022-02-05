@@ -22,13 +22,11 @@ constexpr tp::SInt g_defaultMargin(10);
 constexpr tp::SInt g_startTextMargin(5);
 constexpr auto g_fontName = "Monospace";
 constexpr tp::SInt g_fontSize = 14;
-static const QColor g_bgColor(Qt::white);
-static const QColor g_txtColor(Qt::black);
-static const QColor g_selectionBgColor("#4169e1");
-static const QColor g_selectionTxtColor(Qt::white);
-static const QColor g_headerTxtColor(Qt::white);
-static const QColor g_headerBgColor(Qt::darkGray);
-static const QColor g_markBgColor("#9400d3");
+static const SectionColor g_textAreaColor(Qt::black, Qt::white);
+static const SectionColor g_selectionColor(Qt::white, "#4169e1");
+static const SectionColor g_selectionMarkColor(Qt::white, "#008000");
+static const SectionColor g_headerColor(Qt::white, Qt::darkGray);
+static const SectionColor g_bookmarkColor(Qt::white, "#9400d3");
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
@@ -38,8 +36,8 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
 {
     m_header = new HeaderView(this);
     m_header->setFont(&m_font);
-    m_header->setTextColor(g_headerTxtColor);
-    m_header->setBgColor(g_headerBgColor);
+    m_header->setTextColor(g_headerColor.fg);
+    m_header->setBgColor(g_headerColor.bg);
     m_header->setMaximumHeight(m_fm.height());
     m_header->setFixedHeight(m_header->maximumHeight());
     m_header->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
@@ -521,31 +519,31 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
     painter.setFont(m_font);
     painter.eraseRect(rect());
     painter.setClipRect(m_textAreaRect);
-    painter.fillRect(m_textAreaRect, g_bgColor);
+    painter.fillRect(m_textAreaRect, g_textAreaColor.bg);
 
     forEachVisualRowInPage(
         [&painter, this](VisualRowData &vrData)
         {
             // Draw Line Number
             {
+                const auto& lineNumColor = hasBookmark(vrData.row) ? g_bookmarkColor : g_headerColor;
                 painter.setClipping(false);
-                painter.setPen(g_headerTxtColor);
-                const QColor &bgColor = hasBookmark(vrData.row) ? g_markBgColor : g_headerBgColor;
-                painter.fillRect(vrData.numberAreaRect, bgColor);
+                painter.setPen(lineNumColor.fg);
+                painter.fillRect(vrData.numberAreaRect, lineNumColor.bg);
                 painter.drawText(
                     vrData.numberRect,
                     Qt::AlignTop | Qt::AlignRight,
                     std::to_string(vrData.number + 1).c_str());
             }
 
-            QColor rowTextColor(g_txtColor);
+            QColor rowTextColor(g_textAreaColor.fg);
             painter.setClipping(true);
 
             // Selected line
             if (vrData.selected)
             {
-                painter.fillRect(vrData.rect, g_selectionBgColor);
-                rowTextColor = g_selectionTxtColor;
+                painter.fillRect(vrData.rect, g_selectionColor.bg);
+                rowTextColor = g_selectionColor.fg;
             }
             else if (vrData.highlighter != nullptr)
             {
@@ -663,8 +661,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                     {
                         TextSelection textSelection;
                         textSelection.can = can;
-                        textSelection.color.bg = g_selectionBgColor;
-                        textSelection.color.fg = g_selectionTxtColor;
+                        textSelection.color = g_selectionColor;
                         vcData.selection = std::move(textSelection);
                     }
                 }
@@ -691,8 +688,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                 {
                     TextSelection textSelection;
                     textSelection.can = can;
-                    textSelection.color.bg = g_selectionBgColor;
-                    textSelection.color.fg = g_selectionTxtColor;
+                    textSelection.color = g_selectionColor;
                     vcData.selection = std::move(textSelection);
                 }
             }
@@ -918,35 +914,7 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
     QFontMetricsF fm(m_font);
     std::vector<TextSelection> resVec;
 
-    // const auto findAndMarkFunc = [&, this](const QString &text, const QColor &bgColor, const QColor &txtColor)
-    // {
-    //     if (!text.isEmpty())
-    //     {
-    //         auto idx = can.text.indexOf(text);
-    //         while (idx != -1)
-    //         {
-    //             auto strBefore = can.text.mid(0, idx);
-    //             const auto ssX = fm.horizontalAdvance(strBefore);
-    //             const auto esX = fm.horizontalAdvance(text) + ssX;
-    //             int sX, eX;
-    //             int pIni = getStrStartPos(ssX + 1, &sX);
-    //             int pFin = getStrEndPos(esX - 1, &eX);
-
-    //             TextSelection selText;
-    //             selText.can.rect = can.rect;
-    //             selText.can.rect.setLeft(selText.can.rect.left() + sX);
-    //             selText.can.rect.setWidth(eX - sX);
-    //             selText.can.rect = selText.can.rect.intersected(can.rect);
-    //             selText.color.bg = bgColor;
-    //             selText.color.text = txtColor;
-    //             selText.can.text = text;
-    //             resVec.emplace_back(std::move(selText));
-    //             idx = can.text.indexOf(text, ++idx);
-    //         }
-    //     }
-    // };
-
-    const auto findAndMarkFunc = [&, this](const QString &text, const QColor &bgColor, const QColor &txtColor)
+    const auto findAndMarkFunc = [&, this](const QString &text, const SectionColor &color)
     {
         if (!text.isEmpty())
         {
@@ -957,8 +925,7 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
 
                 TextSelection selText;
                 selText.can = selCan;
-                selText.color.bg = bgColor;
-                selText.color.fg = txtColor;
+                selText.color = color;
                 resVec.emplace_back(std::move(selText));
 
                 idx = can.text.indexOf(text, ++idx);
@@ -968,12 +935,12 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
 
     for (const auto &markedText : m_markedTexts)
     {
-        findAndMarkFunc(markedText.can.text, markedText.color.bg, markedText.color.fg);
+        findAndMarkFunc(markedText.can.text, markedText.color);
     }
 
     if (m_selectedText.has_value())
     {
-        findAndMarkFunc(m_selectedText.value(), "#008000", g_selectionTxtColor);
+        findAndMarkFunc(m_selectedText.value(), g_selectionMarkColor);
     }
 
     return resVec;
@@ -1016,7 +983,7 @@ TextCan LogViewWidget::makeSelCanFromSelRect(const TextCan &can, const QRect &se
 
     selCan.rect = can.rect;
     selCan.rect.setLeft(can.rect.left() + sX);
-    selCan.rect.setRight(can.rect.left() + eX);
+    selCan.rect.setWidth(eX - sX);
     selCan.text = can.text.mid(sPos, ePos - sPos);
     return selCan;
 }
@@ -1043,29 +1010,6 @@ int LogViewWidget::getStrStartPos(int left, int *newLeft)
     return pos;
 }
 
-// int LogViewWidget::getStrStartPos(const QString &text, int left, int *newLeft)
-// {
-//     // Not the best implementation, but it allows variable-width fonts as well.
-//     int sX(0);
-//     int eX(m_fm.horizontalAdvance(text));
-//     int sPos(0);
-//     int x(sX);
-//     int p(sPos);
-//     QString tmpStr(text);
-
-//     while (x < left && !tmpStr.isEmpty())
-//     {
-//         sX = x;
-//         sPos = p;
-//         tmpStr = text.mid(++p);
-//         x = eX - m_fm.horizontalAdvance(tmpStr);
-//     }
-
-//     if (newLeft)
-//         *newLeft = sX;
-//     return sPos;
-// }
-
 int LogViewWidget::getStrEndPos(int right, int *newRight, int maxSize)
 {
     QFontMetricsF fm(m_font);
@@ -1076,30 +1020,6 @@ int LogViewWidget::getStrEndPos(int right, int *newRight, int maxSize)
 
     return pos;
 }
-
-// int LogViewWidget::getStrEndPos(const QString &text, int right, int *newRight)
-// {
-//     int eX(m_fm.horizontalAdvance(text));
-//     int ePos(text.size());
-//     int x(eX);
-//     int p(ePos);
-//     QString tmpStr(text);
-
-//     x = eX;
-//     p = ePos;
-//     tmpStr = text;
-//     while (x > right && !tmpStr.isEmpty())
-//     {
-//         eX = x;
-//         ePos = p;
-//         tmpStr = tmpStr.mid(0, --p);
-//         x = m_fm.horizontalAdvance(tmpStr);
-//     }
-
-//     if (newRight)
-//         *newRight = eX;
-//     return ePos;
-// }
 
 void LogViewWidget::goToPrevRow()
 {
