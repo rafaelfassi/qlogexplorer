@@ -5,6 +5,10 @@
 #include "MainWindow.h"
 #include <QApplication>
 #include <QFontDatabase>
+#include <QStyleFactory>
+#include <QStyle>
+#include <QDebug>
+#include "Style.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,6 +18,13 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
     QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
+
+    a.setStyleSheet(Style::loadStyle("Default"));
+
+    // if (QStyleFactory::keys().contains("Fusion"))
+    // {
+    //     QApplication::setStyle(QStyleFactory::create("Fusion"));
+    // }
 
     MainWindow w;
     w.show();

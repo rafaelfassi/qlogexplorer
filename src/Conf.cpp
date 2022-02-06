@@ -13,45 +13,6 @@ Conf::Conf(const std::string &confFileName)
     loadFConf(confFileName);
 }
 
-template <typename T> std::optional<T> GetValueOpt(const rapidjson::Value &jsonObj, const std::string &key)
-{
-    std::optional<T> val;
-
-    if (const auto &it = jsonObj.FindMember(key.c_str()); it != jsonObj.MemberEnd() && !it->value.IsNull())
-    {
-        if constexpr (std::is_enum_v<T> || std::is_base_of<tp::BaseFlags, T>::value)
-        {
-            const auto s = it->value.GetString();
-            val = tp::fromStr<T>(s);
-        }
-        else if constexpr (std::is_same_v<T, std::string>)
-        {
-            val = it->value.GetString();
-        }
-        else if constexpr (std::is_integral<T>::value)
-        {
-            if constexpr (std::is_same<T, bool>::value)
-            {
-                val = it->value.GetBool();
-            }
-            else if constexpr (std::is_signed<T>::value)
-            {
-                val = it->value.GetInt64();
-            }
-            else
-            {
-                val = it->value.GetUint64();
-            }
-        }
-        else if constexpr (std::is_floating_point<T>::value)
-        {
-            val = it->value.GetDouble();
-        }
-    }
-
-    return val;
-}
-
 bool Conf::loadFConf(const std::string &confFileName)
 {
     std::ifstream ifs(confFileName);
@@ -71,21 +32,21 @@ bool Conf::loadFConf(const std::string &confFileName)
         return false;
     }
 
-    m_configName = GetValueOpt<std::string>(d, "configName").value_or(std::string());
-    m_fileType = GetValueOpt<tp::FileType>(d, "fileType").value_or(tp::FileType::Text);
-    m_regexPattern = GetValueOpt<std::string>(d, "regexPattern").value_or(std::string());
+    m_configName = utl::GetValueOpt<std::string>(d, "configName").value_or(std::string());
+    m_fileType = utl::GetValueOpt<tp::FileType>(d, "fileType").value_or(tp::FileType::Text);
+    m_regexPattern = utl::GetValueOpt<std::string>(d, "regexPattern").value_or(std::string());
 
     if (const auto &colsIt = d.FindMember("columns"); colsIt != d.MemberEnd())
     {
         for (const auto &col : colsIt->value.GetArray())
         {
             tp::Column column;
-            column.key = GetValueOpt<std::string>(col, "key").value_or(std::string());
-            column.name = GetValueOpt<std::string>(col, "name").value_or(std::string());
-            column.type = GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
-            column.format = GetValueOpt<std::string>(col, "format").value_or(std::string());
-            column.width = GetValueOpt<tp::SInt>(col, "width").value_or(-1L);
-            column.pos = GetValueOpt<tp::SInt>(col, "pos").value_or(-1L);
+            column.key = utl::GetValueOpt<std::string>(col, "key").value_or(std::string());
+            column.name = utl::GetValueOpt<std::string>(col, "name").value_or(std::string());
+            column.type = utl::GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
+            column.format = utl::GetValueOpt<std::string>(col, "format").value_or(std::string());
+            column.width = utl::GetValueOpt<tp::SInt>(col, "width").value_or(-1L);
+            column.pos = utl::GetValueOpt<tp::SInt>(col, "pos").value_or(-1L);
             m_columns.emplace_back(std::move(column));
         }
     }
@@ -95,12 +56,12 @@ bool Conf::loadFConf(const std::string &confFileName)
         for (const auto &h : highsIt->value.GetArray())
         {
             tp::HighlighterParam hParam;
-            hParam.searchParam.column = GetValueOpt<tp::UInt>(h, "column");
-            hParam.searchParam.type = GetValueOpt<tp::SearchType>(h, "type").value_or(tp::SearchType::SubString);
-            hParam.searchParam.flags = GetValueOpt<tp::SearchFlags>(h, "options").value_or(tp::SearchFlags());
-            hParam.searchParam.pattern = GetValueOpt<std::string>(h, "pattern").value_or(std::string());
-            hParam.bgColor = GetValueOpt<std::string>(h, "backColor").value_or("White").c_str();
-            hParam.textColor = GetValueOpt<std::string>(h, "textColor").value_or("Black").c_str();
+            hParam.searchParam.column = utl::GetValueOpt<tp::UInt>(h, "column");
+            hParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(h, "type").value_or(tp::SearchType::SubString);
+            hParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(h, "options").value_or(tp::SearchFlags());
+            hParam.searchParam.pattern = utl::GetValueOpt<std::string>(h, "pattern").value_or(std::string());
+            hParam.bgColor = utl::GetValueOpt<std::string>(h, "backColor").value_or("White").c_str();
+            hParam.textColor = utl::GetValueOpt<std::string>(h, "textColor").value_or("Black").c_str();
             m_highlighterParams.emplace_back(std::move(hParam));
         }
     }

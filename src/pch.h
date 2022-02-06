@@ -19,6 +19,7 @@
 // Qt
 #include <QString>
 #include <QColor>
+#include <QRect>
 #include <QDir>
 #include <QFile>
 #include <QVariant>

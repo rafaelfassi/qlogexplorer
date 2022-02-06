@@ -23,9 +23,6 @@ class HeaderModel : public QAbstractTableModel
     void setColumns(tp::Columns &columns);
 
     tp::ColumnsRef m_columns;
-    const QFont *m_font = nullptr;
-    QBrush m_textBrush = QColor(Qt::white);
-    QBrush m_bgBrush = QColor(Qt::blue);
     friend class ::HeaderView;
 };
 } // namespace priv
@@ -38,9 +35,6 @@ public:
     HeaderView(QWidget *parent = nullptr);
     ~HeaderView();
     void setColumns(tp::Columns &columns);
-    void setFont(const QFont *font);
-    void setTextColor(const QColor &color);
-    void setBgColor(const QColor &color);
     void getVisibleColumns(tp::ColumnsRef &columnsRef, bool orderByPos = false);
     tp::ColumnsRef &getColumns();
 

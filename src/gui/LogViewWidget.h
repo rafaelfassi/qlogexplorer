@@ -3,8 +3,9 @@
 
 #pragma once
 
-#include <QWidget>
 #include "Highlighter.h"
+#include "GuiTypes.h"
+#include <QWidget>
 
 class AbstractModel;
 class HeaderView;
@@ -17,31 +18,6 @@ enum class ColumnsFit
     Headers,
     Content,
     Screen
-};
-
-struct TextCan
-{
-    TextCan() = default;
-    TextCan(const QString &_text) : text(_text) {}
-    TextCan(const QRect &_rect, const QString &_text = {}) : rect(_rect), text(_text) {}
-    QRect rect;
-    QString text;
-};
-
-struct SectionColor
-{
-    SectionColor() = default;
-    SectionColor(const QColor &_fg, const QColor &_bg) : fg(_fg), bg(_bg) {}
-    QColor fg;
-    QColor bg;
-};
-
-struct TextSelection
-{
-    TextSelection() = default;
-    TextSelection(const TextCan &_can, const SectionColor &_color) : can(_can), color(_color) {}
-    TextCan can;
-    SectionColor color;
 };
 
 class LogViewWidget : public QWidget
@@ -137,7 +113,6 @@ protected:
     void getColumnsSizeToContent(tp::ColumnsRef &columnsRef);
     void getColumnsSizeToScreen(tp::ColumnsRef &columnsRef);
 
-    qreal getCharSize();
     qreal getCharMarging();
     std::vector<TextSelection> findMarkedText(const TextCan &can);
     TextCan makeSelCanFromStrPos(const TextCan &can, int fromPos, int len);
@@ -178,8 +153,6 @@ private:
     QAction *m_actBookmark;
     QAction *m_actPrevBookmark;
     QAction *m_actNextBookmark;
-    QFont m_font;
-    QFontMetrics m_fm;
     tp::SInt m_rowHeight = 0;
     tp::SInt m_itemsPerPage = 0;
     QRect m_textAreaRect;

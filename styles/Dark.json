@@ -1,0 +1,28 @@
+{
+    "fontName": "DejaVu Sans Mono",
+    "fontSize": 12,
+
+    "textAreaColorBg": "#19232D",
+    "textAreaColorFg": "#E0E1E3",
+
+    "selectedColorBg": "#346792",
+    "selectedColorFg": "#E0E1E3",
+
+    "selectedTextMarkColorBg": "#008000",
+    "selectedTextMarkColorFg": "#E0E1E3",
+
+    "headerColorBg": "#60798B",
+    "headerColorFg": "#E0E1E3",
+
+    "bookmarkColorBg": "#9400d3",
+    "bookmarkColorFg": "#E0E1E3",
+
+    "scrollBarColorBg": "#60798B",
+    "scrollBarColorFg": "#213040",
+
+    "textPadding": 5,
+
+    "columnMargin": 10,
+
+    "scrollBarThickness": 25
+} 

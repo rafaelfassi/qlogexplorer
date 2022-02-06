@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "LongScrollBar.h"
+#include "Style.h"
 #include <QPaintEvent>
 #include <QPainter>
 
@@ -129,10 +130,10 @@ void LongScrollBar::paintEvent(QPaintEvent *event)
     QPainter devicePainter(this);
     devicePainter.eraseRect(rect());
 
-    devicePainter.fillRect(rect(), QColor("lightGray"));
+    devicePainter.fillRect(rect(), Style::getScrollBarColor().bg);
     if (m_max > 0)
     {
-        devicePainter.fillRect(m_knobRect, QColor("darkGray"));
+        devicePainter.fillRect(m_knobRect, Style::getScrollBarColor().fg);
     }
 }
 

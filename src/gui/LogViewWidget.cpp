@@ -2,6 +2,7 @@
 // This file is part of qlogviewer project licensed under GPL-3.0
 
 #include "pch.h"
+#include "Style.h"
 #include "HeaderView.h"
 #include "LogViewWidget.h"
 #include "LongScrollBar.h"
@@ -16,44 +17,33 @@
 #include <QMenu>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QTextLayout>
-
-constexpr tp::SInt g_scrollBarThickness(25);
-constexpr tp::SInt g_defaultMargin(10);
-constexpr tp::SInt g_startTextMargin(5);
-constexpr auto g_fontName = "DejaVu Sans Mono";
-constexpr tp::SInt g_fontSize = 12;
-static const SectionColor g_textAreaColor(Qt::black, Qt::white);
-static const SectionColor g_selectionColor(Qt::white, "#4169e1");
-static const SectionColor g_selectionMarkColor(Qt::white, "#008000");
-static const SectionColor g_headerColor(Qt::white, Qt::darkGray);
-static const SectionColor g_bookmarkColor(Qt::white, "#9400d3");
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
-      m_model(model),
-      m_font(g_fontName, g_fontSize),
-      m_fm(m_font)
+      m_model(model)
 {
     m_header = new HeaderView(this);
-    m_header->setFont(&m_font);
-    m_header->setTextColor(g_headerColor.fg);
-    m_header->setBgColor(g_headerColor.bg);
-    m_header->setMaximumHeight(m_fm.height());
+    m_header->setMaximumHeight(Style::getTextHeight(true));
     m_header->setFixedHeight(m_header->maximumHeight());
-    m_header->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
-    m_header->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
+    auto headerPolicy = m_header->sizePolicy();
+    headerPolicy.setHorizontalPolicy(QSizePolicy::Expanding);
+    headerPolicy.setVerticalPolicy(QSizePolicy::Fixed);
+    m_header->setSizePolicy(headerPolicy);
 
     m_vScrollBar = new LongScrollBar(Qt::Vertical, this);
-    m_vScrollBar->setFixedWidth(g_scrollBarThickness);
-    m_vScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Expanding);
-    m_vScrollBar->sizePolicy().setHorizontalPolicy(QSizePolicy::Fixed);
+    m_vScrollBar->setFixedWidth(Style::getScrollBarThickness());
+    auto vScrollBarPolicy = m_vScrollBar->sizePolicy();
+    vScrollBarPolicy.setHorizontalPolicy(QSizePolicy::Fixed);
+    vScrollBarPolicy.setVerticalPolicy(QSizePolicy::Expanding);
+    m_vScrollBar->setSizePolicy(vScrollBarPolicy);
 
     m_hScrollBar = new LongScrollBar(Qt::Horizontal, this);
     m_hScrollBar->setPosPerStep(20);
-    m_hScrollBar->setFixedHeight(g_scrollBarThickness);
-    m_hScrollBar->sizePolicy().setHorizontalPolicy(QSizePolicy::Expanding);
-    m_hScrollBar->sizePolicy().setVerticalPolicy(QSizePolicy::Fixed);
+    m_hScrollBar->setFixedHeight(Style::getScrollBarThickness());
+    auto hScrollBarPolicy = m_hScrollBar->sizePolicy();
+    hScrollBarPolicy.setHorizontalPolicy(QSizePolicy::Expanding);
+    hScrollBarPolicy.setVerticalPolicy(QSizePolicy::Fixed);
+    m_hScrollBar->setSizePolicy(hScrollBarPolicy);
 
     m_btnExpandColumns = new QPushButton(this);
     m_btnExpandColumns->setFocusPolicy(Qt::NoFocus);
@@ -61,15 +51,15 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     m_btnExpandColumns->setToolTip("Expand All Columns");
     m_btnExpandColumns->setFlat(true);
     m_btnExpandColumns->setFixedHeight(m_header->maximumHeight());
-    m_btnExpandColumns->setFixedWidth(g_scrollBarThickness);
+    m_btnExpandColumns->setFixedWidth(Style::getScrollBarThickness());
 
     m_btnFitColumns = new QPushButton(this);
     m_btnFitColumns->setFocusPolicy(Qt::NoFocus);
     m_btnFitColumns->setIcon(QIcon(":/images/fit_icon.png"));
     m_btnFitColumns->setToolTip("Adjust Columns to Fit");
     m_btnFitColumns->setFlat(true);
-    m_btnFitColumns->setFixedHeight(g_scrollBarThickness);
-    m_btnFitColumns->setFixedWidth(g_scrollBarThickness);
+    m_btnFitColumns->setFixedHeight(Style::getScrollBarThickness());
+    m_btnFitColumns->setFixedWidth(Style::getScrollBarThickness());
 
     m_hScrollBarLayout = new QVBoxLayout();
     m_hScrollBarLayout->setMargin(0);
@@ -276,13 +266,13 @@ void LogViewWidget::updateDisplaySize()
     if (m_model)
     {
         tp::SInt rowCount(m_model->rowCount());
-        m_rowHeight = m_fm.height();
+        m_rowHeight = Style::getTextHeight(false);
         m_itemsPerPage = m_textAreaRect.height() / m_rowHeight;
 
         m_vScrollBar->setMax(rowCount - m_itemsPerPage);
 
         const std::string lastLineNumberStr(std::to_string(m_model->getRowNum(rowCount - 1L) + 1L));
-        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + 2 * g_startTextMargin);
+        m_textAreaRect.setLeft(getTextWidth(lastLineNumberStr) + 2 * Style::getTextPadding());
         m_hScrollBarLayout->setContentsMargins(m_textAreaRect.left(), 0, 0, 0);
     }
     else
@@ -306,8 +296,8 @@ void LogViewWidget::resetColumns()
 
 void LogViewWidget::resizeEvent(QResizeEvent *event)
 {
-    m_textAreaRect.setHeight(height() - g_scrollBarThickness - m_textAreaRect.top());
-    m_textAreaRect.setWidth(width() - g_scrollBarThickness - m_textAreaRect.left());
+    m_textAreaRect.setHeight(height() - Style::getScrollBarThickness() - m_textAreaRect.top());
+    m_textAreaRect.setWidth(width() - Style::getScrollBarThickness() - m_textAreaRect.left());
     updateDisplaySize();
     QWidget::resizeEvent(event);
     m_stabilizedUpdateTimer->start();
@@ -517,17 +507,17 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         return;
 
     QPainter painter(this);
-    painter.setFont(m_font);
+    painter.setFont(Style::getFont());
     painter.eraseRect(rect());
     painter.setClipRect(m_textAreaRect);
-    painter.fillRect(m_textAreaRect, g_textAreaColor.bg);
+    painter.fillRect(m_textAreaRect, Style::getTextAreaColor().bg);
 
     forEachVisualRowInPage(
         [&painter, this](VisualRowData &vrData)
         {
             // Draw Line Number
             {
-                const auto &lineNumColor = hasBookmark(vrData.row) ? g_bookmarkColor : g_headerColor;
+                const auto &lineNumColor = hasBookmark(vrData.row) ? Style::getBookmarkColor() : Style::getHeaderColor();
                 painter.setClipping(false);
                 painter.setPen(lineNumColor.fg);
                 painter.fillRect(vrData.numberAreaRect, lineNumColor.bg);
@@ -537,14 +527,14 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                     std::to_string(vrData.number + 1).c_str());
             }
 
-            QColor rowTextColor(g_textAreaColor.fg);
+            QColor rowTextColor(Style::getTextAreaColor().fg);
             painter.setClipping(true);
 
             // Selected line
             if (vrData.selected)
             {
-                painter.fillRect(vrData.rect, g_selectionColor.bg);
-                rowTextColor = g_selectionColor.fg;
+                painter.fillRect(vrData.rect, Style::getSelectedColor().bg);
+                rowTextColor = Style::getSelectedColor().fg;
             }
             else if (vrData.highlighter != nullptr)
             {
@@ -602,7 +592,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
     rect.translate(-hOffset, 0);
 
     vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
-    vrData.numberRect = QRect(g_startTextMargin, yOffset, m_textAreaRect.left() - g_startTextMargin * 2, m_rowHeight);
+    vrData.numberRect = QRect(Style::getTextPadding(), yOffset, m_textAreaRect.left() - Style::getTextPadding() * 2, m_rowHeight);
 
     for (const auto &highlighter : m_highlightersRows)
     {
@@ -649,12 +639,12 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             const tp::SInt idx = m_header->logicalIndex(vIdx);
             const tp::SInt colWidth = m_header->sectionSize(idx);
             rect.setWidth(colWidth);
-            rect.setLeft(rect.left() + g_startTextMargin);
+            rect.setLeft(rect.left() + Style::getTextPadding());
             vcData.can.rect = rect;
             if (idx < rowData.size())
             {
                 const QString &colText(rowData[idx].c_str());
-                vcData.can.text = getElidedText(colText, colWidth - g_defaultMargin, true);
+                vcData.can.text = getElidedText(colText, colWidth - Style::getColumnMargin(), true);
                 if (selectText.has_value() && rect.contains(selectText.value()))
                 {
                     const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
@@ -662,7 +652,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                     {
                         TextSelection textSelection;
                         textSelection.can = can;
-                        textSelection.color = g_selectionColor;
+                        textSelection.color = Style::getSelectedColor();
                         vcData.selection = std::move(textSelection);
                     }
                 }
@@ -677,9 +667,9 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
         for (const auto &colText : rowData)
         {
             VisualColData vcData;
-            const tp::SInt colWidth = getTextWidth(colText) + g_defaultMargin;
+            const tp::SInt colWidth = getTextWidth(colText) + Style::getColumnMargin();
             rect.setWidth(colWidth);
-            rect.setLeft(rect.left() + g_startTextMargin);
+            rect.setLeft(rect.left() + Style::getTextPadding());
             vcData.can.text = QString::fromStdString(colText);
             vcData.can.rect = rect;
             if (selectText.has_value() && rect.contains(selectText.value()))
@@ -689,7 +679,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                 {
                     TextSelection textSelection;
                     textSelection.can = can;
-                    textSelection.color = g_selectionColor;
+                    textSelection.color = Style::getSelectedColor();
                     vcData.selection = std::move(textSelection);
                 }
             }
@@ -750,13 +740,13 @@ tp::SInt LogViewWidget::getRowByScreenPos(int yPos) const
 
 tp::SInt LogViewWidget::getTextWidth(const std::string &text, bool simplified)
 {
-    QString qStr(QString::fromStdString(text));
-    return m_fm.horizontalAdvance(simplified ? qStr.simplified() : qStr);
+    const QString qStr(QString::fromStdString(text));
+    return Style::getTextWidth(simplified ? qStr.simplified() : qStr);
 }
 
 QString LogViewWidget::getElidedText(const QString &text, tp::SInt width, bool simplified)
 {
-    return m_fm.elidedText(simplified ? text.simplified() : text, Qt::ElideRight, width);
+    return Style::getElidedText(simplified ? text.simplified() : text, width, Qt::ElideRight);
 }
 
 void LogViewWidget::configure(Conf *conf)
@@ -801,7 +791,7 @@ void LogViewWidget::getColumnsSizeToHeader(tp::ColumnsRef &columnsRef, bool disc
         auto &column(headerColumn.get());
         if (discardConfig || (column.width < 0))
         {
-            column.width = getTextWidth(column.name) + g_startTextMargin + g_defaultMargin;
+            column.width = getTextWidth(column.name) + Style::getTextPadding() + Style::getColumnMargin();
         }
     }
 }
@@ -824,7 +814,7 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
         {
             auto &column(headerColumn.get());
             const tp::SInt textWidth =
-                getTextWidth(rowData[column.idx], true) + g_startTextMargin + elideWith + g_defaultMargin;
+                getTextWidth(rowData[column.idx], true) + Style::getTextPadding() + elideWith + Style::getColumnMargin();
             column.width = std::max<tp::SInt>(column.width, textWidth);
         }
     }
@@ -899,20 +889,13 @@ void LogViewWidget::expandColumnToContent(tp::SInt columnIdx)
     }
 }
 
-qreal LogViewWidget::getCharSize()
-{
-    QFontMetricsF fm(m_font);
-    return fm.horizontalAdvance('a');
-}
-
 qreal LogViewWidget::getCharMarging()
 {
-    return getCharSize() / 4.0;
+    return Style::getCharWidthF() / 4.0;
 }
 
 std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
 {
-    QFontMetricsF fm(m_font);
     std::vector<TextSelection> resVec;
 
     const auto findAndMarkFunc = [&, this](const QString &text, const SectionColor &color)
@@ -941,7 +924,7 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
 
     if (m_selectedText.has_value())
     {
-        findAndMarkFunc(m_selectedText.value(), g_selectionMarkColor);
+        findAndMarkFunc(m_selectedText.value(), Style::getSelectedTextMarkColor());
     }
 
     return resVec;
@@ -991,8 +974,7 @@ TextCan LogViewWidget::makeSelCanFromSelRect(const TextCan &can, const QRect &se
 
 int LogViewWidget::getStrWidthUntilPos(int pos, int maxWidth)
 {
-    QFontMetricsF fm(m_font);
-    const auto chSize = fm.horizontalAdvance('a');
+    const auto chSize = Style::getCharWidthF();
     int strWidth = chSize * pos;
     if (strWidth > maxWidth)
         return maxWidth / chSize;
@@ -1002,8 +984,7 @@ int LogViewWidget::getStrWidthUntilPos(int pos, int maxWidth)
 
 int LogViewWidget::getStrStartPos(int left, int *newLeft)
 {
-    QFontMetricsF fm(m_font);
-    const auto charWidth = fm.horizontalAdvance('a');
+    const auto charWidth = Style::getCharWidthF();
     const int pos = left / charWidth;
     if (newLeft)
         *newLeft = (pos * charWidth);
@@ -1013,8 +994,7 @@ int LogViewWidget::getStrStartPos(int left, int *newLeft)
 
 int LogViewWidget::getStrEndPos(int right, int *newRight, int maxSize)
 {
-    QFontMetricsF fm(m_font);
-    const auto charWidth = fm.horizontalAdvance('a');
+    const auto charWidth = Style::getCharWidthF();
     const int pos = std::min<int>((right / charWidth) + 1, maxSize);
     if (newRight)
         *newRight = pos * charWidth;

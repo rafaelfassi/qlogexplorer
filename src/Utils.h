@@ -40,4 +40,43 @@ QString elideLeft(const std::string &str, tp::UInt maxSize);
 
 QVariant toVariant(const tp::Column &column, const QString &text);
 
+template <typename T> std::optional<T> GetValueOpt(const rapidjson::Value &jsonObj, const std::string &key)
+{
+    std::optional<T> val;
+
+    if (const auto &it = jsonObj.FindMember(key.c_str()); it != jsonObj.MemberEnd() && !it->value.IsNull())
+    {
+        if constexpr (std::is_enum_v<T> || std::is_base_of<tp::BaseFlags, T>::value)
+        {
+            const auto s = it->value.GetString();
+            val = tp::fromStr<T>(s);
+        }
+        else if constexpr (std::is_same_v<T, std::string>)
+        {
+            val = it->value.GetString();
+        }
+        else if constexpr (std::is_integral<T>::value)
+        {
+            if constexpr (std::is_same<T, bool>::value)
+            {
+                val = it->value.GetBool();
+            }
+            else if constexpr (std::is_signed<T>::value)
+            {
+                val = it->value.GetInt64();
+            }
+            else
+            {
+                val = it->value.GetUint64();
+            }
+        }
+        else if constexpr (std::is_floating_point<T>::value)
+        {
+            val = it->value.GetDouble();
+        }
+    }
+
+    return val;
+}
+
 } // namespace utl

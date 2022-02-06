@@ -62,6 +62,8 @@ set(MATCH_SOURCES
 )
 
 set(GUI_HEADERS
+    src/gui/GuiTypes.h
+    src/gui/Style.h
     src/gui/MainWindow.h
     src/gui/LongScrollBar.h
     src/gui/LogViewWidget.h
@@ -73,6 +75,7 @@ set(GUI_HEADERS
 )
 
 set(GUI_SOURCES
+    src/gui/Style.cpp
     src/gui/MainWindow.cpp
     src/gui/LongScrollBar.cpp
     src/gui/LogViewWidget.cpp

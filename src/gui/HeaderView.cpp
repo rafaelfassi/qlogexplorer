@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "HeaderView.h"
+#include "Style.h"
 #include "QMouseEvent"
 #include <QMenu>
 
@@ -36,11 +37,11 @@ QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation,
         case Qt::TextAlignmentRole:
             return Qt::AlignLeft;
         case Qt::FontRole:
-            return (m_font != nullptr) ? *m_font : QFont();
+            return Style::getFont();
         case Qt::BackgroundRole:
-            return m_bgBrush;
+            return Style::getHeaderColor().bg;
         case Qt::ForegroundRole:
-            return m_textBrush;
+            return Style::getHeaderColor().fg;
         default:
             return QVariant();
     }
@@ -186,21 +187,6 @@ void HeaderView::resizedColumn(int idx, int oldSize, int size)
         columns.at(idx).get().width = size;
     }
     emit columnsChanged();
-}
-
-void HeaderView::setFont(const QFont *font)
-{
-    m_headerModel->m_font = font;
-}
-
-void HeaderView::setTextColor(const QColor &color)
-{
-    m_headerModel->m_textBrush = color;
-}
-
-void HeaderView::setBgColor(const QColor &color)
-{
-    m_headerModel->m_bgBrush = color;
 }
 
 void HeaderView::getVisibleColumns(tp::ColumnsRef &columnsRef, bool orderByPos)
