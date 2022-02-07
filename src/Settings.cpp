@@ -51,6 +51,16 @@ void Settings::initSettings()
     loadTemplates();
 }
 
+QDir Settings::getSettingsDir(const QString &subDir)
+{
+    QDir dir = inst().m_settingsDir;
+    if (!subDir.isEmpty())
+    {
+        dir.setPath(dir.absolutePath() + QDir::separator() + subDir);
+    }
+    return dir;
+}
+
 tp::SInt Settings::getMaxRecentFiles()
 {
     return inst().m_settings->value("maxRecentFiles", 10).toInt();

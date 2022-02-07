@@ -9,8 +9,10 @@
 class Style
 {
 public:
+    static void initStyle();
     static QStringList availableStyles();
-    static QString loadStyle(const QString &styleName);
+    static void loadStyleSheet(const QDir &dir, const QString &fileName);
+    static void loadStyle(const QString &styleName);
     static const QFont &getFont() { return inst().m_font; }
     static const SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
     static const SectionColor &getSelectedColor() { return inst().m_selectedColor; }
@@ -32,15 +34,21 @@ public:
 private:
     Style() = default;
     static Style &inst();
+    void loadStyleConf(const rapidjson::Value &jsonObj);
 
     QFont m_font;
+    QMap<QString, QString> m_availableStyles;
     SectionColor m_textAreaColor;
     SectionColor m_selectedColor;
     SectionColor m_selectedTextMarkColor;
     SectionColor m_headerColor;
     SectionColor m_bookmarkColor;
     SectionColor m_scrollBarColor;
-    tp::SInt m_textPadding;
-    tp::SInt m_columnMargin;
-    tp::SInt m_scrollBarThickness;
+    QString m_style;
+    QString m_baseStyle;
+    QString m_styleSheet;
+    QPalette m_palette;
+    tp::SInt m_textPadding = -1;
+    tp::SInt m_columnMargin = -1;
+    tp::SInt m_scrollBarThickness = -1;
 };

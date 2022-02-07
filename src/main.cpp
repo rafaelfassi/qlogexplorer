@@ -18,16 +18,12 @@ int main(int argc, char *argv[])
     qRegisterMetaType<tp::SharedSIntList>("tp::SharedSIntList");
 
     QApplication a(argc, argv);
-
-    Settings::initSettings();
-
     QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
-    a.setStyleSheet(Style::loadStyle(Settings::getStyle()));
+    Settings::initSettings();
+    Style::initStyle();
+    Style::loadStyle(Settings::getStyle());
 
-    // if (QStyleFactory::keys().contains("Fusion"))
-    // {
-    //     QApplication::setStyle(QStyleFactory::create("Fusion"));
-    // }
+    qDebug() << Style::availableStyles();
 
     MainWindow w;
     w.show();

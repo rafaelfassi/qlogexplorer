@@ -1,10 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>fonts/DejaVuSansMono.ttf</file>
-        <file>styles/Default.json</file>
-        <file>styles/Default.qss</file>
         <file>styles/Dark.json</file>
-        <file>styles/Dark.qss</file>
         <file>images/case_sensitive_icon.png</file>
         <file>images/delete_icon.png</file>
         <file>images/regex_icon.png</file>

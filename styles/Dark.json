@@ -1,28 +1,38 @@
 {
+    "osWin": {
+        "style": "Fusion"
+    },
+
     "fontName": "DejaVu Sans Mono",
     "fontSize": 12,
+    "style": "Breeze",
 
-    "textAreaColorBg": "#19232D",
-    "textAreaColorFg": "#E0E1E3",
+    "qtWindow": "#455364",
+    "qtWindowText": "#E0E1E3",
+    "qtWindowTextDsb": "#808080",
 
-    "selectedColorBg": "#346792",
-    "selectedColorFg": "#E0E1E3",
+    "qtBase": "#19232D",
+    "qtText": "#E0E1E3",
+    "qtTextDsb": "#808080",
+    "qtAlternateBase": "#19232D",
+
+    "qtButton": "#455364",
+    "qtButtonText": "#E0E1E3",
+    "qtButtonTextDsb": "#808080",
+
+    "qtHighlight": "#346792",
+    "qtHighlightedText": "#E0E1E3",
+
+    "qtDark": "#19232D",
+    "qtMid": "#60798B",
 
     "selectedTextMarkColorBg": "#008000",
     "selectedTextMarkColorFg": "#E0E1E3",
 
-    "headerColorBg": "#60798B",
-    "headerColorFg": "#E0E1E3",
-
     "bookmarkColorBg": "#9400d3",
     "bookmarkColorFg": "#E0E1E3",
 
-    "scrollBarColorBg": "#60798B",
-    "scrollBarColorFg": "#213040",
-
     "textPadding": 5,
-
     "columnMargin": 10,
-
     "scrollBarThickness": 25
 } 

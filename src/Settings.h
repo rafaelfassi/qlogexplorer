@@ -9,6 +9,8 @@ class Settings
 public:
     static void initSettings();
 
+    static QDir getSettingsDir(const QString &subDir = {});
+
     static tp::SInt getMaxRecentFiles();
     static std::vector<Conf> getRecentFiles();
     static void setRecentFile(Conf *conf);

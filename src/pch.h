@@ -18,6 +18,7 @@
 
 // Qt
 #include <QString>
+#include <QPalette>
 #include <QColor>
 #include <QRect>
 #include <QDir>
