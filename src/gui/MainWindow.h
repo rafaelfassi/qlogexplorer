@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include "Settings.h"
 
 class QMenu;
 class QAction;
@@ -42,8 +43,6 @@ private slots:
 
 private:
     void updateRecentFiles();
-    QString makeRecentFileName(const std::string &recentFile);
-    Conf *findConfByTemplateFileName(const std::string &templateFileName);
 
 private:
     QAction *m_openFile;
@@ -55,10 +54,7 @@ private:
     QAction *m_actRecentFilesSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
-    std::vector<QAction *> m_actRecentFiles;
+    std::vector<std::pair<QAction *, Conf>> m_actRecentFiles;
+    std::vector<std::pair<QAction *, Conf *>> m_actTemplates;
     QTabWidget *m_tabViews;
-    QDir m_configDir;
-    QDir m_templatesDir;
-    QSettings *m_settings;
-    std::vector<Conf *> m_templates;
 };

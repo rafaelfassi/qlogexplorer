@@ -29,6 +29,8 @@ set(MAIN_SOURCES
     src/Conf.cpp
     src/Utils.h
     src/Utils.cpp
+    src/Settings.h
+    src/Settings.cpp
 )
 
 set(MODEL_HEADERS

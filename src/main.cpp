@@ -8,6 +8,7 @@
 #include <QStyleFactory>
 #include <QStyle>
 #include <QDebug>
+#include "Settings.h"
 #include "Style.h"
 
 int main(int argc, char *argv[])
@@ -17,9 +18,11 @@ int main(int argc, char *argv[])
     qRegisterMetaType<tp::SharedSIntList>("tp::SharedSIntList");
 
     QApplication a(argc, argv);
-    QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
 
-    a.setStyleSheet(Style::loadStyle("Default"));
+    Settings::initSettings();
+
+    QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
+    a.setStyleSheet(Style::loadStyle(Settings::getStyle()));
 
     // if (QStyleFactory::keys().contains("Fusion"))
     // {
