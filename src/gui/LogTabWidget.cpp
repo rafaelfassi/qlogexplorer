@@ -19,7 +19,6 @@
 #include <QToolButton>
 #include <QSplitter>
 
-#include <fstream>
 
 LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_conf(conf)
 {

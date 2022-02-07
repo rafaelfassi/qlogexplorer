@@ -5,7 +5,9 @@
 
     "fontName": "DejaVu Sans Mono",
     "fontSize": 12,
+
     "style": "Breeze",
+    "qtStyleSheet": ":/styles/Dark.qss",
 
     "qtWindow": "#455364",
     "qtWindowText": "#E0E1E3",
@@ -17,12 +19,15 @@
     "qtAlternateBase": "#19232D",
 
     "qtButton": "#455364",
+    "qtButtonAct": "#303030",
     "qtButtonText": "#E0E1E3",
     "qtButtonTextDsb": "#808080",
 
     "qtHighlight": "#346792",
     "qtHighlightedText": "#E0E1E3",
 
+    "qtLightDsb": "#19232D",
+    "qtMidlight": "#455364",
     "qtDark": "#19232D",
     "qtMid": "#60798B",
 

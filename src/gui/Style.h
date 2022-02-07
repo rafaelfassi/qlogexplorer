@@ -11,7 +11,7 @@ class Style
 public:
     static void initStyle();
     static QStringList availableStyles();
-    static void loadStyleSheet(const QDir &dir, const QString &fileName);
+    static void loadStyleSheet(const QString &fileName);
     static void loadStyle(const QString &styleName);
     static const QFont &getFont() { return inst().m_font; }
     static const SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }

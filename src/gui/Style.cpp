@@ -53,12 +53,8 @@ QStringList Style::availableStyles()
     return inst().m_availableStyles.keys();
 }
 
-void Style::loadStyleSheet(const QDir &dir, const QString &fileName)
+void Style::loadStyleSheet(const QString &fileName)
 {
-    const auto oldCurrDir = QDir::currentPath();
-
-    QDir::setCurrent(dir.absolutePath());
-
     QFile qssFile(fileName);
     if (qssFile.exists() && qssFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -69,31 +65,34 @@ void Style::loadStyleSheet(const QDir &dir, const QString &fileName)
     {
         LOG_ERR("Cannot open StyleSheet '{}'", fileName.toStdString());
     }
-
-    QDir::setCurrent(oldCurrDir);
 }
 
 void Style::loadStyleConf(const rapidjson::Value &jsonObj)
 {
-    const auto loadColorRole =
-        [&jsonObj, this](const std::string &key, QPalette::ColorRole role, QPalette::ColorGroup group = QPalette::All)
+    static std::vector<std::pair<std::string, QPalette::ColorGroup>> groups =
+        {{"", QPalette::All}, {"Atc", QPalette::Active}, {"Ina", QPalette::Inactive}, {"Dsb", QPalette::Disabled}};
+
+    const auto loadColorRole = [&jsonObj, this](const std::string &key, QPalette::ColorRole role)
     {
-        const auto cl = utl::GetValueOpt<std::string>(jsonObj, key);
-        if (cl.has_value())
+        for (const auto &[groupStr, groupEnum] : groups)
         {
-            m_palette.setColor(group, role, cl.value().c_str());
+            const auto cl = utl::GetValueOpt<std::string>(jsonObj, key + groupStr);
+            if (cl.has_value())
+            {
+                m_palette.setColor(groupEnum, role, cl.value().c_str());
+            }
         }
     };
 
     const auto loadColorSection =
-        [&jsonObj](const std::string &key, SectionColor &colorSec, const QString &defFg, const QString &defBg)
+        [&jsonObj](const std::string &key, SectionColor &colorSec, const QString &defFg = {}, const QString &defBg = {})
     {
         const auto fg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Fg", key));
         if (fg.has_value())
         {
             colorSec.fg = fg.value().c_str();
         }
-        else if (!colorSec.fg.isValid())
+        else if (!colorSec.fg.isValid() && !defFg.isEmpty())
         {
             colorSec.fg = defFg;
         }
@@ -103,7 +102,7 @@ void Style::loadStyleConf(const rapidjson::Value &jsonObj)
         {
             colorSec.bg = bg.value().c_str();
         }
-        else if (!colorSec.bg.isValid())
+        else if (!colorSec.bg.isValid() && !defBg.isEmpty())
         {
             colorSec.bg = defBg;
         }
@@ -137,46 +136,55 @@ void Style::loadStyleConf(const rapidjson::Value &jsonObj)
         m_baseStyle = baseStyle.value().c_str();
     }
 
-    // Load palette colors
-    loadColorRole("qtWindow", QPalette::Window);
-    loadColorRole("qtWindowText", QPalette::WindowText);
-    loadColorRole("qtWindowTextDsb", QPalette::WindowText, QPalette::Disabled);
-    loadColorRole("qtBase", QPalette::Base);
-    loadColorRole("qtAlternateBase", QPalette::AlternateBase);
-    loadColorRole("qtText", QPalette::Text);
-    loadColorRole("qtTextDsb", QPalette::Text, QPalette::Disabled);
-    loadColorRole("qtButton", QPalette::Button);
-    loadColorRole("qtButtonDsb", QPalette::Button, QPalette::Disabled);
-    loadColorRole("qtButtonText", QPalette::ButtonText);
-    loadColorRole("qtButtonTextDsb", QPalette::ButtonText, QPalette::Disabled);
-    loadColorRole("qtHighlight", QPalette::Highlight);
-    loadColorRole("qtHighlightedText", QPalette::HighlightedText);
-    loadColorRole("qtLight", QPalette::Light);
-    loadColorRole("qtMidlight", QPalette::Midlight);
-    loadColorRole("qtDark", QPalette::Dark);
-    loadColorRole("qtMid", QPalette::Mid);
-    loadColorRole("qtShadow", QPalette::Shadow);
+    const auto qtStyleSheet = utl::GetValueOpt<std::string>(jsonObj, "qtStyleSheet");
+    if (qtStyleSheet.has_value())
+    {
+        m_styleSheet = qtStyleSheet.value().c_str();
+    }
 
-    // Load colors from palette
-    loadColorSectionFromRoles(m_textAreaColor, QPalette::Text, QPalette::Base);
-    loadColorSectionFromRoles(m_selectedColor, QPalette::HighlightedText, QPalette::Highlight);
-    loadColorSectionFromRoles(m_headerColor, QPalette::WindowText, QPalette::Window);
-    loadColorSectionFromRoles(m_scrollBarColor, QPalette::Dark, QPalette::Mid);
-
-    // Load application specific colors
-    loadColorSection("selectedTextMarkColor", m_selectedTextMarkColor, "#E0E1E3", "#008000");
-    loadColorSection("bookmarkColor", m_bookmarkColor, "#E0E1E3", "#9400d3");
+    if (jsonObj.MemberCount() > 0)
+    {
+        // Load palette colors
+        loadColorRole("qtWindow", QPalette::Window);
+        loadColorRole("qtWindowText", QPalette::WindowText);
+        loadColorRole("qtBase", QPalette::Base);
+        loadColorRole("qtAlternateBase", QPalette::AlternateBase);
+        loadColorRole("qtToolTipBase", QPalette::ToolTipBase);
+        loadColorRole("qtToolTipText", QPalette::ToolTipText);
+        loadColorRole("qtPlaceholderText", QPalette::PlaceholderText);
+        loadColorRole("qtText", QPalette::Text);
+        loadColorRole("qtButton", QPalette::Button);
+        loadColorRole("qtButtonText", QPalette::ButtonText);
+        loadColorRole("qtBrightText", QPalette::BrightText);
+        loadColorRole("qtLight", QPalette::Light);
+        loadColorRole("qtMidlight", QPalette::Midlight);
+        loadColorRole("qtDark", QPalette::Dark);
+        loadColorRole("qtMid", QPalette::Mid);
+        loadColorRole("qtShadow", QPalette::Shadow);
+        loadColorRole("qtHighlight", QPalette::Highlight);
+        loadColorRole("qtHighlightedText", QPalette::HighlightedText);
+        loadColorRole("qtLink", QPalette::Link);
+        loadColorRole("qtLinkVisited", QPalette::LinkVisited);
+    }
 
     // Load integers
     loadInt("textPadding", m_textPadding, 5);
     loadInt("columnMargin", m_columnMargin, 10);
     loadInt("scrollBarThickness", m_scrollBarThickness, 25);
 
-    const auto qtStyleSheet = utl::GetValueOpt<std::string>(jsonObj, "qtStyleSheet");
-    if (qtStyleSheet.has_value())
-    {
-        m_styleSheet = qtStyleSheet.value().c_str();
-    }
+    // Load colors from palette
+    loadColorSectionFromRoles(m_textAreaColor, QPalette::Text, QPalette::Base);
+    loadColorSectionFromRoles(m_selectedColor, QPalette::HighlightedText, QPalette::Highlight);
+    loadColorSectionFromRoles(m_headerColor, QPalette::WindowText, QPalette::Window);
+    loadColorSectionFromRoles(m_scrollBarColor, QPalette::Mid, QPalette::Midlight);
+
+    // Load application specific colors (may overwrite the ones got from the palette)
+    loadColorSection("textAreaColor", m_textAreaColor, "#000000", "#FFFFFF");
+    loadColorSection("selectedColor", m_selectedColor, "#FFFFFF", "#346792");
+    loadColorSection("headerColor", m_headerColor, "#FFFFFF", "#808080");
+    loadColorSection("scrollBarColor", m_scrollBarColor, "#808080", "#C0C0C0");
+    loadColorSection("selectedTextMarkColor", m_selectedTextMarkColor, "#E0E1E3", "#008000");
+    loadColorSection("bookmarkColor", m_bookmarkColor, "#E0E1E3", "#9400d3");
 }
 
 void Style::loadStyle(const QString &styleName)
@@ -248,7 +256,7 @@ void Style::loadStyle(const QString &styleName)
 
     if (!style.m_styleSheet.isEmpty())
     {
-        loadStyleSheet(QFileInfo(styleFileName).absoluteDir(), style.m_styleSheet);
+        loadStyleSheet(style.m_styleSheet);
     }
 
     qApp->setPalette(style.m_palette);
