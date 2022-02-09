@@ -11,7 +11,7 @@ class ProxyModel : public AbstractModel
 
 public:
     ProxyModel(AbstractModel *source);
-    tp::SInt getRow(std::uint64_t row, tp::RowData &rowData) const override;
+    tp::SInt getRow(tp::SInt row, tp::RowData &rowData) const override;
     tp::Columns &getColumns() override;
     const tp::Columns &getColumns() const override;
     tp::UInt columnCount() const override;

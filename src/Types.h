@@ -6,8 +6,8 @@
 namespace tp
 {
 
-using SInt = ssize_t;
-using UInt = size_t;
+using SInt = std::intptr_t;
+using UInt = std::uintptr_t;
 using SIntList = std::deque<tp::SInt>;
 using RowData = std::vector<std::string>;
 using SharedSIntList = std::shared_ptr<SIntList>;

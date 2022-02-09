@@ -291,6 +291,7 @@ void Style::loadStyle(const QString &styleName)
     }
 
     qApp->setPalette(style.m_palette);
+    qApp->setFont(getFont());
 }
 
 const QFont &Style::getFont()

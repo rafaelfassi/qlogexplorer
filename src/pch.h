@@ -4,6 +4,7 @@
 #pragma once
 
 // STL
+#include <cstdint>
 #include <queue>
 #include <string>
 #include <vector>

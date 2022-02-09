@@ -11,7 +11,7 @@ class AbstractModel : public QObject
 
 public:
     AbstractModel(QObject *parent = 0) : QObject(parent) {}
-    virtual tp::SInt getRow(std::uint64_t row, tp::RowData &rowData) const = 0;
+    virtual tp::SInt getRow(tp::SInt row, tp::RowData &rowData) const = 0;
     virtual tp::Columns &getColumns() = 0;
     virtual const tp::Columns &getColumns() const = 0;
     virtual tp::UInt columnCount() const = 0;
@@ -22,4 +22,3 @@ signals:
     void modelConfigured() const;
     void countChanged() const;
 };
-

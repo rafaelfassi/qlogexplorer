@@ -83,7 +83,7 @@ public:
     BaseLogModel(Conf &conf, QObject *parent = 0);
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
-    tp::SInt getRow(std::uint64_t row, tp::RowData &rowData) const override final;
+    tp::SInt getRow(tp::SInt row, tp::RowData &rowData) const override final;
     tp::Columns &getColumns() override final;
     const tp::Columns &getColumns() const override final;
     tp::UInt columnCount() const override final;

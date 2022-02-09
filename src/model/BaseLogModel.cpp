@@ -31,11 +31,11 @@ const std::string &BaseLogModel::getFileName() const
     return m_fileName;
 }
 
-tp::SInt BaseLogModel::getRow(std::uint64_t row, tp::RowData &rowData) const
+tp::SInt BaseLogModel::getRow(tp::SInt row, tp::RowData &rowData) const
 {
     const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
-    if (row < m_rowCount.load())
+    if ((-1L < row) && (row < m_rowCount.load()))
     {
         if (!m_cachedChunkRows.contains(row))
         {

@@ -9,7 +9,7 @@ ProxyModel::ProxyModel(AbstractModel *source) : AbstractModel(source), m_source(
     connect(m_source, &AbstractModel::modelConfigured, this, &AbstractModel::modelConfigured);
 }
 
-tp::SInt ProxyModel::getRow(std::uint64_t row, tp::RowData &rowData) const
+tp::SInt ProxyModel::getRow(tp::SInt row, tp::RowData &rowData) const
 {
     if (row < m_rowMap.size())
     {
@@ -40,7 +40,7 @@ tp::UInt ProxyModel::rowCount() const
 
 tp::SInt ProxyModel::getRowNum(tp::SInt row) const
 {
-    if (row < m_rowMap.size())
+    if ((-1L < row) && (row < m_rowMap.size()))
     {
         return m_source->getRowNum(m_rowMap[row]);
     }
