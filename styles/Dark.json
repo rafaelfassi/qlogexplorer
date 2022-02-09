@@ -1,13 +1,10 @@
 {
     "osLinux": {
-        "style": "Breeze",
+        "qtStyle": "Breeze",
         "qtStyleSheet": ""
     },
 
-    "fontName": "DejaVu Sans Mono",
-    "fontSize": 12,
-
-    "style": "Fusion",
+    "qtStyle": "Fusion",
     "qtStyleSheet": ":/styles/Dark.qss",
     "imgDir": ":/images/dark",
 
@@ -22,17 +19,19 @@
 
     "qtButton": "#455364",
     "qtButtonDsb": "#343F4B",
-    "qtButtonAct": "#303030",
+    "qtButtonAct": "#546478",
     "qtButtonText": "#E0E1E3",
     "qtButtonTextDsb": "#808080",
 
     "qtHighlight": "#346792",
     "qtHighlightedText": "#E0E1E3",
 
+    "qtLight": "#697D96",
     "qtLightDsb": "#19232D",
-    "qtMidlight": "#455364",
-    "qtDark": "#19232D",
-    "qtMid": "#60798B",
+    "qtMidlight": "#546478",
+    "qtDark": "#1F262D",
+    "qtMid": "#343F4B",
+    "qtShadow": "#0A0D0F",
 
     "selectedTextMarkColorBg": "#008000",
     "selectedTextMarkColorFg": "#E0E1E3",

@@ -12,9 +12,8 @@ class Style
 public:
     static void initStyle();
     static QStringList availableStyles();
-    static void loadStyleSheet(const QString &fileName);
+    static void loadStyleSheetFile(const QString &fileName);
     static void loadStyle(const QString &styleName);
-    static const QFont &getFont() { return inst().m_font; }
     static QIcon getIcon(const QString &iconName) { return QIcon(inst().m_imgDir.absoluteFilePath(iconName)); };
     static const SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
     static const SectionColor &getSelectedColor() { return inst().m_selectedColor; }
@@ -26,6 +25,7 @@ public:
     static tp::SInt getColumnMargin() { return inst().m_columnMargin; }
     static tp::SInt getScrollBarThickness() { return inst().m_scrollBarThickness; }
 
+    static const QFont &getFont();
     static tp::SInt getTextHeight(bool addPadding);
     static tp::SInt getCharWidth();
     static double getCharWidthF();
@@ -36,9 +36,8 @@ public:
 private:
     Style() = default;
     static Style &inst();
-    void loadStyleConf(const rapidjson::Value &jsonObj);
+    void loadStyleFromJson(const rapidjson::Value &jsonObj);
 
-    QFont m_font;
     QMap<QString, QString> m_availableStyles;
     SectionColor m_textAreaColor;
     SectionColor m_selectedColor;
@@ -47,8 +46,8 @@ private:
     SectionColor m_bookmarkColor;
     SectionColor m_scrollBarColor;
     QString m_style;
-    QString m_baseStyle;
-    QString m_styleSheet;
+    QString m_qtStyle;
+    QString m_qtStyleSheet;
     QDir m_imgDir;
     QPalette m_palette;
     tp::SInt m_textPadding = -1;

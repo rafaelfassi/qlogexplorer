@@ -1,8 +1,13 @@
 <RCC>
     <qresource prefix="/">
         <file>fonts/DejaVuSansMono.ttf</file>
+
+        <file>styles/Light.json</file>
+        <file>styles/Light.qss</file>
+
         <file>styles/Dark.json</file>
         <file>styles/Dark.qss</file>
+
         <file>images/default/add_icon.png</file>
         <file>images/default/case_sensitive_icon.png</file>
         <file>images/default/clear_icon.png</file>
@@ -17,6 +22,7 @@
         <file>images/default/regex_icon.png</file>
         <file>images/default/search_icon.png</file>
         <file>images/default/sync_icon.png</file>
+
         <file>images/dark/add_icon.png</file>
         <file>images/dark/case_sensitive_icon.png</file>
         <file>images/dark/clear_icon.png</file>

@@ -3,8 +3,8 @@ QHeaderView::section {
 }
 
 QHeaderView::section::horizontal {
-    background-color: #455364;
-    color: #E0E1E3;
+    background-color: #999999;
+    color: #FFFFFF;
     padding: 5px;
-    border-left: 1px solid #6C6C6C;
+    border-left: 1px solid #808080;
 }

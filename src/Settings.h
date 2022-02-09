@@ -2,12 +2,17 @@
 // This file is part of qlogviewer project licensed under GPL-3.0
 
 #pragma once
+
+#include <QFont>
+
 class QSettings;
 
 class Settings
 {
 public:
     static void initSettings();
+
+    static const QFont &getFont() { return inst().m_font; }
 
     static QDir getSettingsDir(const QString &subDir = {});
 
@@ -28,6 +33,7 @@ private:
     Settings() = default;
     static Settings &inst();
 
+    QFont m_font;
     QDir m_settingsDir;
     QDir m_templatesDir;
     QSettings *m_settings;

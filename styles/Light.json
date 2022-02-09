@@ -1,0 +1,21 @@
+{
+    "osLinux": {
+        "qtStyle": "Breeze",
+        "qtStyleSheet": ""
+    },
+
+    "qtStyle": "Fusion",
+    "qtStyleSheet": ":/styles/Light.qss",
+
+    "headerColorFg": "#FFFFFF",
+    "headerColorBg": "#999999",
+
+    "scrollBarColorFg": "#808080",
+    "scrollBarColorBg": "#B3B3B3",
+
+    "selectedTextMarkColorBg": "#008000",
+    "selectedTextMarkColorFg": "#E0E1E3",
+
+    "bookmarkColorBg": "#9400d3",
+    "bookmarkColorFg": "#E0E1E3"
+}

@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include <QSettings>
 #include <QStandardPaths>
+#include <QApplication>
 
 Settings &Settings::inst()
 {
@@ -47,6 +48,11 @@ void Settings::initSettings()
 
     const auto &settingsFile = s.m_settingsDir.absoluteFilePath("settings.ini");
     s.m_settings = new QSettings(settingsFile, QSettings::IniFormat);
+
+    const auto fontName = s.m_settings->value("fontName", "DejaVu Sans Mono").toString();
+    const auto fontSize = s.m_settings->value("fontSize", 12).toInt();
+    s.m_font = QFont(fontName, fontSize);
+    qApp->setFont(s.m_font);
 
     loadTemplates();
 }
