@@ -41,14 +41,14 @@ private slots:
     void clearResults();
     void deleteParamWidget(QWidget *);
     void sourceModelConfigured();
-    void addMarksFromMainLog();
+    void syncMarks();
 
 private:
     QAction *m_actAddSearchParam;
     QAction *m_actMergeResults;
     QAction *m_actOrOperator;
     QAction *m_actClear;
-    QAction *m_actAddMarks;
+    QAction *m_actSyncMarks;
     QAction *m_actExec;
     QVBoxLayout *m_searchParamsLayout;
     LogViewWidget *m_mainLog;

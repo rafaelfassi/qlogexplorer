@@ -9,6 +9,7 @@
 #include "SearchParamWidget.h"
 #include "ProxyModel.h"
 #include "LongScrollBar.h"
+#include "Style.h"
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -42,9 +43,9 @@ LogSearchWidget::LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceMod
     btnClear->setFocusPolicy(Qt::NoFocus);
     btnClear->setDefaultAction(m_actClear);
 
-    QToolButton *btnAddMarks = new QToolButton(this);
-    btnAddMarks->setFocusPolicy(Qt::NoFocus);
-    btnAddMarks->setDefaultAction(m_actAddMarks);
+    QToolButton *btnSyncMarks = new QToolButton(this);
+    btnSyncMarks->setFocusPolicy(Qt::NoFocus);
+    btnSyncMarks->setDefaultAction(m_actSyncMarks);
 
     QToolButton *btnExec = new QToolButton(this);
     btnExec->setFocusPolicy(Qt::NoFocus);
@@ -56,7 +57,7 @@ LogSearchWidget::LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceMod
     hLayout->addWidget(btnMergeResults);
     hLayout->addWidget(btnOrOperator);
     hLayout->addWidget(btnClear);
-    hLayout->addWidget(btnAddMarks);
+    hLayout->addWidget(btnSyncMarks);
     hLayout->addWidget(btnExec);
     hLayout->addStretch();
     hLayout->addWidget(btnAddSearchParam);
@@ -89,31 +90,31 @@ void LogSearchWidget::configure(Conf *conf)
 void LogSearchWidget::createActions()
 {
     m_actAddSearchParam = new QAction(tr("Add Search Parameter"), this);
-    m_actAddSearchParam->setIcon(QIcon(":/images/add_icon.png"));
+    m_actAddSearchParam->setIcon(Style::getIcon("add_icon.png"));
 
     m_actMergeResults = new QAction(tr("Merge Results"), this);
-    m_actMergeResults->setIcon(QIcon(":/images/merge_icon.png"));
+    m_actMergeResults->setIcon(Style::getIcon("merge_icon.png"));
     m_actMergeResults->setCheckable(true);
 
     m_actOrOperator = new QAction(tr("Use OR operator"), this);
-    m_actOrOperator->setIcon(QIcon(":/images/or_icon.png"));
+    m_actOrOperator->setIcon(Style::getIcon("or_icon.png"));
     m_actOrOperator->setCheckable(true);
 
     m_actClear = new QAction(tr("Clear Results"), this);
-    m_actClear->setIcon(QIcon(":/images/clear_icon.png"));
+    m_actClear->setIcon(Style::getIcon("clear_icon.png"));
 
-    m_actAddMarks = new QAction(tr("Add/Show Main Log Marks"), this);
-    m_actAddMarks->setIcon(QIcon(":/images/mark_icon.png"));
+    m_actSyncMarks = new QAction(tr("Sync Bookmarks and Marked Texts"), this);
+    m_actSyncMarks->setIcon(Style::getIcon("sync_icon.png"));
 
     m_actExec = new QAction(tr("Search"), this);
-    m_actExec->setIcon(QIcon(":/images/search_icon.png"));
+    m_actExec->setIcon(Style::getIcon("search_icon.png"));
 }
 
 void LogSearchWidget::createConnections()
 {
     connect(m_actExec, &QAction::triggered, this, &LogSearchWidget::startSearch);
     connect(m_actClear, &QAction::triggered, this, &LogSearchWidget::clearResults);
-    connect(m_actAddMarks, &QAction::triggered, this, &LogSearchWidget::addMarksFromMainLog);
+    connect(m_actSyncMarks, &QAction::triggered, this, &LogSearchWidget::syncMarks);
     connect(m_actAddSearchParam, &QAction::triggered, this, &LogSearchWidget::addSearchParam);
     connect(m_sourceModel, &BaseLogModel::modelConfigured, this, &LogSearchWidget::sourceModelConfigured);
     connect(m_sourceModel, &BaseLogModel::valueFound, this, &LogSearchWidget::addSearchResult);
@@ -211,7 +212,7 @@ void LogSearchWidget::sourceModelConfigured()
     }
 }
 
-void LogSearchWidget::addMarksFromMainLog()
+void LogSearchWidget::syncMarks()
 {
     for (const auto searchResultsRow : m_searchResults->getBookmarks())
     {

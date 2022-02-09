@@ -3,19 +3,33 @@
         <file>fonts/DejaVuSansMono.ttf</file>
         <file>styles/Dark.json</file>
         <file>styles/Dark.qss</file>
-        <file>images/case_sensitive_icon.png</file>
-        <file>images/delete_icon.png</file>
-        <file>images/regex_icon.png</file>
-        <file>images/search_icon.png</file>
-        <file>images/range_icon.png</file>
-        <file>images/clear_icon.png</file>
-        <file>images/add_icon.png</file>
-        <file>images/merge_icon.png</file>
-        <file>images/or_icon.png</file>
-        <file>images/filter_off_icon.png</file>
-        <file>images/fit_icon.png</file>
-        <file>images/expand_icon.png</file>
-        <file>images/not_icon.png</file>
-        <file>images/mark_icon.png</file>
+        <file>images/default/add_icon.png</file>
+        <file>images/default/case_sensitive_icon.png</file>
+        <file>images/default/clear_icon.png</file>
+        <file>images/default/delete_icon.png</file>
+        <file>images/default/expand_icon.png</file>
+        <file>images/default/filter_off_icon.png</file>
+        <file>images/default/fit_icon.png</file>
+        <file>images/default/merge_icon.png</file>
+        <file>images/default/not_icon.png</file>
+        <file>images/default/or_icon.png</file>
+        <file>images/default/range_icon.png</file>
+        <file>images/default/regex_icon.png</file>
+        <file>images/default/search_icon.png</file>
+        <file>images/default/sync_icon.png</file>
+        <file>images/dark/add_icon.png</file>
+        <file>images/dark/case_sensitive_icon.png</file>
+        <file>images/dark/clear_icon.png</file>
+        <file>images/dark/delete_icon.png</file>
+        <file>images/dark/expand_icon.png</file>
+        <file>images/dark/filter_off_icon.png</file>
+        <file>images/dark/fit_icon.png</file>
+        <file>images/dark/merge_icon.png</file>
+        <file>images/dark/not_icon.png</file>
+        <file>images/dark/or_icon.png</file>
+        <file>images/dark/range_icon.png</file>
+        <file>images/dark/regex_icon.png</file>
+        <file>images/dark/search_icon.png</file>
+        <file>images/dark/sync_icon.png</file>
     </qresource>
 </RCC>

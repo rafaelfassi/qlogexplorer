@@ -72,8 +72,8 @@ HeaderView::HeaderView(QWidget *parent) : QHeaderView(Qt::Horizontal, parent)
     m_moveLeft = new QAction("Move Left", this);
     m_moveRight = new QAction("Move Right", this);
     m_expandColumn = new QAction("Expand", this);
-    m_expandAllToContent = new QAction(QIcon(":/images/expand_icon.png"), "Expand All", this);
-    m_expandAllToScreen = new QAction(QIcon(":/images/fit_icon.png"), "Fit the Screen", this);
+    m_expandAllToContent = new QAction(Style::getIcon("expand_icon.png"), "Expand All", this);
+    m_expandAllToScreen = new QAction(Style::getIcon("fit_icon.png"), "Fit the Screen", this);
 
     setModel(m_headerModel);
 

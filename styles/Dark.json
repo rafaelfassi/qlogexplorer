@@ -1,13 +1,15 @@
 {
-    "osWin": {
-        "style": "Fusion"
+    "osLinux": {
+        "style": "Breeze",
+        "qtStyleSheet": ""
     },
 
     "fontName": "DejaVu Sans Mono",
     "fontSize": 12,
 
-    "style": "Breeze",
+    "style": "Fusion",
     "qtStyleSheet": ":/styles/Dark.qss",
+    "imgDir": ":/images/dark",
 
     "qtWindow": "#455364",
     "qtWindowText": "#E0E1E3",
@@ -19,6 +21,7 @@
     "qtAlternateBase": "#19232D",
 
     "qtButton": "#455364",
+    "qtButtonDsb": "#343F4B",
     "qtButtonAct": "#303030",
     "qtButtonText": "#E0E1E3",
     "qtButtonTextDsb": "#808080",

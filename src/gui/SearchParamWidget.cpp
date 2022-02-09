@@ -7,6 +7,7 @@
 #include "TextLogModel.h"
 #include "JsonLogModel.h"
 #include "ProxyModel.h"
+#include "Style.h"
 #include "LongScrollBar.h"
 #include <QTableView>
 #include <QVBoxLayout>
@@ -82,27 +83,27 @@ SearchParamWidget::~SearchParamWidget()
 void SearchParamWidget::createActions()
 {
     m_actMatchCase = new QAction(tr("Match Case"), this);
-    m_actMatchCase->setIcon(QIcon(":/images/case_sensitive_icon.png"));
+    m_actMatchCase->setIcon(Style::getIcon("case_sensitive_icon.png"));
     m_actMatchCase->setCheckable(true);
 
     m_actRegex = new QAction(tr("Regular Expression"), this);
-    m_actRegex->setIcon(QIcon(":/images/regex_icon.png"));
+    m_actRegex->setIcon(Style::getIcon("regex_icon.png"));
     m_actRegex->setCheckable(true);
 
     m_actRange = new QAction(tr("Range match (from -> to)"), this);
-    m_actRange->setIcon(QIcon(":/images/range_icon.png"));
+    m_actRange->setIcon(Style::getIcon("range_icon.png"));
     m_actRange->setCheckable(true);
 
     m_actNotOp = new QAction(tr("Not (invert the match)"), this);
-    m_actNotOp->setIcon(QIcon(":/images/not_icon.png"));
+    m_actNotOp->setIcon(Style::getIcon("not_icon.png"));
     m_actNotOp->setCheckable(true);
 
     m_actDisableMe = new QAction(tr("Disable Parameter"), this);
-    m_actDisableMe->setIcon(QIcon(":/images/filter_off_icon.png"));
+    m_actDisableMe->setIcon(Style::getIcon("filter_off_icon.png"));
     m_actDisableMe->setCheckable(true);
 
     m_actRemoveMe = new QAction(tr("Remove Parameter"), this);
-    m_actRemoveMe->setIcon(QIcon(":/images/delete_icon.png"));
+    m_actRemoveMe->setIcon(Style::getIcon("delete_icon.png"));
 }
 
 void SearchParamWidget::createConnections()

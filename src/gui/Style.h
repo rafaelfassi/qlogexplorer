@@ -5,6 +5,7 @@
 
 #include "GuiTypes.h"
 #include <QFont>
+#include <QIcon>
 
 class Style
 {
@@ -14,6 +15,7 @@ public:
     static void loadStyleSheet(const QString &fileName);
     static void loadStyle(const QString &styleName);
     static const QFont &getFont() { return inst().m_font; }
+    static QIcon getIcon(const QString &iconName) { return QIcon(inst().m_imgDir.absoluteFilePath(iconName)); };
     static const SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
     static const SectionColor &getSelectedColor() { return inst().m_selectedColor; }
     static const SectionColor &getSelectedTextMarkColor() { return inst().m_selectedTextMarkColor; }
@@ -47,6 +49,7 @@ private:
     QString m_style;
     QString m_baseStyle;
     QString m_styleSheet;
+    QDir m_imgDir;
     QPalette m_palette;
     tp::SInt m_textPadding = -1;
     tp::SInt m_columnMargin = -1;

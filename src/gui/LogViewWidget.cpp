@@ -22,6 +22,10 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
     : QWidget(parent),
       m_model(model)
 {
+    auto pal = palette();
+    pal.setColor(QPalette::Window, Style::getHeaderColor().bg);
+    setPalette(pal);
+
     m_header = new HeaderView(this);
     m_header->setMaximumHeight(Style::getTextHeight(true));
     m_header->setFixedHeight(m_header->maximumHeight());
@@ -47,7 +51,7 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
 
     m_btnExpandColumns = new QPushButton(this);
     m_btnExpandColumns->setFocusPolicy(Qt::NoFocus);
-    m_btnExpandColumns->setIcon(QIcon(":/images/expand_icon.png"));
+    m_btnExpandColumns->setIcon(Style::getIcon("expand_icon.png"));
     m_btnExpandColumns->setToolTip("Expand All Columns");
     m_btnExpandColumns->setFlat(true);
     m_btnExpandColumns->setFixedHeight(m_header->maximumHeight());
@@ -55,7 +59,7 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
 
     m_btnFitColumns = new QPushButton(this);
     m_btnFitColumns->setFocusPolicy(Qt::NoFocus);
-    m_btnFitColumns->setIcon(QIcon(":/images/fit_icon.png"));
+    m_btnFitColumns->setIcon(Style::getIcon("fit_icon.png"));
     m_btnFitColumns->setToolTip("Adjust Columns to Fit");
     m_btnFitColumns->setFlat(true);
     m_btnFitColumns->setFixedHeight(Style::getScrollBarThickness());

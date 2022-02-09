@@ -46,6 +46,8 @@ void Style::initStyle()
             s.m_availableStyles[stInfo.baseName()] = stInfo.filePath();
         }
     }
+
+    s.m_imgDir.setPath(":/images/default");
 }
 
 QStringList Style::availableStyles()
@@ -110,7 +112,12 @@ void Style::loadStyleConf(const rapidjson::Value &jsonObj)
 
     const auto loadColorSectionFromRoles =
         [this](SectionColor &colorSec, QPalette::ColorRole fg, QPalette::ColorRole bg)
-    { colorSec = SectionColor(m_palette.color(fg), m_palette.color(bg)); };
+    {
+        if (!colorSec.fg.isValid() || !colorSec.bg.isValid())
+        {
+            colorSec = SectionColor(m_palette.color(fg), m_palette.color(bg));
+        }
+    };
 
     const auto loadInt = [&jsonObj](const std::string &key, tp::SInt &intVal, const tp::SInt def)
     {
@@ -140,6 +147,16 @@ void Style::loadStyleConf(const rapidjson::Value &jsonObj)
     if (qtStyleSheet.has_value())
     {
         m_styleSheet = qtStyleSheet.value().c_str();
+    }
+
+    const auto imgDirStr = utl::GetValueOpt<std::string>(jsonObj, "imgDir");
+    if (imgDirStr.has_value())
+    {
+        QDir imgDir(imgDirStr.value().c_str());
+        if (imgDir.exists())
+            m_imgDir = imgDir;
+        else
+            LOG_ERR("Image dir '{}' does not exist", imgDirStr.value());
     }
 
     if (jsonObj.MemberCount() > 0)
