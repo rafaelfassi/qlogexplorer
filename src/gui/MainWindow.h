@@ -52,6 +52,7 @@ private:
     QAction *m_actSaveConfAs;
     QAction *m_actEdtRegex;
     QAction *m_actRecentFilesSep;
+    QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
     std::vector<std::pair<QAction *, Conf>> m_actRecentFiles;

@@ -66,6 +66,7 @@ void MainWindow::createMenus()
     m_fileOpenAsMenu = m_fileMenu->addMenu(tr("Open As..."));
     m_fileOpenAsMenu->addAction(m_openFileAsText);
     m_fileOpenAsMenu->addAction(m_openFileAsJson);
+    m_actOpenAsSep = m_fileOpenAsMenu->addSeparator();
 
     m_fileMenu->addSeparator();
 
@@ -121,6 +122,8 @@ void MainWindow::updateTemplates()
         m_actTemplates.emplace_back(std::make_pair(act, conf));
         m_fileOpenAsMenu->addAction(act);
     }
+
+    m_actOpenAsSep->setVisible(!templates.empty());
 }
 
 void MainWindow::handleOpenWithTemplate()
