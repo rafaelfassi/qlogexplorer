@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "GuiTypes.h"
 #include <QFont>
 #include <QIcon>
 
@@ -15,12 +14,12 @@ public:
     static void loadStyleSheetFile(const QString &fileName);
     static void loadStyle(const QString &styleName);
     static QIcon getIcon(const QString &iconName) { return QIcon(inst().m_imgDir.absoluteFilePath(iconName)); };
-    static const SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
-    static const SectionColor &getSelectedColor() { return inst().m_selectedColor; }
-    static const SectionColor &getSelectedTextMarkColor() { return inst().m_selectedTextMarkColor; }
-    static const SectionColor &getHeaderColor() { return inst().m_headerColor; }
-    static const SectionColor &getBookmarkColor() { return inst().m_bookmarkColor; }
-    static const SectionColor &getScrollBarColor() { return inst().m_scrollBarColor; }
+    static const tp::SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
+    static const tp::SectionColor &getSelectedColor() { return inst().m_selectedColor; }
+    static const tp::SectionColor &getSelectedTextMarkColor() { return inst().m_selectedTextMarkColor; }
+    static const tp::SectionColor &getHeaderColor() { return inst().m_headerColor; }
+    static const tp::SectionColor &getBookmarkColor() { return inst().m_bookmarkColor; }
+    static const tp::SectionColor &getScrollBarColor() { return inst().m_scrollBarColor; }
     static tp::SInt getTextPadding() { return inst().m_textPadding; }
     static tp::SInt getColumnMargin() { return inst().m_columnMargin; }
     static tp::SInt getScrollBarThickness() { return inst().m_scrollBarThickness; }
@@ -39,12 +38,12 @@ private:
     void loadStyleFromJson(const rapidjson::Value &jsonObj);
 
     QMap<QString, QString> m_availableStyles;
-    SectionColor m_textAreaColor;
-    SectionColor m_selectedColor;
-    SectionColor m_selectedTextMarkColor;
-    SectionColor m_headerColor;
-    SectionColor m_bookmarkColor;
-    SectionColor m_scrollBarColor;
+    tp::SectionColor m_textAreaColor;
+    tp::SectionColor m_selectedColor;
+    tp::SectionColor m_selectedTextMarkColor;
+    tp::SectionColor m_headerColor;
+    tp::SectionColor m_bookmarkColor;
+    tp::SectionColor m_scrollBarColor;
     QString m_style;
     QString m_qtStyle;
     QString m_qtStyleSheet;

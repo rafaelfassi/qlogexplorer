@@ -49,9 +49,9 @@ void MainWindow::createActions()
     m_openFile = new QAction(tr("Open"), this);
     m_openFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
     m_openFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
-    m_actSaveConf = new QAction(tr("Save Configuration"), this);
+    m_actSaveConf = new QAction("", this);
     m_actSaveConf->setVisible(false);
-    m_actSaveConfAs = new QAction(tr("Save As..."), this);
+    m_actSaveConfAs = new QAction("", this);
     m_actSaveConfAs->setVisible(false);
     m_actEdtRegex = new QAction(tr("Regular Expression"), this);
     m_actEdtRegex->setEnabled(false);
@@ -69,14 +69,14 @@ void MainWindow::createMenus()
 
     m_fileMenu->addSeparator();
 
-    m_fileMenu->addAction(m_actSaveConf);
-    m_fileMenu->addAction(m_actSaveConfAs);
-
-    m_fileMenu->addSeparator();
-
     m_fileMenu->addAction(m_actEdtRegex);
 
     m_actRecentFilesSep = m_fileMenu->addSeparator();
+
+    m_templatesMenu = menuBar()->addMenu(tr("&Templates"));
+
+    m_templatesMenu->addAction(m_actSaveConf);
+    m_templatesMenu->addAction(m_actSaveConfAs);
 }
 
 void MainWindow::createToolBars()
@@ -200,7 +200,7 @@ void MainWindow::updateRecentFiles()
         {
             typeStr = tp::toStr<tp::FileType>(conf->getFileType());
         }
-        const auto dispName = QString("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr.c_str());
+        const auto dispName = tr("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr.c_str());
         auto act = new QAction(dispName, this);
         act->setData(idx++);
         connect(act, &QAction::triggered, this, &MainWindow::handleOpenRecentFile);
@@ -258,7 +258,7 @@ void MainWindow::openFile(FileConf::Ptr conf)
     QFileInfo fileInfo(conf->getFileName().c_str());
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
-        LOG_ERR("File '{}' doe not exist", conf->getFileName());
+        LOG_ERR("File '{}' does not exist", conf->getFileName());
         return;
     }
 
@@ -336,15 +336,15 @@ void MainWindow::confCurrentTab(int index)
     m_actSaveConf->setVisible(true);
     if (conf->exists())
     {
-        m_actSaveConf->setText(QString("Save [%1]").arg(conf->getConfigName().c_str()));
+        m_actSaveConf->setText(tr("Save [%1]").arg(conf->getConfigName().c_str()));
         m_actSaveConfAs->setVisible(true);
-        m_actSaveConfAs->setText(QString("Save [%1] As...").arg(conf->getConfigName().c_str()));
+        m_actSaveConfAs->setText(tr("Save [%1] As...").arg(conf->getConfigName().c_str()));
     }
     else
     {
-        m_actSaveConf->setText("Save Configuration");
+        m_actSaveConf->setText(tr("Save As Template"));
         m_actSaveConfAs->setVisible(false);
-        m_actSaveConfAs->setText("Save Configuration As...");
+        m_actSaveConfAs->setText("");
     }
 
     m_actEdtRegex->setEnabled(conf->getFileType() == tp::FileType::Text);
@@ -391,7 +391,7 @@ void MainWindow::saveConfAs()
     auto conf = tab->getConf();
     bool ok;
     QString confName =
-        QInputDialog::getText(this, tr("Save template"), tr("Template name:"), QLineEdit::Normal, QString(), &ok);
+        QInputDialog::getText(this, tr("Save template"), tr("Template name"), QLineEdit::Normal, QString(), &ok);
     if (ok && !confName.isEmpty())
     {
         Settings::saveTemplateAs(conf, confName);

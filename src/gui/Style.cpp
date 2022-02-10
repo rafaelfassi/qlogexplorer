@@ -91,7 +91,7 @@ void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
         }
     };
 
-    const auto loadColorSection = [&jsonObj](const std::string &key, SectionColor &colorSec)
+    const auto loadColorSection = [&jsonObj](const std::string &key, tp::SectionColor &colorSec)
     {
         const auto fg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Fg", key));
         if (fg.has_value())
@@ -238,11 +238,11 @@ void Style::loadStyle(const QString &styleName)
 
     // If nothing was defined by the style file, load colors from palette roles.
     const auto loadColorSectionFromRoles =
-        [&style](SectionColor &colorSec, QPalette::ColorRole fg, QPalette::ColorRole bg)
+        [&style](tp::SectionColor &colorSec, QPalette::ColorRole fg, QPalette::ColorRole bg)
     {
         if (!colorSec.fg.isValid() || !colorSec.bg.isValid())
         {
-            colorSec = SectionColor(style.m_palette.color(fg), style.m_palette.color(bg));
+            colorSec = tp::SectionColor(style.m_palette.color(fg), style.m_palette.color(bg));
         }
     };
     loadColorSectionFromRoles(style.m_textAreaColor, QPalette::Text, QPalette::Base);
@@ -251,7 +251,7 @@ void Style::loadStyle(const QString &styleName)
     loadColorSectionFromRoles(style.m_scrollBarColor, QPalette::Mid, QPalette::Midlight);
 
     // If nothing was defined by the style file or palette roles, load default colors.
-    const auto loadDefaultColorSection = [](SectionColor &colorSec, const QString &defFg, const QString &defBg)
+    const auto loadDefaultColorSection = [](tp::SectionColor &colorSec, const QString &defFg, const QString &defBg)
     {
         if (!colorSec.fg.isValid() || !colorSec.bg.isValid())
         {

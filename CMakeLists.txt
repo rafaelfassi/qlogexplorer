@@ -64,7 +64,6 @@ set(MATCH_SOURCES
 )
 
 set(GUI_HEADERS
-    src/gui/GuiTypes.h
     src/gui/Style.h
     src/gui/MainWindow.h
     src/gui/LongScrollBar.h

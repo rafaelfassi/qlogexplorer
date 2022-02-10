@@ -4,7 +4,6 @@
 #pragma once
 
 #include "Highlighter.h"
-#include "GuiTypes.h"
 #include <QWidget>
 
 class AbstractModel;
@@ -26,9 +25,9 @@ class LogViewWidget : public QWidget
 
     struct VisualColData
     {
-        TextCan can;
-        std::optional<TextSelection> selection;
-        std::vector<TextSelection> markedTexts;
+        tp::TextCan can;
+        std::optional<tp::TextSelection> selection;
+        std::vector<tp::TextSelection> markedTexts;
     };
 
     struct VisualRowData
@@ -77,8 +76,8 @@ public slots:
     void goFullRight();
     void goToPrevBookmark();
     void goToNextBookmark();
-    void addTextMark(const QString &text, const SectionColor &selColor);
-    void removeTextMarks(const SectionColor &selColor);
+    void addTextMark(const QString &text, const tp::SectionColor &selColor);
+    void removeTextMarks(const tp::SectionColor &selColor);
 
 protected slots:
     void configureColumns();
@@ -114,9 +113,9 @@ protected:
     void getColumnsSizeToScreen(tp::ColumnsRef &columnsRef);
 
     qreal getCharMarging();
-    std::vector<TextSelection> findMarkedText(const TextCan &can);
-    TextCan makeSelCanFromStrPos(const TextCan &can, int fromPos, int len);
-    TextCan makeSelCanFromSelRect(const TextCan &can, const QRect &selRect);
+    std::vector<tp::TextSelection> findMarkedText(const tp::TextCan &can);
+    tp::TextCan makeSelCanFromStrPos(const tp::TextCan &can, int fromPos, int len);
+    tp::TextCan makeSelCanFromSelRect(const tp::TextCan &can, const QRect &selRect);
     int getStrWidthUntilPos(int pos, int maxWidth = std::numeric_limits<int>::max());
     int getStrStartPos(int left, int *newLeft = nullptr);
     int getStrEndPos(int right, int *newRight = nullptr, int maxSize = std::numeric_limits<int>::max());
@@ -162,6 +161,6 @@ private:
     std::optional<std::pair<tp::SInt, int>> m_selectEnd;
     std::set<tp::SInt> m_bookMarks;
     std::vector<Highlighter> m_highlightersRows;
-    std::vector<TextSelection> m_markedTexts;
-    std::vector<SectionColor> m_availableMarks;
+    std::vector<tp::TextSelection> m_markedTexts;
+    std::vector<tp::SectionColor> m_availableMarks;
 };

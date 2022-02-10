@@ -54,6 +54,7 @@ private:
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
+    QMenu *m_templatesMenu;
     QTabWidget *m_tabViews;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actTemplates;

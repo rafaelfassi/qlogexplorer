@@ -375,7 +375,7 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
                 const auto it = std::find_if(
                     m_markedTexts.begin(),
                     m_markedTexts.end(),
-                    [&mark](const TextSelection &sel) { return sel.color.bg == mark.bg; });
+                    [&mark](const tp::TextSelection &sel) { return sel.color.bg == mark.bg; });
                 if (it != m_markedTexts.end())
                 {
                     auto actUnmark = unmarkAllMenu->addAction(icon, QString("Style %1").arg(markCnt));
@@ -654,13 +654,13 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                     const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
                     if (!can.text.isEmpty() && can.rect.isValid())
                     {
-                        TextSelection textSelection;
+                        tp::TextSelection textSelection;
                         textSelection.can = can;
                         textSelection.color = Style::getSelectedColor();
                         vcData.selection = std::move(textSelection);
                     }
                 }
-                vcData.markedTexts = findMarkedText(TextCan(rect, colText));
+                vcData.markedTexts = findMarkedText(tp::TextCan(rect, colText));
             }
             vrData.columns.emplace_back(std::move(vcData));
             rect.moveLeft(rect.left() + rect.width());
@@ -681,7 +681,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
                 const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
                 if (!can.text.isEmpty() && can.rect.isValid())
                 {
-                    TextSelection textSelection;
+                    tp::TextSelection textSelection;
                     textSelection.can = can;
                     textSelection.color = Style::getSelectedColor();
                     vcData.selection = std::move(textSelection);
@@ -898,11 +898,11 @@ qreal LogViewWidget::getCharMarging()
     return Style::getCharWidthF() / 4.0;
 }
 
-std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
+std::vector<tp::TextSelection> LogViewWidget::findMarkedText(const tp::TextCan &can)
 {
-    std::vector<TextSelection> resVec;
+    std::vector<tp::TextSelection> resVec;
 
-    const auto findAndMarkFunc = [&, this](const QString &text, const SectionColor &color)
+    const auto findAndMarkFunc = [&, this](const QString &text, const tp::SectionColor &color)
     {
         if (!text.isEmpty())
         {
@@ -911,7 +911,7 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
             {
                 const auto &selCan = makeSelCanFromStrPos(can, idx, text.size());
 
-                TextSelection selText;
+                tp::TextSelection selText;
                 selText.can = selCan;
                 selText.color = color;
                 resVec.emplace_back(std::move(selText));
@@ -934,12 +934,12 @@ std::vector<TextSelection> LogViewWidget::findMarkedText(const TextCan &can)
     return resVec;
 }
 
-TextCan LogViewWidget::makeSelCanFromStrPos(const TextCan &can, int fromPos, int len)
+tp::TextCan LogViewWidget::makeSelCanFromStrPos(const tp::TextCan &can, int fromPos, int len)
 {
     int sX = getStrWidthUntilPos(fromPos);
     int eX = getStrWidthUntilPos(fromPos + len);
 
-    TextCan selCan;
+    tp::TextCan selCan;
     selCan = can;
     selCan.rect.setLeft(selCan.rect.left() + sX);
     selCan.rect.setWidth(eX - sX);
@@ -948,9 +948,9 @@ TextCan LogViewWidget::makeSelCanFromStrPos(const TextCan &can, int fromPos, int
     return selCan;
 }
 
-TextCan LogViewWidget::makeSelCanFromSelRect(const TextCan &can, const QRect &selRect)
+tp::TextCan LogViewWidget::makeSelCanFromSelRect(const tp::TextCan &can, const QRect &selRect)
 {
-    TextCan selCan;
+    tp::TextCan selCan;
 
     if (can.text.isEmpty() || selRect.isNull() || !selRect.isValid())
     {
@@ -1256,19 +1256,19 @@ bool LogViewWidget::hasTextSelected()
     return (m_selectedText.has_value() && !m_selectedText->isEmpty());
 }
 
-void LogViewWidget::addTextMark(const QString &text, const SectionColor &selColor)
+void LogViewWidget::addTextMark(const QString &text, const tp::SectionColor &selColor)
 {
-    m_markedTexts.emplace_back(TextCan(text), selColor);
+    m_markedTexts.emplace_back(tp::TextCan(text), selColor);
     update();
 }
 
-void LogViewWidget::removeTextMarks(const SectionColor &selColor)
+void LogViewWidget::removeTextMarks(const tp::SectionColor &selColor)
 {
     m_markedTexts.erase(
         std::remove_if(
             m_markedTexts.begin(),
             m_markedTexts.end(),
-            [&selColor](const TextSelection &mark) { return (mark.color.bg == selColor.bg); }),
+            [&selColor](const tp::TextSelection &mark) { return (mark.color.bg == selColor.bg); }),
         m_markedTexts.end());
     update();
 }

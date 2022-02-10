@@ -60,8 +60,8 @@ bool FileConf::loadFConf(const std::string &confFileName)
             hParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(h, "type").value_or(tp::SearchType::SubString);
             hParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(h, "options").value_or(tp::SearchFlags());
             hParam.searchParam.pattern = utl::GetValueOpt<std::string>(h, "pattern").value_or(std::string());
-            hParam.bgColor = utl::GetValueOpt<std::string>(h, "backColor").value_or("White").c_str();
-            hParam.textColor = utl::GetValueOpt<std::string>(h, "textColor").value_or("Black").c_str();
+            hParam.color.bg = utl::GetValueOpt<std::string>(h, "backColor").value_or("White").c_str();
+            hParam.color.fg = utl::GetValueOpt<std::string>(h, "textColor").value_or("Black").c_str();
             m_highlighterParams.emplace_back(std::move(hParam));
         }
     }
@@ -132,8 +132,8 @@ rapidjson::Document FileConf::toJson() const
     for (const auto &hParam : m_highlighterParams)
     {
         rapidjson::Value jHigh(rapidjson::kObjectType);
-        jHigh.AddMember("textColor", utl::toStr(hParam.textColor), alloc);
-        jHigh.AddMember("backColor", utl::toStr(hParam.bgColor), alloc);
+        jHigh.AddMember("textColor", utl::toStr(hParam.color.fg), alloc);
+        jHigh.AddMember("backColor", utl::toStr(hParam.color.bg), alloc);
         jHigh.AddMember("type", tp::toStr(hParam.searchParam.type), alloc);
         jHigh.AddMember("options", tp::toStr(hParam.searchParam.flags), alloc);
         jHigh.AddMember("pattern", hParam.searchParam.pattern, alloc);
