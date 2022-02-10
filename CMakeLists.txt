@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(qlogviewer LANGUAGES CXX)
+project(qlogexplorer LANGUAGES CXX)
 set(VERSION 0.0.1)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -21,7 +21,7 @@ find_package(TBB)
 add_definitions(-fPIC)
 
 set(MAIN_SOURCES
-    qlogviewer.qrc
+    qlogexplorer.qrc
     src/main.cpp
     src/Types.h
     src/Types.cpp
