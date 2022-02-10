@@ -753,7 +753,7 @@ QString LogViewWidget::getElidedText(const QString &text, tp::SInt width, bool s
     return Style::getElidedText(simplified ? text.simplified() : text, width, Qt::ElideRight);
 }
 
-void LogViewWidget::configure(Conf::Ptr conf)
+void LogViewWidget::configure(FileConf::Ptr conf)
 {
     m_highlightersRows.clear();
     for (const auto &param : conf->getHighlighterParams())

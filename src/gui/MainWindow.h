@@ -26,14 +26,14 @@ public:
 public slots:
     void openFile(tp::FileType type);
     void openFile(const QString &fileName, tp::FileType type);
-    void openFile(Conf::Ptr conf);
+    void openFile(FileConf::Ptr conf);
     void closeTab(int index);
     void confCurrentTab(int index);
     void goToTab(int index);
     void saveConf();
     void saveConfAs();
     void editRegex();
-    void setRecentFile(const Conf::Ptr &conf);
+    void setRecentFile(const FileConf::Ptr &conf);
 
 private slots:
     void handleOpenWithTemplate();
@@ -41,7 +41,7 @@ private slots:
 
 private:
     void updateRecentFiles();
-    int findOpenedFileTab(const Conf::Ptr &conf);
+    int findOpenedFileTab(const FileConf::Ptr &conf);
 
 private:
     QAction *m_openFile;
@@ -55,6 +55,6 @@ private:
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
     QTabWidget *m_tabViews;
-    std::vector<std::pair<QAction *, Conf::Ptr>> m_actRecentFiles;
-    std::vector<std::pair<QAction *, Conf::Ptr>> m_actTemplates;
+    std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;
+    std::vector<std::pair<QAction *, FileConf::Ptr>> m_actTemplates;
 };

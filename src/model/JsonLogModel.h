@@ -10,11 +10,11 @@ class JsonLogModel : public BaseLogModel
     Q_OBJECT
 
 public:
-    JsonLogModel(Conf::Ptr conf, QObject *parent = 0);
+    JsonLogModel(FileConf::Ptr conf, QObject *parent = 0);
     ~JsonLogModel();
 
 protected:
-    bool configure(Conf::Ptr conf, std::istream &is) override;
+    bool configure(FileConf::Ptr conf, std::istream &is) override;
     bool parseRow(const std::string &rawText, tp::RowData &rowData) const override;
     virtual tp::UInt parseChunks(
         std::istream &is,

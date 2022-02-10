@@ -4,7 +4,7 @@
 #include "pch.h"
 #include "BaseLogModel.h"
 
-BaseLogModel::BaseLogModel(Conf::Ptr conf, QObject *parent)
+BaseLogModel::BaseLogModel(FileConf::Ptr conf, QObject *parent)
     : AbstractModel(parent),
       m_conf(conf),
       m_fileName(conf->getFileName()),

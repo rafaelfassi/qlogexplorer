@@ -82,7 +82,7 @@ LogSearchWidget::~LogSearchWidget()
 {
 }
 
-void LogSearchWidget::configure(Conf::Ptr conf)
+void LogSearchWidget::configure(FileConf::Ptr conf)
 {
     m_searchResults->configure(conf);
 }

@@ -44,4 +44,4 @@
 // global includes
 #include "Types.h"
 #include "Utils.h"
-#include "Conf.h"
+#include "FileConf.h"

@@ -52,7 +52,7 @@ public:
     const std::set<tp::SInt> &getBookmarks();
     void clearBookmarks();
     bool hasBookmark(tp::SInt row) const;
-    void configure(Conf::Ptr conf);
+    void configure(FileConf::Ptr conf);
 
 signals:
     void rowSelected(tp::SInt row);

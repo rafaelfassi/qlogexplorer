@@ -6,7 +6,7 @@
 
 constexpr tp::UInt g_maxChunksPerParse(500);
 
-TextLogModel::TextLogModel(Conf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
+TextLogModel::TextLogModel(FileConf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -15,7 +15,7 @@ TextLogModel::~TextLogModel()
     stop();
 }
 
-bool TextLogModel::configure(Conf::Ptr conf, std::istream &is)
+bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
 {
     if (conf->getRegexPattern().empty())
     {

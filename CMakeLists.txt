@@ -25,8 +25,8 @@ set(MAIN_SOURCES
     src/main.cpp
     src/Types.h
     src/Types.cpp
-    src/Conf.h
-    src/Conf.cpp
+    src/FileConf.h
+    src/FileConf.cpp
     src/Utils.h
     src/Utils.cpp
     src/Settings.h

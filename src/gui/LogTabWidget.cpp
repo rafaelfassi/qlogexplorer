@@ -20,7 +20,7 @@
 #include <QSplitter>
 
 
-LogTabWidget::LogTabWidget(Conf::Ptr conf, QWidget *parent) : QWidget(parent), m_conf(conf)
+LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent), m_conf(conf)
 {
     if (!conf)
     {
@@ -87,7 +87,7 @@ void LogTabWidget::updateColumns()
     m_logModel->reconfigure();
 }
 
-Conf::Ptr LogTabWidget::getConf()
+FileConf::Ptr LogTabWidget::getConf()
 {
     return m_conf;
 }

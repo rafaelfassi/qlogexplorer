@@ -138,13 +138,13 @@ void MainWindow::handleOpenWithTemplate()
         const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
         if (fileName.isEmpty())
             return;
-        auto newConf = Conf::clone(conf);
+        auto newConf = FileConf::clone(conf);
         newConf->setFileName(fileName.toStdString());
         openFile(newConf);
     }
 }
 
-void MainWindow::setRecentFile(const Conf::Ptr &conf)
+void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 {
     Settings::setRecentFile(conf);
     updateRecentFiles();
@@ -161,7 +161,7 @@ void MainWindow::handleOpenRecentFile()
     {
         const auto &recentFileConf = m_actRecentFiles[idx].second;
 
-        Conf::Ptr newFileConf;
+        FileConf::Ptr newFileConf;
         if (!recentFileConf->getConfFileName().empty())
         {
             auto updatedConf = Settings::findConfByTemplateFileName(recentFileConf->getConfFileName());
@@ -171,12 +171,12 @@ void MainWindow::handleOpenRecentFile()
                 return;
             }
 
-            newFileConf = Conf::clone(updatedConf);
+            newFileConf = FileConf::clone(updatedConf);
             newFileConf->setFileName(recentFileConf->getFileName());
         }
         else
         {
-            newFileConf = Conf::clone(recentFileConf);
+            newFileConf = FileConf::clone(recentFileConf);
         }
 
         openFile(newFileConf);
@@ -211,7 +211,7 @@ void MainWindow::updateRecentFiles()
     m_actRecentFilesSep->setVisible(!recentFiles.empty());
 }
 
-int MainWindow::findOpenedFileTab(const Conf::Ptr &conf)
+int MainWindow::findOpenedFileTab(const FileConf::Ptr &conf)
 {
     for (int tabIdx = 0; tabIdx < m_tabViews->count(); ++tabIdx)
     {
@@ -242,12 +242,12 @@ void MainWindow::openFile(tp::FileType type)
 
 void MainWindow::openFile(const QString &fileName, tp::FileType type)
 {
-    auto conf = Conf::make(type);
+    auto conf = FileConf::make(type);
     conf->setFileName(fileName.toStdString());
     openFile(conf);
 }
 
-void MainWindow::openFile(Conf::Ptr conf)
+void MainWindow::openFile(FileConf::Ptr conf)
 {
     if (!conf)
     {

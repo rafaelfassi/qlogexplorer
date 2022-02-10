@@ -2,18 +2,18 @@
 // This file is part of qlogexplorer project licensed under GPL-3.0
 
 #include "pch.h"
-#include "Conf.h"
+#include "FileConf.h"
 
-Conf::Conf(tp::FileType fileType) : m_fileType(fileType)
+FileConf::FileConf(tp::FileType fileType) : m_fileType(fileType)
 {
 }
 
-Conf::Conf(const std::string &confFileName)
+FileConf::FileConf(const std::string &confFileName)
 {
     loadFConf(confFileName);
 }
 
-bool Conf::loadFConf(const std::string &confFileName)
+bool FileConf::loadFConf(const std::string &confFileName)
 {
     std::ifstream ifs(confFileName);
     if (!ifs.is_open())
@@ -71,7 +71,7 @@ bool Conf::loadFConf(const std::string &confFileName)
     return true;
 }
 
-void Conf::saveConfAs(const std::string &confFileName)
+void FileConf::saveConfAs(const std::string &confFileName)
 {
     const auto &jDoc = toJson();
     rapidjson::StringBuffer buffer;
@@ -91,7 +91,7 @@ void Conf::saveConfAs(const std::string &confFileName)
     m_confFileName = confFileName;
 }
 
-void Conf::saveConf()
+void FileConf::saveConf()
 {
     if (m_confFileName.empty())
     {
@@ -101,11 +101,11 @@ void Conf::saveConf()
     saveConfAs(m_confFileName);
 }
 
-void Conf::fromJson(const rapidjson::Document &doc)
+void FileConf::fromJson(const rapidjson::Document &doc)
 {
 }
 
-rapidjson::Document Conf::toJson() const
+rapidjson::Document FileConf::toJson() const
 {
     rapidjson::Document jDoc(rapidjson::kObjectType);
     auto &alloc = jDoc.GetAllocator();
@@ -146,29 +146,29 @@ rapidjson::Document Conf::toJson() const
     return jDoc;
 }
 
-bool Conf::isSameType(const Conf::Ptr &other) const
+bool FileConf::isSameType(const FileConf::Ptr &other) const
 {
     return ((getFileType() == other->getFileType()) && (getConfFileName() == other->getConfFileName()));
 }
 
-bool Conf::isSameFileAndType(const Conf::Ptr &other) const
+bool FileConf::isSameFileAndType(const FileConf::Ptr &other) const
 {
     return (isSameType(other) && (getFileName() == other->getFileName()));
 }
 
-void Conf::copyFrom(const Conf::Ptr &other)
+void FileConf::copyFrom(const FileConf::Ptr &other)
 {
     *this = *other.get();
 }
 
-void Conf::copyTypeFrom(const Conf::Ptr &other)
+void FileConf::copyTypeFrom(const FileConf::Ptr &other)
 {
     m_fileType = other->getFileType();
     m_confFileName = other->getConfFileName();
     m_configName = other->getConfigName();
 }
 
-void Conf::copyFileAndTypeFrom(const Conf::Ptr &other)
+void FileConf::copyFileAndTypeFrom(const FileConf::Ptr &other)
 {
     copyTypeFrom(other);
     setFileName(other->getFileName());

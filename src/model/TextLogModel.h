@@ -10,11 +10,11 @@ class TextLogModel : public BaseLogModel
     Q_OBJECT
 
 public:
-    TextLogModel(Conf::Ptr conf, QObject *parent = 0);
+    TextLogModel(FileConf::Ptr conf, QObject *parent = 0);
     ~TextLogModel();
 
 protected:
-    bool configure(Conf::Ptr conf, std::istream &is) override;
+    bool configure(FileConf::Ptr conf, std::istream &is) override;
     bool parseRow(const std::string &rawText, tp::RowData &rowData) const override;
     tp::UInt parseChunks(
         std::istream &is,

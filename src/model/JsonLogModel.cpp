@@ -14,7 +14,7 @@ std::string toString(const rapidjson::Value &json)
     return buffer.GetString();
 }
 
-JsonLogModel::JsonLogModel(Conf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
+JsonLogModel::JsonLogModel(FileConf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -23,7 +23,7 @@ JsonLogModel::~JsonLogModel()
     stop();
 }
 
-bool JsonLogModel::configure(Conf::Ptr conf, std::istream &is)
+bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
 {
     tp::SInt idx(0);
 
