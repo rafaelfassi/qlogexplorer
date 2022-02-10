@@ -32,6 +32,7 @@ public slots:
     void openFile(Conf *conf);
     void closeTab(int index);
     void confCurrentTab(int index);
+    void goToTab(int index);
     void saveConf();
     void saveConfAs();
     void editRegex();
@@ -43,6 +44,7 @@ private slots:
 
 private:
     void updateRecentFiles();
+    int findOpenedFileTab(const Conf &conf);
 
 private:
     QAction *m_openFile;

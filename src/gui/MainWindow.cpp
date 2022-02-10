@@ -162,6 +162,13 @@ void MainWindow::handleOpenRecentFile()
     {
         const auto &recentFileConf = m_actRecentFiles[idx].second;
 
+        const auto openedFileTabIdx = findOpenedFileTab(recentFileConf);
+        if (openedFileTabIdx != -1)
+        {
+            goToTab(openedFileTabIdx);
+            return;
+        }
+
         Conf *newFileConf(nullptr);
         if (!recentFileConf.getConfFileName().empty())
         {
@@ -213,6 +220,24 @@ void MainWindow::updateRecentFiles()
     m_actRecentFilesSep->setVisible(!recentFiles.empty());
 }
 
+int MainWindow::findOpenedFileTab(const Conf &conf)
+{
+    for (int tabIdx = 0; tabIdx < m_tabViews->count(); ++tabIdx)
+    {
+        LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(tabIdx));
+        if (!tab)
+        {
+            LOG_ERR("Invalid tab at index {}", tabIdx);
+            continue;
+        }
+        const auto &tabConf = tab->getConf();
+        if (tabConf.isSameFileAndType(conf))
+            return tabIdx;
+    }
+
+    return -1;
+}
+
 void MainWindow::openFile(tp::FileType type)
 {
     const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
@@ -233,9 +258,24 @@ void MainWindow::openFile(const QString &fileName, tp::FileType type)
 
 void MainWindow::openFile(Conf *conf)
 {
+    if (conf == nullptr)
+    {
+        LOG_ERR("File conf is null");
+        return;
+    }
+
     QFileInfo fileInfo(conf->getFileName().c_str());
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
+        LOG_ERR("File '{}' doe not exist", conf->getFileName());
+        return;
+    }
+
+    const auto openedFileTabIdx = findOpenedFileTab(*conf);
+    if (openedFileTabIdx != -1)
+    {
+        delete conf;
+        goToTab(openedFileTabIdx);
         return;
     }
 
@@ -243,7 +283,7 @@ void MainWindow::openFile(Conf *conf)
     LogTabWidget *logTabWidget = new LogTabWidget(conf, this);
 
     int newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
-    m_tabViews->setCurrentIndex(newTabIdx);
+    goToTab(newTabIdx);
     setRecentFile(conf);
 }
 
@@ -318,6 +358,15 @@ void MainWindow::confCurrentTab(int index)
     }
 
     m_actEdtRegex->setEnabled(conf.getFileType() == tp::FileType::Text);
+}
+
+void MainWindow::goToTab(int index)
+{
+    if (index >= 0 && index < m_tabViews->count())
+    {
+        m_tabViews->setCurrentIndex(index);
+        confCurrentTab(index);
+    }
 }
 
 void MainWindow::saveConf()

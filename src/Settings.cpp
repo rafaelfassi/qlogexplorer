@@ -99,8 +99,7 @@ std::vector<Conf> Settings::getRecentFiles()
                 LOG_WAR("Template file '{}' not found", templFileName);
                 continue;
             }
-            conf.setConfigName(templCong->getConfigName());
-            conf.setConfFileName(templCong->getConfFileName());
+            conf.copyTypeFrom(*templCong);
         }
 
         conf.setFileName(fileName);
