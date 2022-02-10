@@ -230,5 +230,5 @@ void Settings::setStyle(const QString styleName)
 
 QString Settings::getStyle()
 {
-    return inst().m_settings->value("styleName", "Default").toString();
+    return inst().m_settings->value("styleName", "Dark").toString();
 }
