@@ -14,6 +14,7 @@ class LogTabWidget : public QWidget
     Q_OBJECT
 
 public:
+    // LogTabWidget gets ownership of conf
     LogTabWidget(Conf *conf, QWidget *parent = nullptr);
     ~LogTabWidget();
     void updateColumns();

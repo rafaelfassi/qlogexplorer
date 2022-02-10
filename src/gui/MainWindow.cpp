@@ -39,12 +39,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     createConnections();
 
     loadConfig();
-
-    // openFile("/home/rafael/Dev/QLogViewer/log.json", tp::FileType::Json);
-    // openFile("/home/rafael/Dev/QLogViewer/log.txt", tp::FileType::Text);
-    //  openFile("/home/rafael/Dev/QLogViewer/biglog.txt", FileType::Text);
-    //  openFile("/home/rafael/Dev/QLogViewer/biglog.json", FileType::Text);
-    //  openFile("/home/rafael/Dev/QLogViewer/log.json", FileType::Text);
 }
 
 MainWindow::~MainWindow()
@@ -164,8 +158,26 @@ void MainWindow::handleOpenRecentFile()
     if (idx >= 0 && idx < m_actRecentFiles.size())
     {
         const auto &recentFileConf = m_actRecentFiles[idx].second;
-        Conf *conf = new Conf(recentFileConf);
-        openFile(conf);
+
+        Conf *newFileConf(nullptr);
+        if (!recentFileConf.getConfFileName().empty())
+        {
+            Conf *updatedConf = Settings::findConfByTemplateFileName(recentFileConf.getConfFileName());
+            if (updatedConf == nullptr)
+            {
+                LOG_ERR("Template file '{}' not found", recentFileConf.getConfFileName());
+                return;
+            }
+
+            newFileConf = new Conf(*updatedConf);
+            newFileConf->setFileName(recentFileConf.getFileName());
+        }
+        else
+        {
+            newFileConf = new Conf(recentFileConf);
+        }
+
+        openFile(newFileConf);
     }
 }
 
@@ -213,11 +225,6 @@ void MainWindow::openFile(const QString &fileName, tp::FileType type)
 {
     Conf *conf = new Conf(type);
     conf->setFileName(fileName.toStdString());
-    // if (type == tp::FileType::Text)
-    // {
-    //     //conf->setRegexPattern("^\\[(?<Level>[A-Z])\\]:\\s+(?<Time>\\d{2}-\\d{2}-\\d{4}\\s+\\d{2}:\\d{2}:\\d{2}\\.\\d+)\\s+\\[(?<File>[^\\]]+)\\]:\\s+(?<Message>.*)$");
-    //     //conf->setRegexPattern("^\\[([A-Z])\\]:\\s+(\\d{2}-\\d{2}-\\d{4}\\s+\\d{2}:\\d{2}:\\d{2}\\.\\d+)\\s+\\[([^\\]]+)\\]:\\s+(.*)$");
-    // }
     openFile(conf);
 }
 
@@ -351,7 +358,7 @@ void MainWindow::saveConfAs()
         const auto idx = m_tabViews->currentIndex();
         if (idx >= 0)
         {
-            confCurrentTab(0);
+            confCurrentTab(idx);
         }
     }
 }

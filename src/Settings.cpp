@@ -81,6 +81,13 @@ std::vector<Conf> Settings::getRecentFiles()
         const auto &fileName = recentFileParts[1];
         const auto &templFileName = recentFileParts[2];
 
+        if (!QFile::exists(fileName.c_str()))
+        {
+            // File was deleted.
+            LOG_WAR("File '{}' not found", fileName);
+            continue;
+        }
+
         Conf conf(tp::fromStr<tp::FileType>(fileType));
 
         if (!templFileName.empty())
@@ -89,10 +96,11 @@ std::vector<Conf> Settings::getRecentFiles()
             if (templCong == nullptr)
             {
                 // Template was deleted.
+                LOG_WAR("Template file '{}' not found", templFileName);
                 continue;
             }
-
-            conf = *templCong;
+            conf.setConfigName(templCong->getConfigName());
+            conf.setConfFileName(templCong->getConfFileName());
         }
 
         conf.setFileName(fileName);
@@ -103,20 +111,29 @@ std::vector<Conf> Settings::getRecentFiles()
 
 void Settings::setRecentFile(Conf *conf)
 {
-    QStringList files = inst().m_settings->value("recentFileList").toStringList();
-    const auto &fileType = tp::toStr<tp::FileType>(conf->getFileType());
-    const auto &fileName = conf->getFileName();
-    const auto &templateFileName = conf->getConfFileName();
-
-    const QString recentFile = utl::join({fileType, fileName, templateFileName}, "|").c_str();
-
-    files.removeAll(recentFile);
-    files.prepend(recentFile);
-
-    const auto maxReccentFiles = inst().getMaxRecentFiles();
-    while (files.size() > maxReccentFiles)
+    const auto makeRecentFileStr = [](const Conf &c) -> QString
     {
-        files.removeLast();
+        const auto &fileType = tp::toStr<tp::FileType>(c.getFileType());
+        const auto &fileName = c.getFileName();
+        const auto &templateFileName = c.getConfFileName();
+        return utl::join({fileType, fileName, templateFileName}, "|").c_str();
+    };
+
+    QStringList files;
+    const auto &newRecentFileStr = makeRecentFileStr(*conf);
+    files.append(newRecentFileStr);
+
+    const auto maxReccentFiles = getMaxRecentFiles();
+    const auto &recentFiles = getRecentFiles();
+    for (const auto &recentFileConf : recentFiles)
+    {
+        const auto &recentFileStr = makeRecentFileStr(recentFileConf);
+        if (recentFileStr != newRecentFileStr)
+        {
+            files.append(recentFileStr);
+            if (files.size() >= maxReccentFiles)
+                break;
+        }
     }
 
     inst().m_settings->setValue("recentFileList", files);
@@ -198,7 +215,6 @@ void Settings::saveTemplateAs(Conf *conf, const QString &name)
 
     fileName = templDir.absoluteFilePath(fileName);
     conf->saveConfAs(fileName.toStdString());
-
     confTemplates.push_back(new Conf(*conf));
 }
 

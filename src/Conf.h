@@ -20,6 +20,7 @@ public:
     tp::FileType getFileType() const { return m_fileType; }
     const std::string &getConfigName() const { return m_configName; }
     const std::string &getConfFileName() const { return m_confFileName; }
+    void setConfFileName(const std::string &confFileName) { m_confFileName = confFileName; }
     const std::string &getRegexPattern() const { return m_regexPattern; }
     void setRegexPattern(const std::string &pattern) { m_regexPattern = pattern; }
     bool exists() const { return !m_confFileName.empty(); }

@@ -18,9 +18,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
-LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent)
-    : QWidget(parent),
-      m_model(model)
+LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(parent), m_model(model)
 {
     auto pal = palette();
     pal.setColor(QPalette::Window, Style::getHeaderColor().bg);
@@ -521,7 +519,8 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         {
             // Draw Line Number
             {
-                const auto &lineNumColor = hasBookmark(vrData.row) ? Style::getBookmarkColor() : Style::getHeaderColor();
+                const auto &lineNumColor =
+                    hasBookmark(vrData.row) ? Style::getBookmarkColor() : Style::getHeaderColor();
                 painter.setClipping(false);
                 painter.setPen(lineNumColor.fg);
                 painter.fillRect(vrData.numberAreaRect, lineNumColor.bg);
@@ -596,7 +595,8 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
     rect.translate(-hOffset, 0);
 
     vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
-    vrData.numberRect = QRect(Style::getTextPadding(), yOffset, m_textAreaRect.left() - Style::getTextPadding() * 2, m_rowHeight);
+    vrData.numberRect =
+        QRect(Style::getTextPadding(), yOffset, m_textAreaRect.left() - Style::getTextPadding() * 2, m_rowHeight);
 
     for (const auto &highlighter : m_highlightersRows)
     {
@@ -771,16 +771,16 @@ void LogViewWidget::configureColumns()
         {
             m_header->setVisible(false);
             m_btnExpandColumns->setVisible(false);
-            m_btnFitColumns->setEnabled(false);
+            m_btnFitColumns->setVisible(false);
+            m_vScrollBarLayout->setContentsMargins(0, 0, 0, m_btnFitColumns->height());
             m_textAreaRect.setTop(0);
-            // m_btnFitColumns->setIcon(QIcon());
-            // m_btnFitColumns->setToolTip("");
         }
         else
         {
             m_header->setVisible(true);
             m_btnExpandColumns->setVisible(true);
-            m_btnFitColumns->setEnabled(true);
+            m_btnFitColumns->setVisible(true);
+            m_vScrollBarLayout->setContentsMargins(0, 0, 0, 0);
             m_textAreaRect.setTop(m_header->height());
             adjustColumns(ColumnsFit::Headers);
         }
@@ -817,8 +817,8 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
         for (auto &headerColumn : columnsRef)
         {
             auto &column(headerColumn.get());
-            const tp::SInt textWidth =
-                getTextWidth(rowData[column.idx], true) + Style::getTextPadding() + elideWith + Style::getColumnMargin();
+            const tp::SInt textWidth = getTextWidth(rowData[column.idx], true) + Style::getTextPadding() + elideWith +
+                                       Style::getColumnMargin();
             column.width = std::max<tp::SInt>(column.width, textWidth);
         }
     }
