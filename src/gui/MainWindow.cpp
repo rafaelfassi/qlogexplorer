@@ -11,7 +11,6 @@
 #include "LongScrollBar.h"
 #include "LogSearchWidget.h"
 #include "HeaderView.h"
-#include <QTableView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -135,17 +134,17 @@ void MainWindow::handleOpenWithTemplate()
     auto idx = action->data().toInt();
     if (idx >= 0 && idx < m_actTemplates.size())
     {
-        Conf *conf = m_actTemplates[idx].second;
+        auto conf = m_actTemplates[idx].second;
         const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
         if (fileName.isEmpty())
             return;
-        auto newConf = new Conf(*conf);
+        auto newConf = Conf::clone(conf);
         newConf->setFileName(fileName.toStdString());
         openFile(newConf);
     }
 }
 
-void MainWindow::setRecentFile(Conf *conf)
+void MainWindow::setRecentFile(const Conf::Ptr &conf)
 {
     Settings::setRecentFile(conf);
     updateRecentFiles();
@@ -162,29 +161,22 @@ void MainWindow::handleOpenRecentFile()
     {
         const auto &recentFileConf = m_actRecentFiles[idx].second;
 
-        const auto openedFileTabIdx = findOpenedFileTab(recentFileConf);
-        if (openedFileTabIdx != -1)
+        Conf::Ptr newFileConf;
+        if (!recentFileConf->getConfFileName().empty())
         {
-            goToTab(openedFileTabIdx);
-            return;
-        }
-
-        Conf *newFileConf(nullptr);
-        if (!recentFileConf.getConfFileName().empty())
-        {
-            Conf *updatedConf = Settings::findConfByTemplateFileName(recentFileConf.getConfFileName());
-            if (updatedConf == nullptr)
+            auto updatedConf = Settings::findConfByTemplateFileName(recentFileConf->getConfFileName());
+            if (!updatedConf)
             {
-                LOG_ERR("Template file '{}' not found", recentFileConf.getConfFileName());
+                LOG_ERR("Template file '{}' not found", recentFileConf->getConfFileName());
                 return;
             }
 
-            newFileConf = new Conf(*updatedConf);
-            newFileConf->setFileName(recentFileConf.getFileName());
+            newFileConf = Conf::clone(updatedConf);
+            newFileConf->setFileName(recentFileConf->getFileName());
         }
         else
         {
-            newFileConf = new Conf(recentFileConf);
+            newFileConf = Conf::clone(recentFileConf);
         }
 
         openFile(newFileConf);
@@ -193,8 +185,6 @@ void MainWindow::handleOpenRecentFile()
 
 void MainWindow::updateRecentFiles()
 {
-    const auto &recentFiles = Settings::getRecentFiles();
-
     for (auto &recentFile : m_actRecentFiles)
     {
         delete recentFile.first;
@@ -202,14 +192,15 @@ void MainWindow::updateRecentFiles()
     m_actRecentFiles.clear();
 
     int idx(0);
+    const auto &recentFiles = Settings::getRecentFiles();
     for (const auto &conf : recentFiles)
     {
-        std::string typeStr = conf.getConfigName();
+        std::string typeStr = conf->getConfigName();
         if (typeStr.empty())
         {
-            typeStr = tp::toStr<tp::FileType>(conf.getFileType());
+            typeStr = tp::toStr<tp::FileType>(conf->getFileType());
         }
-        const auto dispName = QString("%1 As [%2]").arg(utl::elideLeft(conf.getFileName(), 60), typeStr.c_str());
+        const auto dispName = QString("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr.c_str());
         auto act = new QAction(dispName, this);
         act->setData(idx++);
         connect(act, &QAction::triggered, this, &MainWindow::handleOpenRecentFile);
@@ -220,7 +211,7 @@ void MainWindow::updateRecentFiles()
     m_actRecentFilesSep->setVisible(!recentFiles.empty());
 }
 
-int MainWindow::findOpenedFileTab(const Conf &conf)
+int MainWindow::findOpenedFileTab(const Conf::Ptr &conf)
 {
     for (int tabIdx = 0; tabIdx < m_tabViews->count(); ++tabIdx)
     {
@@ -230,8 +221,8 @@ int MainWindow::findOpenedFileTab(const Conf &conf)
             LOG_ERR("Invalid tab at index {}", tabIdx);
             continue;
         }
-        const auto &tabConf = tab->getConf();
-        if (tabConf.isSameFileAndType(conf))
+        const auto tabConf = tab->getConf();
+        if (tabConf->isSameFileAndType(conf))
             return tabIdx;
     }
 
@@ -251,14 +242,14 @@ void MainWindow::openFile(tp::FileType type)
 
 void MainWindow::openFile(const QString &fileName, tp::FileType type)
 {
-    Conf *conf = new Conf(type);
+    auto conf = Conf::make(type);
     conf->setFileName(fileName.toStdString());
     openFile(conf);
 }
 
-void MainWindow::openFile(Conf *conf)
+void MainWindow::openFile(Conf::Ptr conf)
 {
-    if (conf == nullptr)
+    if (!conf)
     {
         LOG_ERR("File conf is null");
         return;
@@ -271,10 +262,9 @@ void MainWindow::openFile(Conf *conf)
         return;
     }
 
-    const auto openedFileTabIdx = findOpenedFileTab(*conf);
+    const auto openedFileTabIdx = findOpenedFileTab(conf);
     if (openedFileTabIdx != -1)
     {
-        delete conf;
         goToTab(openedFileTabIdx);
         return;
     }
@@ -302,12 +292,12 @@ void MainWindow::editRegex()
         tr("Regular Expression"),
         tr("Pattern:"),
         QLineEdit::Normal,
-        tab->getConf().getRegexPattern().c_str(),
+        tab->getConf()->getRegexPattern().c_str(),
         &ok);
 
     if (ok)
     {
-        tab->getConf().setRegexPattern(rxPattern.toStdString());
+        tab->getConf()->setRegexPattern(rxPattern.toStdString());
         tab->updateColumns();
     }
 }
@@ -342,13 +332,13 @@ void MainWindow::confCurrentTab(int index)
         return;
     }
 
-    Conf &conf = tab->getConf();
+    auto conf = tab->getConf();
     m_actSaveConf->setVisible(true);
-    if (conf.exists())
+    if (conf->exists())
     {
-        m_actSaveConf->setText(QString("Save [%1]").arg(conf.getConfigName().c_str()));
+        m_actSaveConf->setText(QString("Save [%1]").arg(conf->getConfigName().c_str()));
         m_actSaveConfAs->setVisible(true);
-        m_actSaveConfAs->setText(QString("Save [%1] As...").arg(conf.getConfigName().c_str()));
+        m_actSaveConfAs->setText(QString("Save [%1] As...").arg(conf->getConfigName().c_str()));
     }
     else
     {
@@ -357,7 +347,7 @@ void MainWindow::confCurrentTab(int index)
         m_actSaveConfAs->setText("Save Configuration As...");
     }
 
-    m_actEdtRegex->setEnabled(conf.getFileType() == tp::FileType::Text);
+    m_actEdtRegex->setEnabled(conf->getFileType() == tp::FileType::Text);
 }
 
 void MainWindow::goToTab(int index)
@@ -378,10 +368,10 @@ void MainWindow::saveConf()
         return;
     }
 
-    auto &conf = tab->getConf();
-    if (conf.exists())
+    auto conf = tab->getConf();
+    if (conf->exists())
     {
-        Settings::saveTemplate(&conf);
+        Settings::saveTemplate(conf);
     }
     else
     {
@@ -398,15 +388,15 @@ void MainWindow::saveConfAs()
         return;
     }
 
-    auto &conf = tab->getConf();
+    auto conf = tab->getConf();
     bool ok;
     QString confName =
         QInputDialog::getText(this, tr("Save template"), tr("Template name:"), QLineEdit::Normal, QString(), &ok);
     if (ok && !confName.isEmpty())
     {
-        Settings::saveTemplateAs(&conf, confName);
+        Settings::saveTemplateAs(conf, confName);
         updateTemplates();
-        setRecentFile(&conf);
+        setRecentFile(conf);
         const auto idx = m_tabViews->currentIndex();
         if (idx >= 0)
         {

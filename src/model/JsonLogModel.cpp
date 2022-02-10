@@ -14,7 +14,7 @@ std::string toString(const rapidjson::Value &json)
     return buffer.GetString();
 }
 
-JsonLogModel::JsonLogModel(Conf &conf, QObject *parent) : BaseLogModel(conf, parent)
+JsonLogModel::JsonLogModel(Conf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -23,11 +23,11 @@ JsonLogModel::~JsonLogModel()
     stop();
 }
 
-bool JsonLogModel::configure(Conf &conf, std::istream &is)
+bool JsonLogModel::configure(Conf::Ptr conf, std::istream &is)
 {
     tp::SInt idx(0);
 
-    if (conf.getColumns().empty())
+    if (conf->getColumns().empty())
     {
         rapidjson::IStreamWrapper isw(is);
         rapidjson::Document d;
@@ -63,19 +63,19 @@ bool JsonLogModel::configure(Conf &conf, std::istream &is)
                 cl.idx = idx++;
                 cl.pos = cl.idx;
                 cl.width = -1;
-                conf.addColumn(std::move(cl));
+                conf->addColumn(std::move(cl));
             }
         }
     }
     else
     {
-        for (auto& col : conf.getColumns())
+        for (auto& col : conf->getColumns())
         {
             col.idx = idx++;
         }
     }
 
-    return !conf.getColumns().empty();
+    return !conf->getColumns().empty();
 }
 
 bool JsonLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const

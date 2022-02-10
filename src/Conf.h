@@ -6,6 +6,11 @@
 class Conf
 {
 public:
+    using Ptr = std::shared_ptr<Conf>;
+    static Ptr make(tp::FileType fileType = tp::FileType::None) { return std::make_shared<Conf>(fileType); }
+    static Ptr make(const std::string &confFileName) { return std::make_shared<Conf>(confFileName); }
+    static Ptr clone(const Ptr &conf) { return std::make_shared<Conf>(*conf.get()); }
+
     Conf(tp::FileType fileType = tp::FileType::None);
     Conf(const std::string &confFileName);
     bool loadFConf(const std::string &confFileName);
@@ -29,10 +34,11 @@ public:
     void addColumn(tp::Column &&column) { m_columns.emplace_back(column); }
     tp::HighlighterParams &getHighlighterParams() { return m_highlighterParams; }
 
-    bool isSameType(const Conf &other) const;
-    bool isSameFileAndType(const Conf &other) const;
-    void copyTypeFrom(const Conf &other);
-    void copyFileAndTypeFrom(const Conf &other);
+    bool isSameType(const Conf::Ptr &other) const;
+    bool isSameFileAndType(const Conf::Ptr &other) const;
+    void copyFrom(const Conf::Ptr &other);
+    void copyTypeFrom(const Conf::Ptr &other);
+    void copyFileAndTypeFrom(const Conf::Ptr &other);
 
 private:
     tp::FileType m_fileType;

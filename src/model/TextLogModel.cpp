@@ -6,7 +6,7 @@
 
 constexpr tp::UInt g_maxChunksPerParse(500);
 
-TextLogModel::TextLogModel(Conf &conf, QObject *parent) : BaseLogModel(conf, parent)
+TextLogModel::TextLogModel(Conf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
 
@@ -15,13 +15,13 @@ TextLogModel::~TextLogModel()
     stop();
 }
 
-bool TextLogModel::configure(Conf &conf, std::istream &is)
+bool TextLogModel::configure(Conf::Ptr conf, std::istream &is)
 {
-    if (conf.getRegexPattern().empty())
+    if (conf->getRegexPattern().empty())
     {
-        if (conf.getColumns().empty())
+        if (conf->getColumns().empty())
         {
-            conf.addColumn(tp::Column(0));
+            conf->addColumn(tp::Column(0));
         }
         if (m_rx.isValid())
         {
@@ -30,13 +30,13 @@ bool TextLogModel::configure(Conf &conf, std::istream &is)
     }
     else
     {
-        m_rx.setPattern(conf.getRegexPattern().c_str());
+        m_rx.setPattern(conf->getRegexPattern().c_str());
         if (!m_rx.isValid())
         {
-            LOG_ERR("Invalid regex pattern: '{}'", conf.getRegexPattern());
+            LOG_ERR("Invalid regex pattern: '{}'", conf->getRegexPattern());
         }
 
-        if (conf.getColumns().empty())
+        if (conf->getColumns().empty())
         {
             const auto groupsCount = m_rx.captureCount();
             const auto &namedGroups = m_rx.namedCaptureGroups();
@@ -59,20 +59,20 @@ bool TextLogModel::configure(Conf &conf, std::istream &is)
                 cl.idx = g - 1;
                 cl.pos = cl.idx;
                 cl.width = -1;
-                conf.addColumn(std::move(cl));
+                conf->addColumn(std::move(cl));
             }
         }
         else
         {
             tp::SInt idx(0);
-            for (auto& col : conf.getColumns())
+            for (auto& col : conf->getColumns())
             {
                 col.idx = idx++;
             }
         }
     }
 
-    return !conf.getColumns().empty();
+    return !conf->getColumns().empty();
 }
 
 bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const

@@ -146,25 +146,30 @@ rapidjson::Document Conf::toJson() const
     return jDoc;
 }
 
-bool Conf::isSameType(const Conf &other) const
+bool Conf::isSameType(const Conf::Ptr &other) const
 {
-    return ((getFileType() == other.getFileType()) && (getConfFileName() == other.getConfFileName()));
+    return ((getFileType() == other->getFileType()) && (getConfFileName() == other->getConfFileName()));
 }
 
-bool Conf::isSameFileAndType(const Conf &other) const
+bool Conf::isSameFileAndType(const Conf::Ptr &other) const
 {
-    return (isSameType(other) && (getFileName() == other.getFileName()));
+    return (isSameType(other) && (getFileName() == other->getFileName()));
 }
 
-void Conf::copyTypeFrom(const Conf &other)
+void Conf::copyFrom(const Conf::Ptr &other)
 {
-    m_fileType = other.getFileType();
-    m_confFileName = other.getConfFileName();
-    m_configName = other.getConfigName();
+    *this = *other.get();
 }
 
-void Conf::copyFileAndTypeFrom(const Conf &other)
+void Conf::copyTypeFrom(const Conf::Ptr &other)
+{
+    m_fileType = other->getFileType();
+    m_confFileName = other->getConfFileName();
+    m_configName = other->getConfigName();
+}
+
+void Conf::copyFileAndTypeFrom(const Conf::Ptr &other)
 {
     copyTypeFrom(other);
-    setFileName(other.getFileName());
+    setFileName(other->getFileName());
 }

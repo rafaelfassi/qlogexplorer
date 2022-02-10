@@ -17,14 +17,14 @@ public:
     static QDir getSettingsDir(const QString &subDir = {});
 
     static tp::SInt getMaxRecentFiles();
-    static std::vector<Conf> getRecentFiles();
-    static void setRecentFile(Conf *conf);
+    static std::vector<Conf::Ptr> getRecentFiles();
+    static void setRecentFile(const Conf::Ptr &conf);
 
-    static Conf *findConfByTemplateFileName(const std::string &templateFileName);
+    static Conf::Ptr findConfByTemplateFileName(const std::string &templateFileName);
     static void loadTemplates();
-    static void saveTemplate(Conf *conf);
-    static void saveTemplateAs(Conf *conf, const QString &name);
-    static std::vector<Conf *> getTemplates();
+    static void saveTemplate(Conf::Ptr conf);
+    static void saveTemplateAs(Conf::Ptr conf, const QString &name);
+    static std::vector<Conf::Ptr> getTemplates();
 
     static void setStyle(const QString styleName);
     static QString getStyle();
@@ -37,5 +37,5 @@ private:
     QDir m_settingsDir;
     QDir m_templatesDir;
     QSettings *m_settings;
-    std::vector<Conf *> m_templates;
+    std::vector<Conf::Ptr> m_templates;
 };

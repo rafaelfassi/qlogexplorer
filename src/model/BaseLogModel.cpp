@@ -4,10 +4,10 @@
 #include "pch.h"
 #include "BaseLogModel.h"
 
-BaseLogModel::BaseLogModel(Conf &conf, QObject *parent)
+BaseLogModel::BaseLogModel(Conf::Ptr conf, QObject *parent)
     : AbstractModel(parent),
       m_conf(conf),
-      m_fileName(conf.getFileName()),
+      m_fileName(conf->getFileName()),
       m_ifs(m_fileName, std::ifstream::in | std::ifstream::binary)
 {
 }
@@ -58,12 +58,12 @@ tp::SInt BaseLogModel::getRow(tp::SInt row, tp::RowData &rowData) const
 
 tp::Columns &BaseLogModel::getColumns()
 {
-    return m_conf.getColumns();
+    return m_conf->getColumns();
 }
 
 const tp::Columns &BaseLogModel::getColumns() const
 {
-    return m_conf.getColumns();
+    return m_conf->getColumns();
 }
 
 void BaseLogModel::startSearch(const tp::SearchParams &params, bool orOp)
@@ -174,7 +174,7 @@ void BaseLogModel::tryConfigure()
 
 tp::UInt BaseLogModel::columnCount() const
 {
-    return m_conf.getColumns().size();
+    return m_conf->getColumns().size();
 }
 
 tp::UInt BaseLogModel::rowCount() const

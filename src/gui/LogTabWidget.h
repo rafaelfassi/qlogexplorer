@@ -15,10 +15,10 @@ class LogTabWidget : public QWidget
 
 public:
     // LogTabWidget gets ownership of conf
-    LogTabWidget(Conf *conf, QWidget *parent = nullptr);
+    LogTabWidget(Conf::Ptr conf, QWidget *parent = nullptr);
     ~LogTabWidget();
     void updateColumns();
-    Conf &getConf();
+    Conf::Ptr getConf();
 
 protected:
     void createActions();
@@ -30,5 +30,5 @@ private:
     BaseLogModel *m_logModel;
     LogViewWidget *m_logViewWidget;
     LogSearchWidget *m_logSearchWidget;
-    Conf *m_conf;
+    Conf::Ptr m_conf;
 };

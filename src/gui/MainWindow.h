@@ -4,13 +4,10 @@
 #pragma once
 
 #include <QMainWindow>
-#include "Settings.h"
 
 class QMenu;
 class QAction;
 class QTabWidget;
-class QSettings;
-class LogTabWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -29,14 +26,14 @@ public:
 public slots:
     void openFile(tp::FileType type);
     void openFile(const QString &fileName, tp::FileType type);
-    void openFile(Conf *conf);
+    void openFile(Conf::Ptr conf);
     void closeTab(int index);
     void confCurrentTab(int index);
     void goToTab(int index);
     void saveConf();
     void saveConfAs();
     void editRegex();
-    void setRecentFile(Conf *conf);
+    void setRecentFile(const Conf::Ptr &conf);
 
 private slots:
     void handleOpenWithTemplate();
@@ -44,7 +41,7 @@ private slots:
 
 private:
     void updateRecentFiles();
-    int findOpenedFileTab(const Conf &conf);
+    int findOpenedFileTab(const Conf::Ptr &conf);
 
 private:
     QAction *m_openFile;
@@ -57,7 +54,7 @@ private:
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
-    std::vector<std::pair<QAction *, Conf>> m_actRecentFiles;
-    std::vector<std::pair<QAction *, Conf *>> m_actTemplates;
     QTabWidget *m_tabViews;
+    std::vector<std::pair<QAction *, Conf::Ptr>> m_actRecentFiles;
+    std::vector<std::pair<QAction *, Conf::Ptr>> m_actTemplates;
 };

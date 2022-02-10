@@ -20,21 +20,27 @@
 #include <QSplitter>
 
 
-LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_conf(conf)
+LogTabWidget::LogTabWidget(Conf::Ptr conf, QWidget *parent) : QWidget(parent), m_conf(conf)
 {
+    if (!conf)
+    {
+        LOG_ERR("File conf is null");
+        return;
+    }
+
     createActions();
 
     switch (conf->getFileType())
     {
         case tp::FileType::Text:
-            m_logModel = new TextLogModel(*conf, this);
+            m_logModel = new TextLogModel(conf, this);
             break;
         case tp::FileType::Json:
-            m_logModel = new JsonLogModel(*conf, this);
+            m_logModel = new JsonLogModel(conf, this);
             break;
         default:
             LOG_ERR("Invalid FileType {}", tp::toInt(conf->getFileType()));
-            m_logModel = new TextLogModel(*conf, this);
+            m_logModel = new TextLogModel(conf, this);
     }
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);
@@ -63,7 +69,6 @@ LogTabWidget::LogTabWidget(Conf *conf, QWidget *parent) : QWidget(parent), m_con
 
 LogTabWidget::~LogTabWidget()
 {
-    delete m_conf;
 }
 
 void LogTabWidget::createActions()
@@ -82,7 +87,7 @@ void LogTabWidget::updateColumns()
     m_logModel->reconfigure();
 }
 
-Conf &LogTabWidget::getConf()
+Conf::Ptr LogTabWidget::getConf()
 {
-    return *m_conf;
+    return m_conf;
 }

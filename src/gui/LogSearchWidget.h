@@ -20,7 +20,7 @@ class LogSearchWidget : public QWidget
 public:
     LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
     ~LogSearchWidget();
-    void configure(Conf *conf);
+    void configure(Conf::Ptr conf);
 
 private:
     void createActions();

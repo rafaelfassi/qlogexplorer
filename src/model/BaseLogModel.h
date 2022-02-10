@@ -80,7 +80,7 @@ class BaseLogModel : public AbstractModel
     Q_OBJECT
 
 public:
-    BaseLogModel(Conf &conf, QObject *parent = 0);
+    BaseLogModel(Conf::Ptr conf, QObject *parent = 0);
     virtual ~BaseLogModel();
     const std::string &getFileName() const;
     tp::SInt getRow(tp::SInt row, tp::RowData &rowData) const override final;
@@ -106,7 +106,7 @@ public slots:
     void setFollowing(bool following);
 
 protected:
-    virtual bool configure(Conf &conf, std::istream &is) = 0;
+    virtual bool configure(Conf::Ptr conf, std::istream &is) = 0;
     virtual bool parseRow(const std::string &rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
@@ -131,7 +131,7 @@ private:
     WatchingResult watchFile();
     void search();
     void tryConfigure();
-    Conf &m_conf;
+    Conf::Ptr m_conf;
     std::string m_fileName;
     mutable std::ifstream m_ifs;
     mutable std::mutex m_ifsMutex;

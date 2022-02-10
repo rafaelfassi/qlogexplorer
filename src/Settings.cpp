@@ -70,9 +70,9 @@ tp::SInt Settings::getMaxRecentFiles()
     return inst().m_settings->value("maxRecentFiles", 10).toInt();
 }
 
-std::vector<Conf> Settings::getRecentFiles()
+std::vector<Conf::Ptr> Settings::getRecentFiles()
 {
-    std::vector<Conf> recentFiles;
+    std::vector<Conf::Ptr> recentFiles;
     const auto files = inst().m_settings->value("recentFileList").toStringList();
     for (const auto &file : files)
     {
@@ -88,38 +88,38 @@ std::vector<Conf> Settings::getRecentFiles()
             continue;
         }
 
-        Conf conf(tp::fromStr<tp::FileType>(fileType));
+        Conf::Ptr conf = Conf::make(tp::fromStr<tp::FileType>(fileType));
 
         if (!templFileName.empty())
         {
             const auto templCong = Settings::findConfByTemplateFileName(templFileName);
-            if (templCong == nullptr)
+            if (!templCong)
             {
                 // Template was deleted.
                 LOG_WAR("Template file '{}' not found", templFileName);
                 continue;
             }
-            conf.copyTypeFrom(*templCong);
+            conf->copyTypeFrom(templCong);
         }
 
-        conf.setFileName(fileName);
+        conf->setFileName(fileName);
         recentFiles.emplace_back(conf);
     }
     return recentFiles;
 }
 
-void Settings::setRecentFile(Conf *conf)
+void Settings::setRecentFile(const Conf::Ptr &conf)
 {
-    const auto makeRecentFileStr = [](const Conf &c) -> QString
+    const auto makeRecentFileStr = [](const Conf::Ptr &c) -> QString
     {
-        const auto &fileType = tp::toStr<tp::FileType>(c.getFileType());
-        const auto &fileName = c.getFileName();
-        const auto &templateFileName = c.getConfFileName();
+        const auto &fileType = tp::toStr<tp::FileType>(c->getFileType());
+        const auto &fileName = c->getFileName();
+        const auto &templateFileName = c->getConfFileName();
         return utl::join({fileType, fileName, templateFileName}, "|").c_str();
     };
 
     QStringList files;
-    const auto &newRecentFileStr = makeRecentFileStr(*conf);
+    const auto &newRecentFileStr = makeRecentFileStr(conf);
     files.append(newRecentFileStr);
 
     const auto maxReccentFiles = getMaxRecentFiles();
@@ -138,19 +138,20 @@ void Settings::setRecentFile(Conf *conf)
     inst().m_settings->setValue("recentFileList", files);
 }
 
-Conf *Settings::findConfByTemplateFileName(const std::string &templateFileName)
+Conf::Ptr Settings::findConfByTemplateFileName(const std::string &templateFileName)
 {
     const auto &templates(inst().m_templates);
 
     const auto it = std::find_if(
         templates.begin(),
         templates.end(),
-        [&templateFileName](const Conf *conf) { return (conf->getConfFileName() == templateFileName); });
+        [&templateFileName](const Conf::Ptr &conf) { return (conf->getConfFileName() == templateFileName); });
 
     if (it != templates.end())
     {
         return *it;
     }
+
     return nullptr;
 }
 
@@ -159,10 +160,6 @@ void Settings::loadTemplates()
     const auto &templDir(inst().m_templatesDir);
     auto &confTemplates(inst().m_templates);
 
-    for (auto conf : confTemplates)
-    {
-        delete conf;
-    }
     confTemplates.clear();
 
     const auto &templateFiles = templDir.entryList(QDir::Files | QDir::Readable);
@@ -170,27 +167,26 @@ void Settings::loadTemplates()
     {
         const auto &templFileName = templDir.absoluteFilePath(templ).toStdString();
         // Ensures no duplicated template
-        if (findConfByTemplateFileName(templFileName) == nullptr)
+        if (!findConfByTemplateFileName(templFileName))
         {
-            Conf *conf = new Conf(templFileName);
-            confTemplates.push_back(conf);
+            confTemplates.push_back(Conf::make(templFileName));
         }
     }
 }
 
-void Settings::saveTemplate(Conf *conf)
+void Settings::saveTemplate(Conf::Ptr conf)
 {
     conf->saveConf();
     auto templConf = findConfByTemplateFileName(conf->getConfFileName());
-    if (templConf == nullptr)
+    if (!templConf)
     {
         LOG_ERR("Template {} not found", conf->getFileName());
         return;
     }
-    *templConf = *conf;
+    templConf->copyFrom(conf);
 }
 
-void Settings::saveTemplateAs(Conf *conf, const QString &name)
+void Settings::saveTemplateAs(Conf::Ptr conf, const QString &name)
 {
     const auto &templDir(inst().m_templatesDir);
     auto &confTemplates(inst().m_templates);
@@ -214,10 +210,10 @@ void Settings::saveTemplateAs(Conf *conf, const QString &name)
 
     fileName = templDir.absoluteFilePath(fileName);
     conf->saveConfAs(fileName.toStdString());
-    confTemplates.push_back(new Conf(*conf));
+    confTemplates.push_back(Conf::clone(conf));
 }
 
-std::vector<Conf *> Settings::getTemplates()
+std::vector<Conf::Ptr> Settings::getTemplates()
 {
     return inst().m_templates;
 }
