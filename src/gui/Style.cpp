@@ -294,6 +294,13 @@ void Style::loadStyle(const QString &styleName)
     qApp->setFont(getFont());
 }
 
+QIcon Style::makeIcon(const QColor &color, int w, int h)
+{
+    QPixmap pixmap(w, h);
+    pixmap.fill(color);
+    return QIcon(pixmap);
+}
+
 const QFont &Style::getFont()
 {
     return Settings::getFont();

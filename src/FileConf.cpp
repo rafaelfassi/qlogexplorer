@@ -32,39 +32,7 @@ bool FileConf::loadFConf(const std::string &confFileName)
         return false;
     }
 
-    m_configName = utl::GetValueOpt<std::string>(d, "configName").value_or(std::string());
-    m_fileType = utl::GetValueOpt<tp::FileType>(d, "fileType").value_or(tp::FileType::Text);
-    m_regexPattern = utl::GetValueOpt<std::string>(d, "regexPattern").value_or(std::string());
-
-    if (const auto &colsIt = d.FindMember("columns"); colsIt != d.MemberEnd())
-    {
-        for (const auto &col : colsIt->value.GetArray())
-        {
-            tp::Column column;
-            column.key = utl::GetValueOpt<std::string>(col, "key").value_or(std::string());
-            column.name = utl::GetValueOpt<std::string>(col, "name").value_or(std::string());
-            column.type = utl::GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
-            column.format = utl::GetValueOpt<std::string>(col, "format").value_or(std::string());
-            column.width = utl::GetValueOpt<tp::SInt>(col, "width").value_or(-1L);
-            column.pos = utl::GetValueOpt<tp::SInt>(col, "pos").value_or(-1L);
-            m_columns.emplace_back(std::move(column));
-        }
-    }
-
-    if (const auto &highsIt = d.FindMember("highlighters"); highsIt != d.MemberEnd())
-    {
-        for (const auto &h : highsIt->value.GetArray())
-        {
-            tp::HighlighterParam hParam;
-            hParam.searchParam.column = utl::GetValueOpt<tp::UInt>(h, "column");
-            hParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(h, "type").value_or(tp::SearchType::SubString);
-            hParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(h, "options").value_or(tp::SearchFlags());
-            hParam.searchParam.pattern = utl::GetValueOpt<std::string>(h, "pattern").value_or(std::string());
-            hParam.color.bg = utl::GetValueOpt<std::string>(h, "backColor").value_or("White").c_str();
-            hParam.color.fg = utl::GetValueOpt<std::string>(h, "textColor").value_or("Black").c_str();
-            m_highlighterParams.emplace_back(std::move(hParam));
-        }
-    }
+    fromJson(d);
 
     m_confFileName = confFileName;
 
@@ -101,8 +69,42 @@ void FileConf::saveConf()
     saveConfAs(m_confFileName);
 }
 
-void FileConf::fromJson(const rapidjson::Document &doc)
+void FileConf::fromJson(const rapidjson::Document &jDoc)
 {
+    m_configName = utl::GetValueOpt<std::string>(jDoc, "configName").value_or(std::string());
+    m_fileType = utl::GetValueOpt<tp::FileType>(jDoc, "fileType").value_or(tp::FileType::Text);
+    m_regexPattern = utl::GetValueOpt<std::string>(jDoc, "regexPattern").value_or(std::string());
+    m_noMatchColumn = utl::GetValueOpt<tp::SInt>(jDoc, "noMatchColumn").value_or(0);
+
+    if (const auto &colsIt = jDoc.FindMember("columns"); colsIt != jDoc.MemberEnd())
+    {
+        for (const auto &col : colsIt->value.GetArray())
+        {
+            tp::Column column;
+            column.key = utl::GetValueOpt<std::string>(col, "key").value_or(std::string());
+            column.name = utl::GetValueOpt<std::string>(col, "name").value_or(std::string());
+            column.type = utl::GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
+            column.format = utl::GetValueOpt<std::string>(col, "format").value_or(std::string());
+            column.width = utl::GetValueOpt<tp::SInt>(col, "width").value_or(-1L);
+            column.pos = utl::GetValueOpt<tp::SInt>(col, "pos").value_or(-1L);
+            m_columns.emplace_back(std::move(column));
+        }
+    }
+
+    if (const auto &hltIt = jDoc.FindMember("highlighters"); hltIt != jDoc.MemberEnd())
+    {
+        for (const auto &hlt : hltIt->value.GetArray())
+        {
+            tp::HighlighterParam hParam;
+            hParam.searchParam.column = utl::GetValueOpt<tp::UInt>(hlt, "column");
+            hParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(hlt, "type").value_or(tp::SearchType::SubString);
+            hParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(hlt, "options").value_or(tp::SearchFlags());
+            hParam.searchParam.pattern = utl::GetValueOpt<std::string>(hlt, "pattern").value_or(std::string());
+            hParam.color.bg = utl::GetValueOpt<std::string>(hlt, "backColor").value_or("White").c_str();
+            hParam.color.fg = utl::GetValueOpt<std::string>(hlt, "textColor").value_or("Black").c_str();
+            m_highlighterParams.emplace_back(std::move(hParam));
+        }
+    }
 }
 
 rapidjson::Document FileConf::toJson() const
@@ -113,37 +115,43 @@ rapidjson::Document FileConf::toJson() const
     jDoc.AddMember("configName", m_configName, alloc);
     jDoc.AddMember("fileType", tp::toStr(m_fileType), alloc);
     jDoc.AddMember("regexPattern", m_regexPattern, alloc);
+    jDoc.AddMember("noMatchColumn", m_noMatchColumn, alloc);
 
     rapidjson::Value jCols(rapidjson::kArrayType);
-    for (const auto &column : m_columns)
+    for (const auto &col : m_columns)
     {
         rapidjson::Value jCol(rapidjson::kObjectType);
-        jCol.AddMember("pos", column.pos, alloc);
-        jCol.AddMember("key", column.key, alloc);
-        jCol.AddMember("name", column.name, alloc);
-        jCol.AddMember("type", tp::toStr(column.type), alloc);
-        jCol.AddMember("format", column.format, alloc);
-        jCol.AddMember("width", column.width, alloc);
+        jCol.AddMember("pos", col.pos, alloc);
+        jCol.AddMember("key", col.key, alloc);
+        jCol.AddMember("name", col.name, alloc);
+        jCol.AddMember("type", tp::toStr(col.type), alloc);
+        jCol.AddMember("format", col.format, alloc);
+        jCol.AddMember("width", col.width, alloc);
         jCols.GetArray().PushBack(jCol, alloc);
     }
     jDoc.AddMember("columns", jCols, alloc);
 
     rapidjson::Value jHighlighters(rapidjson::kArrayType);
-    for (const auto &hParam : m_highlighterParams)
+    for (const auto &hlt : m_highlighterParams)
     {
-        rapidjson::Value jHigh(rapidjson::kObjectType);
-        jHigh.AddMember("textColor", utl::toStr(hParam.color.fg), alloc);
-        jHigh.AddMember("backColor", utl::toStr(hParam.color.bg), alloc);
-        jHigh.AddMember("type", tp::toStr(hParam.searchParam.type), alloc);
-        jHigh.AddMember("options", tp::toStr(hParam.searchParam.flags), alloc);
-        jHigh.AddMember("pattern", hParam.searchParam.pattern, alloc);
-        if (hParam.searchParam.column.has_value())
-            jHigh.AddMember("column", hParam.searchParam.column.value().idx, alloc);
-        jHighlighters.GetArray().PushBack(jHigh, alloc);
+        rapidjson::Value jHlt(rapidjson::kObjectType);
+        jHlt.AddMember("textColor", utl::toStr(hlt.color.fg), alloc);
+        jHlt.AddMember("backColor", utl::toStr(hlt.color.bg), alloc);
+        jHlt.AddMember("type", tp::toStr(hlt.searchParam.type), alloc);
+        jHlt.AddMember("options", tp::toStr(hlt.searchParam.flags), alloc);
+        jHlt.AddMember("pattern", hlt.searchParam.pattern, alloc);
+        if (hlt.searchParam.column.has_value())
+            jHlt.AddMember("column", hlt.searchParam.column.value().idx, alloc);
+        jHighlighters.GetArray().PushBack(jHlt, alloc);
     }
     jDoc.AddMember("highlighters", jHighlighters, alloc);
 
     return jDoc;
+}
+
+bool FileConf::isEqual(const FileConf::Ptr &other) const
+{
+    return (*this == *other.get());
 }
 
 bool FileConf::isSameType(const FileConf::Ptr &other) const

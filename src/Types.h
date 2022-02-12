@@ -27,6 +27,7 @@ public:
     void reset() noexcept { m_bits.reset(); }
     bool none() const noexcept { return m_bits.none(); }
     bool has(EnumT e) const { return m_bits.test(underlying(e)); }
+    bool operator==(const Flags<EnumT> &other) const { return (m_bits == other.m_bits); }
 
 private:
     static constexpr UnderlyingTp underlying(EnumT e) { return static_cast<UnderlyingTp>(e); }
@@ -96,6 +97,11 @@ struct Column
     ColumnType type = ColumnType::Str;
     SInt width = -1;
 };
+inline bool operator==(const Column &lhs, const Column &rhs)
+{
+    return (lhs.idx == rhs.idx) && (lhs.pos == rhs.pos) && (lhs.key == rhs.key) && (lhs.name == rhs.name) &&
+           (lhs.format == rhs.format) && (lhs.type == rhs.type) && (lhs.width == rhs.width);
+}
 using Columns = std::vector<Column>;
 using ColumnsRef = std::vector<std::reference_wrapper<Column>>;
 
@@ -106,6 +112,15 @@ struct SearchParam
     std::string pattern;
     std::optional<Column> column;
 };
+inline bool operator==(const SearchParam &lhs, const SearchParam &rhs)
+{
+    return (lhs.type == rhs.type) && (lhs.flags == rhs.flags) && (lhs.pattern == rhs.pattern) &&
+           (lhs.column == rhs.column);
+}
+inline bool operator!=(const SearchParam &lhs, const SearchParam &rhs)
+{
+    return !(lhs == rhs);
+}
 using SearchParams = std::vector<SearchParam>;
 
 struct SectionColor
@@ -115,6 +130,10 @@ struct SectionColor
     QColor fg;
     QColor bg;
 };
+inline bool operator==(const SectionColor &lhs, const SectionColor &rhs)
+{
+    return (lhs.fg == rhs.fg) && (lhs.bg == rhs.bg);
+}
 
 struct TextCan
 {
@@ -138,6 +157,10 @@ struct HighlighterParam
     SearchParam searchParam;
     SectionColor color;
 };
+inline bool operator==(const HighlighterParam &lhs, const HighlighterParam &rhs)
+{
+    return (lhs.searchParam == rhs.searchParam) && (lhs.color == rhs.color);
+}
 using HighlighterParams = std::vector<HighlighterParam>;
 
 template <typename T> std::string toStr(const T &type)
@@ -154,9 +177,20 @@ template <typename T> T fromStr(const std::string &str)
     return type;
 }
 
-template <typename T> SInt toInt(const T &type)
+template <typename T> SInt toSInt(const T &type)
 {
     return static_cast<SInt>(type);
+}
+
+template <typename T> int toInt(const T &type)
+{
+    return static_cast<int>(type);
+}
+
+template <typename T> T fromInt(SInt typeInt)
+{
+    const auto &typeStr(toStr<T>(static_cast<T>(typeInt)));
+    return fromStr<T>(typeStr);
 }
 
 } // namespace tp

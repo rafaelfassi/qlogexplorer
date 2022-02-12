@@ -19,7 +19,6 @@
 #include <QToolButton>
 #include <QSplitter>
 
-
 LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent), m_conf(conf)
 {
     if (!conf)
@@ -39,7 +38,7 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
             m_logModel = new JsonLogModel(conf, this);
             break;
         default:
-            LOG_ERR("Invalid FileType {}", tp::toInt(conf->getFileType()));
+            LOG_ERR("Invalid FileType {}", tp::toSInt(conf->getFileType()));
             m_logModel = new TextLogModel(conf, this);
     }
 
@@ -47,8 +46,8 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     m_logViewWidget->setMinimumSize(400, 200);
     m_logViewWidget->configure(conf);
 
-    m_logSearchWidget = new LogSearchWidget(m_logViewWidget, m_logModel, this);
-    m_logSearchWidget->configure(conf);
+    m_logSearchWidget = new LogSearchWidget(conf, m_logViewWidget, m_logModel, this);
+    m_logSearchWidget->configure();
 
     QSplitter *splitter = new QSplitter(parent);
     splitter->setOrientation(Qt::Vertical);
@@ -79,11 +78,11 @@ void LogTabWidget::createConnections()
 {
 }
 
-void LogTabWidget::updateColumns()
+void LogTabWidget::reconfigure()
 {
-    m_conf->clearColumns();
     m_logViewWidget->resetColumns();
-    m_logSearchWidget->resetColumns();
+    m_logViewWidget->configure(m_conf);
+    m_logSearchWidget->reconfigure();
     m_logModel->reconfigure();
 }
 

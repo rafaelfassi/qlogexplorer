@@ -68,11 +68,13 @@ set(GUI_HEADERS
     src/gui/MainWindow.h
     src/gui/LongScrollBar.h
     src/gui/LogViewWidget.h
+    src/gui/SearchParamControl.h
     src/gui/SearchParamWidget.h
     src/gui/LogSearchWidget.h
     src/gui/LogTabWidget.h
     src/gui/HeaderView.h
     src/gui/Highlighter.h
+    src/gui/TemplatesConfigDlg.h
 )
 
 set(GUI_SOURCES
@@ -80,11 +82,13 @@ set(GUI_SOURCES
     src/gui/MainWindow.cpp
     src/gui/LongScrollBar.cpp
     src/gui/LogViewWidget.cpp
+    src/gui/SearchParamControl.cpp
     src/gui/SearchParamWidget.cpp
     src/gui/LogSearchWidget.cpp
     src/gui/LogTabWidget.cpp
     src/gui/HeaderView.cpp
     src/gui/Highlighter.cpp
+    src/gui/TemplatesConfigDlg.cpp
 )
 
 add_executable(${PROJECT_NAME}

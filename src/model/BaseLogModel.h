@@ -89,6 +89,7 @@ public:
     tp::UInt columnCount() const override final;
     tp::UInt rowCount() const override final;
     tp::SInt getRowNum(tp::SInt row) const override final;
+    tp::SInt getNoMatchColumn() const;
     void startSearch(const tp::SearchParams &params, bool orOp);
     void stopSearch();
     bool isSearching() const;

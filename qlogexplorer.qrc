@@ -12,6 +12,8 @@
         <file>images/default/case_sensitive_icon.png</file>
         <file>images/default/clear_icon.png</file>
         <file>images/default/delete_icon.png</file>
+        <file>images/default/down_icon.png</file>
+        <file>images/default/exec_icon.png</file>
         <file>images/default/expand_icon.png</file>
         <file>images/default/filter_off_icon.png</file>
         <file>images/default/fit_icon.png</file>
@@ -20,13 +22,17 @@
         <file>images/default/or_icon.png</file>
         <file>images/default/range_icon.png</file>
         <file>images/default/regex_icon.png</file>
+        <file>images/default/remove_icon.png</file>
         <file>images/default/search_icon.png</file>
         <file>images/default/sync_icon.png</file>
+        <file>images/default/up_icon.png</file>
 
         <file>images/dark/add_icon.png</file>
         <file>images/dark/case_sensitive_icon.png</file>
         <file>images/dark/clear_icon.png</file>
         <file>images/dark/delete_icon.png</file>
+        <file>images/dark/down_icon.png</file>
+        <file>images/dark/exec_icon.png</file>
         <file>images/dark/expand_icon.png</file>
         <file>images/dark/filter_off_icon.png</file>
         <file>images/dark/fit_icon.png</file>
@@ -35,7 +41,9 @@
         <file>images/dark/or_icon.png</file>
         <file>images/dark/range_icon.png</file>
         <file>images/dark/regex_icon.png</file>
+        <file>images/dark/remove_icon.png</file>
         <file>images/dark/search_icon.png</file>
         <file>images/dark/sync_icon.png</file>
+        <file>images/dark/up_icon.png</file>
     </qresource>
 </RCC>

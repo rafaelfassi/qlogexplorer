@@ -11,6 +11,7 @@
 #include "LongScrollBar.h"
 #include "LogSearchWidget.h"
 #include "HeaderView.h"
+#include "TemplatesConfigDlg.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -46,21 +47,18 @@ MainWindow::~MainWindow()
 
 void MainWindow::createActions()
 {
-    m_openFile = new QAction(tr("Open"), this);
     m_openFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
     m_openFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
     m_actSaveConf = new QAction("", this);
     m_actSaveConf->setVisible(false);
     m_actSaveConfAs = new QAction("", this);
     m_actSaveConfAs->setVisible(false);
-    m_actEdtRegex = new QAction(tr("Regular Expression"), this);
-    m_actEdtRegex->setEnabled(false);
+    m_actTemplatesConfig = new QAction(tr("Configure Templates"), this);
 }
 
 void MainWindow::createMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
-    m_fileMenu->addAction(m_openFile);
 
     m_fileOpenAsMenu = m_fileMenu->addMenu(tr("Open As..."));
     m_fileOpenAsMenu->addAction(m_openFileAsText);
@@ -69,14 +67,14 @@ void MainWindow::createMenus()
 
     m_fileMenu->addSeparator();
 
-    m_fileMenu->addAction(m_actEdtRegex);
-
     m_actRecentFilesSep = m_fileMenu->addSeparator();
 
     m_templatesMenu = menuBar()->addMenu(tr("&Templates"));
 
     m_templatesMenu->addAction(m_actSaveConf);
     m_templatesMenu->addAction(m_actSaveConfAs);
+    m_templatesMenu->addSeparator();
+    m_templatesMenu->addAction(m_actTemplatesConfig);
 }
 
 void MainWindow::createToolBars()
@@ -87,12 +85,11 @@ void MainWindow::createToolBars()
 
 void MainWindow::createConnections()
 {
-    connect(m_openFile, &QAction::triggered, this, [this]() { openFile(tp::FileType::Text); });
     connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFile(tp::FileType::Text); });
     connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFile(tp::FileType::Json); });
     connect(m_actSaveConf, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
-    connect(m_actEdtRegex, &QAction::triggered, this, &MainWindow::editRegex);
+    connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::confCurrentTab);
 }
@@ -277,28 +274,30 @@ void MainWindow::openFile(FileConf::Ptr conf)
     setRecentFile(conf);
 }
 
-void MainWindow::editRegex()
+void MainWindow::openTemplatesConfig()
 {
-    LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->currentWidget());
-    if (!tab)
+    auto conf = FileConf::make();
+    const auto tabIdx = m_tabViews->currentIndex();
+    LogTabWidget *tab(nullptr);
+    if (tabIdx >= 0)
     {
-        LOG_ERR("No current tab");
-        return;
+        tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(tabIdx));
+        if (tab)
+        {
+            conf = tab->getConf();
+        }
     }
 
-    bool ok;
-    QString rxPattern = QInputDialog::getText(
-        this,
-        tr("Regular Expression"),
-        tr("Pattern:"),
-        QLineEdit::Normal,
-        tab->getConf()->getRegexPattern().c_str(),
-        &ok);
-
-    if (ok)
+    TemplatesConfigDlg templConf(conf, this);
+    if (templConf.exec() == QDialog::Accepted)
     {
-        tab->getConf()->setRegexPattern(rxPattern.toStdString());
-        tab->updateColumns();
+        updateTemplates();
+        updateRecentFiles();
+        if (tab && !conf->isNull())
+        {
+            tab->reconfigure();
+            confCurrentTab(tabIdx);
+        }
     }
 }
 
@@ -317,37 +316,34 @@ void MainWindow::closeTab(int index)
 
 void MainWindow::confCurrentTab(int index)
 {
-    if (index < 0)
+    bool currHasTemplate(false);
+    if (index >= 0)
+    {
+        LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
+        if (!tab)
+        {
+            LOG_ERR("No current tab for index {}", index);
+            return;
+        }
+
+        auto conf = tab->getConf();
+        if (conf->exists())
+        {
+            m_actSaveConf->setText(tr("Save [%1]").arg(conf->getConfigName().c_str()));
+            m_actSaveConf->setVisible(true);
+            m_actSaveConfAs->setText(tr("Save [%1] As...").arg(conf->getConfigName().c_str()));
+            m_actSaveConfAs->setVisible(true);
+            currHasTemplate = true;
+        }
+    }
+
+    if (!currHasTemplate)
     {
         m_actSaveConf->setVisible(false);
-        m_actSaveConfAs->setVisible(false);
-        m_actEdtRegex->setEnabled(false);
-        return;
-    }
-
-    LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
-    if (!tab)
-    {
-        LOG_ERR("No current tab for index {}", index);
-        return;
-    }
-
-    auto conf = tab->getConf();
-    m_actSaveConf->setVisible(true);
-    if (conf->exists())
-    {
-        m_actSaveConf->setText(tr("Save [%1]").arg(conf->getConfigName().c_str()));
-        m_actSaveConfAs->setVisible(true);
-        m_actSaveConfAs->setText(tr("Save [%1] As...").arg(conf->getConfigName().c_str()));
-    }
-    else
-    {
-        m_actSaveConf->setText(tr("Save As Template"));
+        m_actSaveConf->setText("");
         m_actSaveConfAs->setVisible(false);
         m_actSaveConfAs->setText("");
     }
-
-    m_actEdtRegex->setEnabled(conf->getFileType() == tp::FileType::Text);
 }
 
 void MainWindow::goToTab(int index)

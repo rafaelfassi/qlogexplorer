@@ -8,40 +8,29 @@
 class QAction;
 class QLineEdit;
 class QComboBox;
-class AbstractModel;
+class SearchParamControl;
 
 class SearchParamWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    SearchParamWidget(AbstractModel *sourceModel, QWidget *parent = nullptr);
+    SearchParamWidget(FileConf::Ptr conf, QWidget *parent = nullptr);
     ~SearchParamWidget();
     void createActions();
     void createConnections();
-    void setColumns(const tp::Columns &columns);
-    tp::SearchType getSearchType();
-    tp::SearchFlags getSearchFlags();
+    void updateColumns();
     bool getIsEnabled() const;
-    std::string expression() const;
-    std::optional<tp::Column> column() const;
-
-private slots:
-    void updateOptions();
+    tp::SearchParam getSearchParam() const;
 
 signals:
     void searchRequested();
     void deleteRequested(QWidget *);
 
 private:
-    QAction *m_actMatchCase;
-    QAction *m_actRegex;
-    QAction *m_actRange;
-    QAction *m_actNotOp;
     QAction *m_actDisableMe;
     QAction *m_actRemoveMe;
     QLineEdit *m_txtSearch;
     QComboBox *m_cmbColumns;
-    tp::Columns m_columns;
-    AbstractModel *m_model;
+    SearchParamControl *m_control;
 };

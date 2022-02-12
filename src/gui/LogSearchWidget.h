@@ -18,9 +18,9 @@ class LogSearchWidget : public QWidget
     Q_OBJECT
 
 public:
-    LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
+    LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
     ~LogSearchWidget();
-    void configure(FileConf::Ptr conf);
+    void configure();
 
 private:
     void createActions();
@@ -33,7 +33,7 @@ signals:
 
 public slots:
     void addSearchResult(tp::SharedSIntList rowsPtr);
-    void resetColumns();
+    void reconfigure();
 
 private slots:
     void addSearchParam();
@@ -44,6 +44,7 @@ private slots:
     void syncMarks();
 
 private:
+    FileConf::Ptr m_conf;
     QAction *m_actAddSearchParam;
     QAction *m_actMergeResults;
     QAction *m_actOrOperator;

@@ -32,7 +32,7 @@ public slots:
     void goToTab(int index);
     void saveConf();
     void saveConfAs();
-    void editRegex();
+    void openTemplatesConfig();
     void setRecentFile(const FileConf::Ptr &conf);
 
 private slots:
@@ -44,12 +44,11 @@ private:
     int findOpenedFileTab(const FileConf::Ptr &conf);
 
 private:
-    QAction *m_openFile;
     QAction *m_openFileAsText;
     QAction *m_openFileAsJson;
     QAction *m_actSaveConf;
     QAction *m_actSaveConfAs;
-    QAction *m_actEdtRegex;
+    QAction *m_actTemplatesConfig;
     QAction *m_actRecentFilesSep;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;

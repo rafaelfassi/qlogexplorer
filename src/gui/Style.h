@@ -14,6 +14,7 @@ public:
     static void loadStyleSheetFile(const QString &fileName);
     static void loadStyle(const QString &styleName);
     static QIcon getIcon(const QString &iconName) { return QIcon(inst().m_imgDir.absoluteFilePath(iconName)); };
+    static QIcon makeIcon(const QColor &color, int w = 32, int h = 32);
     static const tp::SectionColor &getTextAreaColor() { return inst().m_textAreaColor; }
     static const tp::SectionColor &getSelectedColor() { return inst().m_selectedColor; }
     static const tp::SectionColor &getSelectedTextMarkColor() { return inst().m_selectedTextMarkColor; }

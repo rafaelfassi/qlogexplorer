@@ -24,6 +24,7 @@ public:
     static void loadTemplates();
     static void saveTemplate(FileConf::Ptr conf);
     static void saveTemplateAs(FileConf::Ptr conf, const QString &name);
+    static void deleteTemplate(FileConf::Ptr conf);
     static std::vector<FileConf::Ptr> getTemplates();
 
     static void setStyle(const QString styleName);

@@ -44,7 +44,7 @@ void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
         matchers.emplace_back(std::make_unique<RangeMatcher>(param));
         break;
     default:
-        LOG_ERR("invalid SearchType {}", tp::toInt(param.type));
+        LOG_ERR("invalid SearchType {}", tp::toSInt(param.type));
     };
 }
 

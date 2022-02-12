@@ -17,58 +17,27 @@ TextLogModel::~TextLogModel()
 
 bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
 {
-    if (conf->getRegexPattern().empty())
+    if (conf->getRegexPattern().empty() || !conf->hasDefinedColumns())
     {
         if (conf->getColumns().empty())
         {
             conf->addColumn(tp::Column(0));
         }
-        if (m_rx.isValid())
-        {
-            m_rx.setPattern(QString());
-        }
+        m_rx.setPattern(QString());
     }
     else
     {
         m_rx.setPattern(conf->getRegexPattern().c_str());
         if (!m_rx.isValid())
         {
-            LOG_ERR("Invalid regex pattern: '{}'", conf->getRegexPattern());
+            LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), utl::toStr(m_rx.errorString()));
+            m_rx.setPattern(QString());
         }
 
-        if (conf->getColumns().empty())
+        tp::SInt idx(0);
+        for (auto &col : conf->getColumns())
         {
-            const auto groupsCount = m_rx.captureCount();
-            const auto &namedGroups = m_rx.namedCaptureGroups();
-            for (auto g = 1; g <= groupsCount; ++g)
-            {
-                tp::Column cl;
-                cl.key = std::to_string(g);
-                cl.type = tp::ColumnType::Str;
-
-                if (g < namedGroups.size())
-                {
-                    cl.name = namedGroups.at(g).toStdString();
-                }
-
-                if (cl.name.empty())
-                {
-                    cl.name = cl.key;
-                }
-
-                cl.idx = g - 1;
-                cl.pos = cl.idx;
-                cl.width = -1;
-                conf->addColumn(std::move(cl));
-            }
-        }
-        else
-        {
-            tp::SInt idx(0);
-            for (auto& col : conf->getColumns())
-            {
-                col.idx = idx++;
-            }
+            col.idx = idx++;
         }
     }
 
@@ -102,8 +71,12 @@ bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) co
         }
         else
         {
-            rowData.emplace_back(rawText);
             rowData.resize(columnCount());
+            const auto noMatchCol = getNoMatchColumn();
+            if (noMatchCol < rowData.size())
+            {
+                rowData[noMatchCol] = rawText;
+            }
         }
     }
 

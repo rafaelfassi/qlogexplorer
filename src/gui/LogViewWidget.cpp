@@ -358,10 +358,7 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
         int markCnt(0);
         for (const auto &mark : m_availableMarks)
         {
-            QPixmap pixmap(24, 24);
-            pixmap.fill(mark.bg);
-            QIcon icon(pixmap);
-
+            QIcon icon(Style::makeIcon(mark.bg));
             ++markCnt;
 
             if (markAllMenu->isEnabled() && m_selectedText.has_value())

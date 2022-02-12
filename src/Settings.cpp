@@ -206,11 +206,33 @@ void Settings::saveTemplateAs(FileConf::Ptr conf, const QString &name)
     {
         idx = QString("_%1").arg(++cnt);
     }
-    fileName.append(idx + ext);
+    fileName.append(idx);
+    if (name.isEmpty())
+        conf->setConfigName(utl::toStr(fileName));
+    else
+        conf->setConfigName(utl::toStr(name));
+    fileName.append(ext);
 
     fileName = templDir.absoluteFilePath(fileName);
     conf->saveConfAs(fileName.toStdString());
     confTemplates.push_back(FileConf::clone(conf));
+}
+
+void Settings::deleteTemplate(FileConf::Ptr conf)
+{
+    if (!conf->exists())
+        return;
+
+    if (QFile::remove(conf->getConfFileName().c_str()))
+    {
+        auto &confTemplates(inst().m_templates);
+        confTemplates.erase(
+            std::remove_if(
+                confTemplates.begin(),
+                confTemplates.end(),
+                [&conf](const FileConf::Ptr &c) { return c->isSameType(conf); }),
+            confTemplates.end());
+    }
 }
 
 std::vector<FileConf::Ptr> Settings::getTemplates()

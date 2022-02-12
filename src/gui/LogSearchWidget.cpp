@@ -20,8 +20,9 @@
 #include <QLineEdit>
 #include <QToolButton>
 
-LogSearchWidget::LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent)
+LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent)
     : QWidget(parent),
+      m_conf(conf),
       m_mainLog(mainLog),
       m_sourceModel(sourceModel)
 {
@@ -76,15 +77,17 @@ LogSearchWidget::LogSearchWidget(LogViewWidget *mainLog, BaseLogModel *sourceMod
     setLayout(vLayout);
 
     createConnections();
+
+    addSearchParam();
 }
 
 LogSearchWidget::~LogSearchWidget()
 {
 }
 
-void LogSearchWidget::configure(FileConf::Ptr conf)
+void LogSearchWidget::configure()
 {
-    m_searchResults->configure(conf);
+    m_searchResults->configure(m_conf);
 }
 
 void LogSearchWidget::createActions()
@@ -123,8 +126,7 @@ void LogSearchWidget::createConnections()
 
 void LogSearchWidget::addSearchParam()
 {
-    SearchParamWidget *param = new SearchParamWidget(m_proxyModel, this);
-    param->setColumns(m_sourceModel->getColumns());
+    SearchParamWidget *param = new SearchParamWidget(m_conf, this);
     param->sizePolicy().setVerticalPolicy(QSizePolicy::Minimum);
     connect(param, &SearchParamWidget::searchRequested, this, &LogSearchWidget::startSearch);
     connect(param, &SearchParamWidget::deleteRequested, this, &LogSearchWidget::deleteParamWidget);
@@ -143,14 +145,13 @@ void LogSearchWidget::startSearch()
 
     for (auto paramWidget : m_searchParamWidgets)
     {
-        if (paramWidget->getIsEnabled() && !paramWidget->expression().empty())
+        if (paramWidget->getIsEnabled())
         {
-            tp::SearchParam param;
-            param.pattern = paramWidget->expression();
-            param.column = paramWidget->column();
-            param.type = paramWidget->getSearchType();
-            param.flags = paramWidget->getSearchFlags();
-            params.push_back(std::move(param));
+            auto param = paramWidget->getSearchParam();
+            if (!param.pattern.empty())
+            {
+                params.push_back(std::move(param));
+            }
         }
     }
 
@@ -173,14 +174,14 @@ void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
     }
 }
 
-void LogSearchWidget::resetColumns()
+void LogSearchWidget::reconfigure()
 {
     for (auto paramWidget : m_searchParamWidgets)
     {
-        paramWidget->deleteLater();
+        paramWidget->updateColumns();
     }
-    m_searchParamWidgets.clear();
     m_searchResults->resetColumns();
+    m_searchResults->configure(m_conf);
 }
 
 void LogSearchWidget::clearResults()
@@ -206,10 +207,7 @@ void LogSearchWidget::deleteParamWidget(QWidget *paramWidget)
 
 void LogSearchWidget::sourceModelConfigured()
 {
-    if (m_searchParamWidgets.empty())
-    {
-        addSearchParam();
-    }
+    reconfigure();
 }
 
 void LogSearchWidget::syncMarks()

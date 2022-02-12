@@ -187,6 +187,11 @@ tp::SInt BaseLogModel::getRowNum(tp::SInt row) const
     return row;
 }
 
+tp::SInt BaseLogModel::getNoMatchColumn() const
+{
+    return m_conf->getNoMatchColumn();
+}
+
 bool BaseLogModel::isWatching() const
 {
     return m_watching.load();
