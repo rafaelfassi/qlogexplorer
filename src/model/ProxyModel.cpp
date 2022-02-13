@@ -18,6 +18,11 @@ tp::SInt ProxyModel::getRow(tp::SInt row, tp::RowData &rowData) const
     return -1;
 }
 
+bool ProxyModel::hasDefinedColumns() const
+{
+    return m_source->hasDefinedColumns();
+}
+
 tp::Columns &ProxyModel::getColumns()
 {
     return m_source->getColumns();

@@ -56,6 +56,11 @@ tp::SInt BaseLogModel::getRow(tp::SInt row, tp::RowData &rowData) const
     return -1;
 }
 
+bool BaseLogModel::hasDefinedColumns() const
+{
+    return m_conf->hasDefinedColumns();
+}
+
 tp::Columns &BaseLogModel::getColumns()
 {
     return m_conf->getColumns();

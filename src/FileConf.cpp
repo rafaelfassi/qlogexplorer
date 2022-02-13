@@ -149,6 +149,16 @@ rapidjson::Document FileConf::toJson() const
     return jDoc;
 }
 
+bool FileConf::hasDefinedColumn(tp::SInt columnIdx) const
+{
+    return (hasDefinedColumns() && (-1L < columnIdx) && (columnIdx < m_columns.size()));
+}
+
+bool FileConf::hasHighlighterParam(tp::SInt hltIdx) const
+{
+    return ((-1L < hltIdx) && (hltIdx < m_highlighterParams.size()));
+}
+
 bool FileConf::isEqual(const FileConf::Ptr &other) const
 {
     return (*this == *other.get());

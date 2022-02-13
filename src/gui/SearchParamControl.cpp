@@ -155,7 +155,7 @@ void SearchParamControl::updateParam(bool notifyChanged)
         param.flags.set(tp::SearchFlag::NotOperator);
 
     const auto colIdx = m_cmbColumns->currentIndex() - 1;
-    if (m_conf && !m_conf->isNull() && (colIdx >= 0) && (colIdx < m_conf->getColumns().size()))
+    if (m_conf && !m_conf->isNull() && m_conf->hasDefinedColumn(colIdx))
     {
         param.column = m_conf->getColumns().at(colIdx);
     }
@@ -191,15 +191,15 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     m_actMatchCase->setChecked(param.flags.has(tp::SearchFlag::MatchCase));
     m_actNotOp->setChecked(param.flags.has(tp::SearchFlag::NotOperator));
 
-    int column(0);
+    int cmbIndex(0);
     if (param.column.has_value())
     {
         const auto colIdx = param.column.value().idx;
-        if (colIdx >= 0 && colIdx <= m_cmbColumns->count())
+        if (m_conf && !m_conf->isNull() && m_conf->hasDefinedColumn(colIdx))
         {
-            column = colIdx + 1;
+            cmbIndex = colIdx + 1;
         }
     }
-    m_cmbColumns->setCurrentIndex(column);
+    m_cmbColumns->setCurrentIndex(cmbIndex);
     updateParam(notifyChanged);
 }

@@ -4,10 +4,16 @@
 # 0 - For Inkscape version < v1.0 [default]
 # 1 - For Inkscape version >= v1.0
 
+SCRIPT_PATH=`readlink -f "$0"`
 inkscapeVersion=${1:-0}
 
-mkdir default
-mkdir dark
+SCRIPT_DIR=`dirname "$SCRIPT_PATH"`
+SVG_IMG_DIR=${SCRIPT_DIR}/svg
+DEFAULT_IMG_DIR=${SCRIPT_DIR}/default
+DARK_IMG_DIR=${SCRIPT_DIR}/dark
+
+mkdir ${DEFAULT_IMG_DIR}
+mkdir ${DARK_IMG_DIR}
 
 function svg2Png()
 {
@@ -23,13 +29,13 @@ function svg2Png()
     fi
 }
 
-for svgFile in svg/*.svg
+for svgFile in ${SVG_IMG_DIR}/*.svg
 do
     baseFileName="${svgFile##*/}"
     baseFileName="${baseFileName%%.*}"
 
-    svg2Png 32 ${svgFile} default/${baseFileName}.png
+    svg2Png 32 ${svgFile} ${DEFAULT_IMG_DIR}/${baseFileName}.png
     sed -i "s/#000000/#FFFFFF/" $svgFile
-    svg2Png 32 ${svgFile} dark/${baseFileName}.png
+    svg2Png 32 ${svgFile} ${DARK_IMG_DIR}/${baseFileName}.png
     sed -i "s/#FFFFFF/#000000/" $svgFile
 done

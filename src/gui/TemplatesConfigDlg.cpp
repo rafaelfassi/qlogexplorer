@@ -107,7 +107,8 @@ void TemplatesConfigDlg::save()
     {
         if (!m_conf->isNull() && templ->isSameType(m_conf))
         {
-            *m_conf = *templ;
+            m_conf->copyFrom(templ);
+            fixHighlighters(m_conf);
             if (!m_conf->exists())
             {
                 if (!m_conf->getConfigName().empty())
@@ -129,7 +130,8 @@ void TemplatesConfigDlg::save()
             // Has changed?
             if (!conf->isEqual(templ))
             {
-                *conf = *templ;
+                conf->copyFrom(templ);
+                fixHighlighters(conf);
                 Settings::saveTemplate(conf);
             }
         }
@@ -148,7 +150,8 @@ void TemplatesConfigDlg::apply()
     auto conf = getCuttentTempl();
     if (!m_conf->isNull() && conf->isSameType(m_conf))
     {
-        *m_conf = *conf;
+        m_conf->copyFrom(conf);
+        fixHighlighters(m_conf);
         accept();
     }
 }
@@ -218,6 +221,25 @@ void TemplatesConfigDlg::deleteTemplate()
 void TemplatesConfigDlg::createColumnsFromRegex()
 {
     auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    if (conf->hasDefinedColumns())
+    {
+        QString fixHltMsg;
+        if (conf->hasHighlighterParams())
+        {
+            fixHltMsg = tr("You may need to fix highlighters that are refereicing the existent columns.\n");
+        }
+        if (QMessageBox::warning(
+                this,
+                tr("Warning"),
+                tr("All columns will be deleted and recreated.\n%1Do you want to continue?").arg(fixHltMsg),
+                QMessageBox::Yes | QMessageBox::No,
+                QMessageBox::No) != QMessageBox::Yes)
+            return;
+    }
+
     QRegularExpression rx(m_edtRegex->text());
     if (!rx.isValid())
     {
@@ -321,7 +343,7 @@ void TemplatesConfigDlg::setCurrentColumn(int index)
         return;
     }
 
-    if (index >= 0 && index < conf->getColumns().size())
+    if (conf->hasDefinedColumn(index))
     {
         const auto &col = conf->getColumns().at(index);
         m_edtColName->setText(col.name.c_str());
@@ -362,8 +384,7 @@ void TemplatesConfigDlg::updateTemplateColumns()
         return;
 
     const int colIdx = m_lstColumns->currentRow();
-
-    if (colIdx >= 0 && colIdx < conf->getColumns().size())
+    if (conf->hasDefinedColumn(colIdx))
     {
         auto &col = conf->getColumns().at(colIdx);
         col.name = utl::toStr(m_edtColName->text());
@@ -416,7 +437,7 @@ void TemplatesConfigDlg::rmColumn()
         return;
 
     const int colIdx = m_lstColumns->currentRow();
-    if (colIdx >= 0 && colIdx < conf->getColumns().size())
+    if (conf->hasDefinedColumn(colIdx))
     {
         auto &columns(conf->getColumns());
         columns.erase(columns.begin() + colIdx);
@@ -446,6 +467,21 @@ void TemplatesConfigDlg::fillHighlighters(const FileConf::Ptr &conf, int selectR
     }
 }
 
+void TemplatesConfigDlg::fixHighlighters(const FileConf::Ptr &conf)
+{
+    for (auto &hlt : conf->getHighlighterParams())
+    {
+        if (hlt.searchParam.column.has_value() && !conf->hasDefinedColumn(hlt.searchParam.column->idx))
+        {
+            hlt.searchParam.column = std::nullopt;
+        }
+        if ((hlt.searchParam.type == tp::SearchType::Range) && !hlt.searchParam.column.has_value())
+        {
+            hlt.searchParam.type = tp::SearchType::SubString;
+        }
+    }
+}
+
 void TemplatesConfigDlg::setCurrentHighlighter(int index)
 {
     auto enableHltFormFunc = [this](bool enable)
@@ -462,6 +498,7 @@ void TemplatesConfigDlg::setCurrentHighlighter(int index)
             m_actHltForeColor->setData(palette().color(QPalette::Text));
             m_actHltBackColor->setIcon(QIcon());
             m_actHltBackColor->setData(palette().color(QPalette::Base));
+            m_hltSearchCtrl->setSearchParam(tp::SearchParam());
         }
     };
 
@@ -472,7 +509,7 @@ void TemplatesConfigDlg::setCurrentHighlighter(int index)
         return;
     }
 
-    if (index >= 0 && index < conf->getHighlighterParams().size())
+    if (conf->hasHighlighterParam(index))
     {
         const auto &hit = conf->getHighlighterParams().at(index);
         m_actHltForeColor->setIcon(Style::makeIcon(hit.color.fg));
@@ -497,7 +534,7 @@ void TemplatesConfigDlg::updateTemplateHighlighters()
         return;
 
     const int hltIdx = m_lstHighlighters->currentRow();
-    if (hltIdx >= 0 && hltIdx < conf->getHighlighterParams().size())
+    if (conf->hasHighlighterParam(hltIdx))
     {
         auto &hit = conf->getHighlighterParams().at(hltIdx);
         auto colorFg = m_actHltForeColor->data().value<QColor>();
@@ -540,9 +577,9 @@ void TemplatesConfigDlg::rmHighlighter()
         return;
 
     const int hltIdx = m_lstHighlighters->currentRow();
-    auto &highlighters(conf->getHighlighterParams());
-    if (hltIdx >= 0 && hltIdx < highlighters.size())
+    if (conf->hasHighlighterParam(hltIdx))
     {
+        auto &highlighters(conf->getHighlighterParams());
         highlighters.erase(highlighters.begin() + hltIdx);
         fillHighlighters(conf, hltIdx < highlighters.size() ? hltIdx : hltIdx - 1);
     }
@@ -555,9 +592,9 @@ void TemplatesConfigDlg::moveHighlighterUp()
         return;
 
     const int hltIdx = m_lstHighlighters->currentRow();
-    auto &highlighters(conf->getHighlighterParams());
-    if ((hltIdx > 0) && (hltIdx < highlighters.size()))
+    if (conf->hasHighlighterParam(hltIdx) && (hltIdx > 0))
     {
+        auto &highlighters(conf->getHighlighterParams());
         std::swap(highlighters[hltIdx], highlighters[hltIdx - 1]);
         fillHighlighters(conf, hltIdx - 1);
     }
@@ -571,7 +608,7 @@ void TemplatesConfigDlg::moveHighlighterDown()
 
     const int hltIdx = m_lstHighlighters->currentRow();
     auto &highlighters(conf->getHighlighterParams());
-    if ((hltIdx >= 0) && (hltIdx < highlighters.size() - 1))
+    if (conf->hasHighlighterParam(hltIdx) && (hltIdx < highlighters.size() - 1))
     {
         std::swap(highlighters[hltIdx], highlighters[hltIdx + 1]);
         fillHighlighters(conf, hltIdx + 1);
@@ -884,16 +921,18 @@ void TemplatesConfigDlg::buildLayout()
     // Create dialog Buttons -------------------------------------------------- (Start)
     auto hDlgButtons = new QHBoxLayout();
 
-    m_btnApply = new QPushButton(tr("Apply"), this);
+    m_btnApply = new QPushButton(tr("&Apply"), this);
+    m_btnApply->setAutoDefault(false);
     hDlgButtons->addWidget(m_btnApply);
 
-    m_btnSave = new QPushButton(tr("Save"), this);
+    m_btnSave = new QPushButton(tr("&Save"), this);
+    m_btnSave->setAutoDefault(false);
     hDlgButtons->addWidget(m_btnSave);
 
     hDlgButtons->addStretch();
 
-    m_btnCancel = new QPushButton(tr("Cancel"), this);
-    m_btnCancel->setDefault(true);
+    m_btnCancel = new QPushButton(tr("&Cancel"), this);
+    m_btnCancel->setAutoDefault(false);
 
     hDlgButtons->addWidget(m_btnCancel);
     // Create dialog Buttons -------------------------------------------------- (Start)

@@ -58,6 +58,7 @@ private:
     FileConf::Ptr getCuttentTempl() const;
     void fillColumns(const FileConf::Ptr &conf, int selectRow = 0);
     void fillHighlighters(const FileConf::Ptr &conf, int selectRow = 0);
+    void fixHighlighters(const FileConf::Ptr &conf);
     void createActions();
     void createConnections();
     void configureRegexMode(const FileConf::Ptr &conf);

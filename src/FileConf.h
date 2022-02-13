@@ -28,7 +28,7 @@ public:
     const std::string &getRegexPattern() const { return m_regexPattern; }
     void setRegexPattern(const std::string &pattern) { m_regexPattern = pattern; }
     tp::SInt getNoMatchColumn() const { return m_noMatchColumn; }
-    void setNoMatchColumn(tp::SInt column) { m_noMatchColumn = column; }
+    void setNoMatchColumn(tp::SInt columnIdx) { m_noMatchColumn = columnIdx; }
     bool exists() const { return !m_confFileName.empty(); }
     void setConfigName(const std::string &configName) { m_configName = configName; }
 
@@ -36,11 +36,13 @@ public:
     void clearColumns() { m_columns.clear(); }
     void addColumn(tp::Column &&column) { m_columns.emplace_back(column); }
     bool hasDefinedColumns() const { return (!m_columns.empty() && !m_columns.front().key.empty()); }
+    bool hasDefinedColumn(tp::SInt columnIdx) const;
 
     tp::HighlighterParams &getHighlighterParams() { return m_highlighterParams; }
     void clearHighlighterParams() { m_highlighterParams.clear(); }
     void addHighlighterParam(tp::HighlighterParam &&hlt) { m_highlighterParams.emplace_back(hlt); }
     bool hasHighlighterParams() const { return !m_highlighterParams.empty(); }
+    bool hasHighlighterParam(tp::SInt hltIdx) const;
 
     bool isNull() const { return (m_fileType == tp::FileType::None); }
     bool isEqual(const FileConf::Ptr &other) const;

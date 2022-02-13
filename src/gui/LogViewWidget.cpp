@@ -764,7 +764,7 @@ void LogViewWidget::configureColumns()
     if ((m_header->count() == 0) && !m_model->getColumns().empty())
     {
         m_header->setColumns(m_model->getColumns());
-        if (m_model->getColumns().front().key.empty())
+        if (!m_model->hasDefinedColumns())
         {
             m_header->setVisible(false);
             m_btnExpandColumns->setVisible(false);
