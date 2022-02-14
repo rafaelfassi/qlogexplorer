@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "SearchParamWidget.h"
 #include "SearchParamControl.h"
+#include "SearchParamModel.h"
 #include "Style.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -11,17 +12,22 @@
 #include <QLineEdit>
 #include <QToolButton>
 #include <QComboBox>
+#include <QStringListModel>
 
-SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent)
+SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searchModel, QWidget *parent) : QWidget(parent)
 {
     createActions();
 
     m_cmbColumns = new QComboBox(this);
 
-    m_txtSearch = new QLineEdit(this);
-    m_txtSearch->setFocusPolicy(Qt::StrongFocus);
+    m_cmbSearch = new QComboBox(this);
+    auto cmbSearchSizePolicy = m_cmbSearch->sizePolicy();
+    cmbSearchSizePolicy.setHorizontalPolicy(QSizePolicy::Expanding);
+    m_cmbSearch->setSizePolicy(cmbSearchSizePolicy);
+    m_cmbSearch->setFocusPolicy(Qt::StrongFocus);
+    m_cmbSearch->setEditable(true);
 
-    m_control = new SearchParamControl(m_cmbColumns, m_txtSearch);
+    m_control = new SearchParamControl(m_cmbColumns, m_cmbSearch, searchModel, this);
     m_control->setFileConf(conf);
 
     QToolButton *btnDisableMe = new QToolButton(this);
@@ -36,7 +42,7 @@ SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, QWidget *parent) : QWid
     hLayout->setMargin(0);
     hLayout->addWidget(m_cmbColumns);
     hLayout->addWidget(m_control);
-    hLayout->addWidget(m_txtSearch);
+    hLayout->addWidget(m_cmbSearch);
     hLayout->addWidget(btnDisableMe);
     hLayout->addWidget(btnRemoveMe);
 
@@ -63,6 +69,11 @@ void SearchParamWidget::createConnections()
 {
     connect(m_control, &SearchParamControl::searchRequested, this, &SearchParamWidget::searchRequested);
     connect(m_actRemoveMe, &QAction::triggered, this, [this]() { emit deleteRequested(this); });
+}
+
+void SearchParamWidget::apply()
+{
+    m_control->apply();
 }
 
 void SearchParamWidget::updateColumns()

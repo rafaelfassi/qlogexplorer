@@ -1,9 +1,4 @@
 {
-    "osLinux": {
-        "qtStyle": "Breeze",
-        "qtStyleSheet": ""
-    },
-
     "qtStyle": "Fusion",
     "qtStyleSheet": ":/styles/Dark.qss",
     "imgDir": ":/images/dark",

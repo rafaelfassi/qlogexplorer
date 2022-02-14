@@ -8,6 +8,8 @@
 class QAction;
 class QLineEdit;
 class QComboBox;
+class SearchParamModel;
+class SearchParamProxyModel;
 
 class SearchParamControl : public QWidget
 {
@@ -15,12 +17,18 @@ class SearchParamControl : public QWidget
 
 public:
     SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPattern, QWidget *parent = nullptr);
+    SearchParamControl(
+        QComboBox *cmbColumns,
+        QComboBox *cmbSearch,
+        SearchParamModel *searchModel,
+        QWidget *parent = nullptr);
     ~SearchParamControl();
     void createActions();
     void createConnections();
     void setFileConf(FileConf::Ptr conf);
     tp::SearchParam getSearchParam() const;
     void setSearchParam(const tp::SearchParam &param, bool notifyChanged = false);
+    static void fixParam(const FileConf::Ptr &conf, tp::SearchParam &param);
 
 signals:
     void paramChanged();
@@ -28,6 +36,7 @@ signals:
 
 public slots:
     void updateColumns(bool tryKeepSel);
+    void apply();
 
 private slots:
     void updateParam(bool notifyChanged = true);
@@ -36,9 +45,11 @@ private:
     tp::SearchParam m_param;
     QComboBox *m_cmbColumns;
     QLineEdit *m_edtPattern;
+    QComboBox *m_cmbSearch;
     FileConf::Ptr m_conf;
     QAction *m_actRegex;
     QAction *m_actRange;
     QAction *m_actMatchCase;
     QAction *m_actNotOp;
+    SearchParamProxyModel *m_proxyModel = nullptr;
 };

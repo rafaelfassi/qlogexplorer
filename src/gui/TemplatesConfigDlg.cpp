@@ -471,14 +471,7 @@ void TemplatesConfigDlg::fixHighlighters(const FileConf::Ptr &conf)
 {
     for (auto &hlt : conf->getHighlighterParams())
     {
-        if (hlt.searchParam.column.has_value() && !conf->hasDefinedColumn(hlt.searchParam.column->idx))
-        {
-            hlt.searchParam.column = std::nullopt;
-        }
-        if ((hlt.searchParam.type == tp::SearchType::Range) && !hlt.searchParam.column.has_value())
-        {
-            hlt.searchParam.type = tp::SearchType::SubString;
-        }
+        SearchParamControl::fixParam(conf, hlt.searchParam);
     }
 }
 

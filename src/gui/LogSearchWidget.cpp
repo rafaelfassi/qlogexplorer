@@ -4,8 +4,8 @@
 #include "pch.h"
 #include "LogSearchWidget.h"
 #include "LogViewWidget.h"
-#include "TextLogModel.h"
-#include "JsonLogModel.h"
+#include "BaseLogModel.h"
+#include "SearchParamModel.h"
 #include "SearchParamWidget.h"
 #include "ProxyModel.h"
 #include "LongScrollBar.h"
@@ -13,11 +13,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QPushButton>
 #include <QAction>
-#include <QToolBar>
-#include <QMenuBar>
-#include <QLineEdit>
 #include <QToolButton>
 
 LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent)
@@ -76,6 +72,26 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
 
     setLayout(vLayout);
 
+    m_searchParamModel = new SearchParamModel(this);
+
+    {
+        tp::SearchParam param;
+        param.pattern = "Logging Sub-System initialized";
+        m_searchParamModel->addRowData("@Initialized", param);
+    }
+    {
+        tp::SearchParam param;
+        param.pattern = "MT\\d";
+        param.type = tp::SearchType::Regex;
+        m_searchParamModel->addRowData("@Metatrader", param);
+    }
+    {
+        tp::SearchParam param;
+        param.pattern = "SEVERE";
+        param.column = tp::Column(0);
+        m_searchParamModel->addRowData("@Error", param);
+    }
+
     createConnections();
 
     addSearchParam();
@@ -126,7 +142,7 @@ void LogSearchWidget::createConnections()
 
 void LogSearchWidget::addSearchParam()
 {
-    SearchParamWidget *param = new SearchParamWidget(m_conf, this);
+    SearchParamWidget *param = new SearchParamWidget(m_conf, m_searchParamModel, this);
     param->sizePolicy().setVerticalPolicy(QSizePolicy::Minimum);
     connect(param, &SearchParamWidget::searchRequested, this, &LogSearchWidget::startSearch);
     connect(param, &SearchParamWidget::deleteRequested, this, &LogSearchWidget::deleteParamWidget);
@@ -147,6 +163,7 @@ void LogSearchWidget::startSearch()
     {
         if (paramWidget->getIsEnabled())
         {
+            paramWidget->apply();
             auto param = paramWidget->getSearchParam();
             if (!param.pattern.empty())
             {

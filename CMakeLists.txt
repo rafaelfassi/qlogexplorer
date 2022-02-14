@@ -39,6 +39,7 @@ set(MODEL_HEADERS
     src/model/TextLogModel.h
     src/model/JsonLogModel.h
     src/model/ProxyModel.h
+    src/model/SearchParamModel.h
 )
 
 set(MODEL_SOURCES
@@ -46,6 +47,7 @@ set(MODEL_SOURCES
     src/model/TextLogModel.cpp
     src/model/JsonLogModel.cpp
     src/model/ProxyModel.cpp
+    src/model/SearchParamModel.cpp
 )
 
 set(MATCH_HEADERS

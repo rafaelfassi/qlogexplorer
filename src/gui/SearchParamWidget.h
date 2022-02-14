@@ -8,6 +8,7 @@
 class QAction;
 class QLineEdit;
 class QComboBox;
+class SearchParamModel;
 class SearchParamControl;
 
 class SearchParamWidget : public QWidget
@@ -15,10 +16,9 @@ class SearchParamWidget : public QWidget
     Q_OBJECT
 
 public:
-    SearchParamWidget(FileConf::Ptr conf, QWidget *parent = nullptr);
+    SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searchModel, QWidget *parent = nullptr);
     ~SearchParamWidget();
-    void createActions();
-    void createConnections();
+    void apply();
     void updateColumns();
     bool getIsEnabled() const;
     tp::SearchParam getSearchParam() const;
@@ -28,9 +28,12 @@ signals:
     void deleteRequested(QWidget *);
 
 private:
+    void createActions();
+    void createConnections();
+
     QAction *m_actDisableMe;
     QAction *m_actRemoveMe;
-    QLineEdit *m_txtSearch;
+    QComboBox *m_cmbSearch;
     QComboBox *m_cmbColumns;
     SearchParamControl *m_control;
 };
