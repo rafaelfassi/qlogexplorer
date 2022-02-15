@@ -33,12 +33,6 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
             LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), utl::toStr(m_rx.errorString()));
             m_rx.setPattern(QString());
         }
-
-        tp::SInt idx(0);
-        for (auto &col : conf->getColumns())
-        {
-            col.idx = idx++;
-        }
     }
 
     return !conf->getColumns().empty();

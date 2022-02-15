@@ -25,53 +25,43 @@ JsonLogModel::~JsonLogModel()
 
 bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
 {
-    tp::SInt idx(0);
-
-    if (conf->getColumns().empty())
+    if (!conf->hasDefinedColumns())
     {
         rapidjson::IStreamWrapper isw(is);
         rapidjson::Document d;
         d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
         if (!d.HasParseError())
         {
+            tp::SInt idx(0);
+            conf->clearColumns();
+
             for (auto i = d.MemberBegin(); i != d.MemberEnd(); ++i)
             {
-                tp::Column cl;
+                tp::Column cl(idx++);
                 cl.key = i->name.GetString();
                 cl.name = cl.key;
                 switch (i->value.GetType())
                 {
-                case rapidjson::kFalseType:
-                case rapidjson::kTrueType:
-                    cl.type = tp::ColumnType::Bool;
-                    break;
-                case rapidjson::kStringType:
-                    cl.type = tp::ColumnType::Str;
-                    break;
-                case rapidjson::kNumberType:
-                    if (i->value.IsUint64())
-                        cl.type = tp::ColumnType::UInt;
-                    if (i->value.IsInt64())
-                        cl.type = tp::ColumnType::Int;
-                    else
-                        cl.type = tp::ColumnType::Float;
-                    break;
-                default:
-                    break;
+                    case rapidjson::kFalseType:
+                    case rapidjson::kTrueType:
+                        cl.type = tp::ColumnType::Bool;
+                        break;
+                    case rapidjson::kStringType:
+                        cl.type = tp::ColumnType::Str;
+                        break;
+                    case rapidjson::kNumberType:
+                        if (i->value.IsUint64())
+                            cl.type = tp::ColumnType::UInt;
+                        if (i->value.IsInt64())
+                            cl.type = tp::ColumnType::Int;
+                        else
+                            cl.type = tp::ColumnType::Float;
+                        break;
+                    default:
+                        break;
                 }
-
-                cl.idx = idx++;
-                cl.pos = cl.idx;
-                cl.width = -1;
                 conf->addColumn(std::move(cl));
             }
-        }
-    }
-    else
-    {
-        for (auto& col : conf->getColumns())
-        {
-            col.idx = idx++;
         }
     }
 
@@ -91,25 +81,25 @@ bool JsonLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) co
         {
             switch (i->value.GetType())
             {
-            case rapidjson::kFalseType:
-                colText = "TRUE";
-                break;
-            case rapidjson::kTrueType:
-                colText = "FALSE";
-                break;
-            case rapidjson::kStringType:
-                colText = i->value.GetString();
-                break;
-            case rapidjson::kNumberType:
-                if (i->value.IsUint64())
-                    colText = std::to_string(i->value.GetUint64());
-                if (i->value.IsInt64())
-                    colText = std::to_string(i->value.GetInt64());
-                else
-                    colText = std::to_string(i->value.GetDouble());
-                break;
-            default:
-                break;
+                case rapidjson::kFalseType:
+                    colText = "TRUE";
+                    break;
+                case rapidjson::kTrueType:
+                    colText = "FALSE";
+                    break;
+                case rapidjson::kStringType:
+                    colText = i->value.GetString();
+                    break;
+                case rapidjson::kNumberType:
+                    if (i->value.IsUint64())
+                        colText = std::to_string(i->value.GetUint64());
+                    if (i->value.IsInt64())
+                        colText = std::to_string(i->value.GetInt64());
+                    else
+                        colText = std::to_string(i->value.GetDouble());
+                    break;
+                default:
+                    break;
             }
         }
         rowData.emplace_back(std::move(colText));

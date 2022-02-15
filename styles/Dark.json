@@ -18,6 +18,9 @@
     "qtButtonText": "#E0E1E3",
     "qtButtonTextDsb": "#808080",
 
+    "qtToolTipBase": "#1A1A1A",
+    "qtToolTipText": "#E0E1E3",
+
     "qtHighlight": "#346792",
     "qtHighlightedText": "#E0E1E3",
 

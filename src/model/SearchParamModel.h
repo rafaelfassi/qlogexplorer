@@ -41,16 +41,17 @@ public:
         int destinationChild) override;
     QModelIndex sibling(int row, int column, const QModelIndex &idx) const override;
 
+    void reloadParams(const tp::FilterParams &params);
+    void appendDistinctParams(const tp::FilterParams &params);
     tp::SearchParam getSearchParam(int idx);
     void setSearchParam(int idx, tp::SearchParam param);
-    RowData &getRowData(int idx);
-    bool matchRowData(const QString &value, const RowData rowData) const;
-    void addRowData(const QString &name, const tp::SearchParam &searchParam);
+    tp::FilterParam &getRowData(int idx);
+    bool matchRowData(const QString &value, const tp::FilterParam &param) const;
     bool isValidIdx(int idx) const;
     QString getItemName(int idx) const;
     QString getItemPattern(int idx) const;
     int findByItemName(const QString &name);
 
 private:
-    std::vector<RowData> m_data;
+    std::vector<tp::FilterParam> m_data;
 };

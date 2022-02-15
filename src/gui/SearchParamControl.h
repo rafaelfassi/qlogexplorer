@@ -41,8 +41,6 @@ public slots:
 
 private slots:
     void updateParam(bool notifyChanged = true);
-    void setCurrentModelIdx(int idx);
-    void textChanged(const QString &text);
 
 private:
     tp::SearchParam m_param;

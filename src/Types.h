@@ -87,10 +87,9 @@ void fromStr(const std::string &str, ColumnType &type);
 
 struct Column
 {
-    Column() = default;
     Column(SInt _idx) : idx(_idx), pos(_idx) {}
-    SInt idx = -1;
-    SInt pos = -1;
+    SInt idx;
+    SInt pos;
     std::string key;
     std::string name;
     std::string format;
@@ -162,6 +161,17 @@ inline bool operator==(const HighlighterParam &lhs, const HighlighterParam &rhs)
     return (lhs.searchParam == rhs.searchParam) && (lhs.color == rhs.color);
 }
 using HighlighterParams = std::vector<HighlighterParam>;
+
+struct FilterParam
+{
+    SearchParam searchParam;
+    std::string name;
+};
+inline bool operator==(const FilterParam &lhs, const FilterParam &rhs)
+{
+    return (lhs.searchParam == rhs.searchParam) && (lhs.name == rhs.name);
+}
+using FilterParams = std::vector<FilterParam>;
 
 template <typename T> std::string toStr(const T &type)
 {

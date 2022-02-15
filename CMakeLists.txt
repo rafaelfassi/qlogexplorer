@@ -10,15 +10,14 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-pthread")
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 add_definitions(-DAPP_BASE_SRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(Threads REQUIRED)
 find_package(TBB)
-
-add_definitions(-fPIC)
 
 set(MAIN_SOURCES
     qlogexplorer.qrc
@@ -114,10 +113,11 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    Threads::Threads
 )
 
 if(TBB_FOUND)
-    target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
+    target_link_libraries(${PROJECT_NAME} PRIVATE TBB::tbb)
     add_definitions(-DHAS_TBB_ENABLED)
 else()
     MESSAGE(STATUS "TBB not found. Configure TBB to improve performance.")

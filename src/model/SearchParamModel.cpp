@@ -36,12 +36,12 @@ QVariant SearchParamModel::data(const QModelIndex &index, int role) const
     if (role == Qt::DisplayRole)
     {
         const auto &param = m_data.at(index.row());
-        return param.name;
+        return param.name.c_str();
     }
     if (role == Qt::EditRole)
     {
         const auto &param = m_data.at(index.row());
-        return param.param.pattern.c_str();
+        return param.searchParam.pattern.c_str();
     }
     return QVariant();
 }
@@ -52,11 +52,11 @@ bool SearchParamModel::setData(const QModelIndex &index, const QVariant &value, 
     {
         const QString valueString = value.toString();
         auto &param = getRowData(index.row());
-        if ((param.name == valueString) || (param.param.pattern.c_str() == valueString))
+        if (matchRowData(valueString, param))
             return true;
 
-        param.name = valueString;
-        param.param.pattern = utl::toStr(valueString);
+        param.name = utl::toStr(valueString);
+        param.searchParam.pattern = param.name;
         emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
         return true;
     }
@@ -70,8 +70,8 @@ QMap<int, QVariant> SearchParamModel::itemData(const QModelIndex &index) const
 
     auto &param = m_data.at(index.row());
     return QMap<int, QVariant>{
-        {std::make_pair<int>(Qt::DisplayRole, param.name),
-         std::make_pair<int>(Qt::EditRole, param.param.pattern.c_str())}};
+        {std::make_pair<int>(Qt::DisplayRole, param.name.c_str()),
+         std::make_pair<int>(Qt::EditRole, param.searchParam.pattern.c_str())}};
 }
 
 bool SearchParamModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)
@@ -102,7 +102,7 @@ bool SearchParamModel::insertRows(int row, int count, const QModelIndex &parent)
     if (count < 1 || row < 0 || row > rowCount(parent))
         return false;
     beginInsertRows(QModelIndex(), row, row + count - 1);
-    m_data.insert(m_data.begin() + row, count, RowData());
+    m_data.insert(m_data.begin() + row, count, tp::FilterParam());
     endInsertRows();
     return true;
 }
@@ -166,32 +166,52 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
     return createIndex(row, 0);
 }
 
+void SearchParamModel::reloadParams(const tp::FilterParams &params)
+{
+    beginResetModel();
+    m_data.clear();
+    for (const auto &param : params)
+    {
+        m_data.emplace_back(param);
+    }
+    endResetModel();
+}
+
+void SearchParamModel::appendDistinctParams(const tp::FilterParams &params)
+{
+    for (const auto &param : params)
+    {
+        if (findByItemName(param.name.c_str()) == -1)
+        {
+            beginInsertRows(QModelIndex(), m_data.size(), m_data.size());
+            m_data.emplace_back(param);
+            endInsertRows();
+        }
+    }
+}
+
 tp::SearchParam SearchParamModel::getSearchParam(int idx)
 {
     if (-1 < idx && idx < m_data.size())
-        return m_data.at(idx).param;
+        return m_data.at(idx).searchParam;
     return tp::SearchParam();
 }
 
 void SearchParamModel::setSearchParam(int idx, tp::SearchParam param)
 {
     if (-1 < idx && idx < m_data.size())
-        m_data.at(idx).param = param;
+        m_data.at(idx).searchParam = param;
 }
 
-SearchParamModel::RowData &SearchParamModel::getRowData(int idx)
+tp::FilterParam &SearchParamModel::getRowData(int idx)
 {
     return m_data.at(idx);
 }
 
-bool SearchParamModel::matchRowData(const QString &value, const RowData rowData) const
+bool SearchParamModel::matchRowData(const QString &value, const tp::FilterParam &param) const
 {
-    return (rowData.name == value);
-}
-
-void SearchParamModel::addRowData(const QString &name, const tp::SearchParam &param)
-{
-    m_data.emplace_back(name, param);
+    const auto &s(utl::toStr(value));
+    return (param.name == s || param.searchParam.pattern == s);
 }
 
 bool SearchParamModel::isValidIdx(int idx) const
@@ -217,7 +237,7 @@ int SearchParamModel::findByItemName(const QString &name)
 {
     for (int row = 0; row < rowCount(); ++row)
     {
-        if (m_data.at(row).name == name)
+        if (m_data.at(row).name.c_str() == name)
             return row;
     }
     return -1;

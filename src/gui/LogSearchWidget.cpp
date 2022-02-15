@@ -74,39 +74,6 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
 
     m_searchParamModel = new SearchParamModel(this);
 
-    {
-        tp::SearchParam param;
-        param.pattern = "Logging Sub-System initialized";
-        m_searchParamModel->addRowData("@Initialized", param);
-    }
-    {
-        tp::SearchParam param;
-        param.pattern = "MT\\d";
-        param.type = tp::SearchType::Regex;
-        m_searchParamModel->addRowData("@Metatrader", param);
-    }
-    {
-        tp::SearchParam param;
-        param.pattern = "SEVERE";
-        param.column = tp::Column(0);
-        m_searchParamModel->addRowData("@Error", param);
-    }
-    {
-        tp::SearchParam param;
-        param.pattern = "test";
-        m_searchParamModel->addRowData("test", param);
-    }
-    {
-        tp::SearchParam param;
-        param.pattern = "two";
-        m_searchParamModel->addRowData("two", param);
-    }
-    {
-        tp::SearchParam param;
-        param.pattern = "other";
-        m_searchParamModel->addRowData("other", param);
-    }
-
     createConnections();
 
     addSearchParam();
@@ -119,6 +86,18 @@ LogSearchWidget::~LogSearchWidget()
 void LogSearchWidget::configure()
 {
     m_searchResults->configure(m_conf);
+    m_searchParamModel->reloadParams(m_conf->getFilterParams());
+}
+
+void LogSearchWidget::reconfigure()
+{
+    for (auto paramWidget : m_searchParamWidgets)
+    {
+        paramWidget->updateColumns();
+    }
+    m_searchResults->resetColumns();
+    m_searchResults->configure(m_conf);
+    m_searchParamModel->appendDistinctParams(m_conf->getFilterParams());
 }
 
 void LogSearchWidget::createActions()
@@ -204,16 +183,6 @@ void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
         m_proxyModel->addSourceRows(*rowsPtr.get());
         m_searchResults->updateView();
     }
-}
-
-void LogSearchWidget::reconfigure()
-{
-    for (auto paramWidget : m_searchParamWidgets)
-    {
-        paramWidget->updateColumns();
-    }
-    m_searchResults->resetColumns();
-    m_searchResults->configure(m_conf);
 }
 
 void LogSearchWidget::clearResults()

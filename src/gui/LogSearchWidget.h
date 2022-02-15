@@ -22,6 +22,7 @@ public:
     LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, BaseLogModel *sourceModel, QWidget *parent = nullptr);
     ~LogSearchWidget();
     void configure();
+    void reconfigure();
 
 private:
     void createActions();
@@ -34,7 +35,6 @@ signals:
 
 public slots:
     void addSearchResult(tp::SharedSIntList rowsPtr);
-    void reconfigure();
 
 private slots:
     void addSearchParam();

@@ -108,7 +108,7 @@ void TemplatesConfigDlg::save()
         if (!m_conf->isNull() && templ->isSameType(m_conf))
         {
             m_conf->copyFrom(templ);
-            fixHighlighters(m_conf);
+            fixColumns(m_conf);
             if (!m_conf->exists())
             {
                 if (!m_conf->getConfigName().empty())
@@ -131,7 +131,7 @@ void TemplatesConfigDlg::save()
             if (!conf->isEqual(templ))
             {
                 conf->copyFrom(templ);
-                fixHighlighters(conf);
+                fixColumns(conf);
                 Settings::saveTemplate(conf);
             }
         }
@@ -151,7 +151,7 @@ void TemplatesConfigDlg::apply()
     if (!m_conf->isNull() && conf->isSameType(m_conf))
     {
         m_conf->copyFrom(conf);
-        fixHighlighters(m_conf);
+        fixColumns(m_conf);
         accept();
     }
 }
@@ -200,9 +200,11 @@ void TemplatesConfigDlg::setCurrentTemplate(int index)
     m_edtFileType->setText(tp::toStr(conf->getFileType()).c_str());
     m_edtConfName->setText(conf->getConfigName().c_str());
     m_hltSearchCtrl->setFileConf(conf);
+    m_fltSearchCtrl->setFileConf(conf);
     configureRegexMode(conf);
     fillColumns(conf);
     fillHighlighters(conf);
+    fillFilters(conf);
 }
 
 void TemplatesConfigDlg::deleteTemplate()
@@ -253,9 +255,8 @@ void TemplatesConfigDlg::createColumnsFromRegex()
     const auto &namedGroups = rx.namedCaptureGroups();
     for (auto g = 1; g <= groupsCount; ++g)
     {
-        tp::Column cl;
+        tp::Column cl(g - 1);
         cl.key = std::to_string(g);
-        cl.type = tp::ColumnType::Str;
 
         if (g < namedGroups.size())
         {
@@ -267,9 +268,6 @@ void TemplatesConfigDlg::createColumnsFromRegex()
             cl.name = cl.key;
         }
 
-        cl.idx = g - 1;
-        cl.pos = cl.idx;
-        cl.width = -1;
         conf->addColumn(std::move(cl));
     }
 
@@ -314,6 +312,7 @@ void TemplatesConfigDlg::fillColumns(const FileConf::Ptr &conf, int selectRow)
     }
 
     m_hltSearchCtrl->updateColumns(true);
+    m_fltSearchCtrl->updateColumns(true);
 }
 
 void TemplatesConfigDlg::setCurrentColumn(int index)
@@ -404,6 +403,7 @@ void TemplatesConfigDlg::updateTemplateColumns()
     }
 
     m_hltSearchCtrl->updateColumns(true);
+    m_fltSearchCtrl->updateColumns(true);
     updateStatus();
 }
 
@@ -467,11 +467,16 @@ void TemplatesConfigDlg::fillHighlighters(const FileConf::Ptr &conf, int selectR
     }
 }
 
-void TemplatesConfigDlg::fixHighlighters(const FileConf::Ptr &conf)
+void TemplatesConfigDlg::fixColumns(const FileConf::Ptr &conf)
 {
     for (auto &hlt : conf->getHighlighterParams())
     {
         SearchParamControl::fixParam(conf, hlt.searchParam);
+    }
+
+    for (auto &flt : conf->getFilterParams())
+    {
+        SearchParamControl::fixParam(conf, flt.searchParam);
     }
 }
 
@@ -623,20 +628,167 @@ void TemplatesConfigDlg::pickColor()
     }
 }
 
+void TemplatesConfigDlg::fillFilters(const FileConf::Ptr &conf, int selectRow)
+{
+    m_lstFilters->clear();
+    if (conf->hasFilterParams())
+    {
+        for (const auto &flt : conf->getFilterParams())
+        {
+            m_lstFilters->addItem(flt.name.c_str());
+        }
+        setCurrentFilter(selectRow);
+        m_lstFilters->setCurrentRow(selectRow);
+    }
+    else
+    {
+        setCurrentFilter(-1);
+        m_lstFilters->setCurrentRow(-1);
+    }
+}
+
+void TemplatesConfigDlg::setCurrentFilter(int index)
+{
+    auto enableFltFormFunc = [this](bool enable)
+    {
+        m_edtFltName->setEnabled(enable);
+        m_cmbFltColumn->setEnabled(enable);
+        m_edtFltPattern->setEnabled(enable);
+        m_fltSearchCtrl->setEnabled(enable);
+
+        if (!enable)
+        {
+            m_edtFltName->clear();
+            m_fltSearchCtrl->setSearchParam(tp::SearchParam());
+        }
+    };
+
+    const auto conf = getCuttentTempl();
+    if (conf->isNull())
+    {
+        enableFltFormFunc(false);
+        return;
+    }
+
+    if (conf->hasFilterParam(index))
+    {
+        const auto &flt = conf->getFilterParams().at(index);
+        m_edtFltName->setText(flt.name.c_str());
+        m_fltSearchCtrl->setSearchParam(flt.searchParam);
+        enableFltFormFunc(true);
+    }
+    else
+    {
+        enableFltFormFunc(false);
+    }
+
+    updateStatus();
+}
+
+void TemplatesConfigDlg::updateTemplateFilter()
+{
+    auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    const int fltIdx = m_lstFilters->currentRow();
+    if (conf->hasFilterParam(fltIdx))
+    {
+        auto &flt = conf->getFilterParams().at(fltIdx);
+        flt.name = utl::toStr(m_edtFltName->text());
+        flt.searchParam = m_fltSearchCtrl->getSearchParam();
+
+        auto item = m_lstFilters->item(fltIdx);
+        if (item != nullptr)
+        {
+            item->setText(flt.name.c_str());
+        }
+    }
+    updateStatus();
+}
+
+void TemplatesConfigDlg::addFilter()
+{
+    auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    tp::FilterParam newFlt;
+    const auto newFltPos(conf->getFilterParams().size() + 1);
+    newFlt.name = utl::toStr(tr("New Filter %1").arg(newFltPos));
+    newFlt.searchParam.pattern = utl::toStr(tr("Pattern Filter %1").arg(newFltPos));
+    conf->addFilterParam(std::move(newFlt));
+
+    fillFilters(conf, conf->getFilterParams().size() - 1);
+}
+
+void TemplatesConfigDlg::rmFilter()
+{
+    auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    const int fltIdx = m_lstFilters->currentRow();
+    if (conf->hasFilterParam(fltIdx))
+    {
+        auto &filters(conf->getFilterParams());
+        filters.erase(filters.begin() + fltIdx);
+        fillFilters(conf, fltIdx < filters.size() ? fltIdx : fltIdx - 1);
+    }
+}
+
+void TemplatesConfigDlg::moveFilterUp()
+{
+    auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    const int fltIdx = m_lstFilters->currentRow();
+    if (conf->hasFilterParam(fltIdx) && (fltIdx > 0))
+    {
+        auto &filters(conf->getFilterParams());
+        std::swap(filters[fltIdx], filters[fltIdx - 1]);
+        fillFilters(conf, fltIdx - 1);
+    }
+}
+
+void TemplatesConfigDlg::moveFilterDown()
+{
+    auto conf = getCuttentTempl();
+    if (conf->isNull())
+        return;
+
+    const int fltIdx = m_lstFilters->currentRow();
+    auto &filters(conf->getFilterParams());
+    if (conf->hasFilterParam(fltIdx) && (fltIdx < filters.size() - 1))
+    {
+        std::swap(filters[fltIdx], filters[fltIdx + 1]);
+        fillFilters(conf, fltIdx + 1);
+    }
+}
+
 void TemplatesConfigDlg::createActions()
 {
     m_actDeleteTempl = new QAction(Style::getIcon("delete_icon.png"), tr("Delete template"), this);
     m_actRunRegex = new QAction(Style::getIcon("exec_icon.png"), tr("Create columns from regex"), this);
 
+    // Columns
     m_actAddColumn = new QAction(Style::getIcon("add_icon.png"), tr("Add column"), this);
     m_actRmColumn = new QAction(Style::getIcon("remove_icon.png"), tr("Remove column"), this);
 
+    // Highlighters
     m_actAddHighlighter = new QAction(Style::getIcon("add_icon.png"), tr("Add Highlighter"), this);
     m_actRmHighlighter = new QAction(Style::getIcon("remove_icon.png"), tr("Remove Highlighter"), this);
     m_actMoveHighlighterUp = new QAction(Style::getIcon("up_icon.png"), tr("Move Up"), this);
     m_actMoveHighlighterDown = new QAction(Style::getIcon("down_icon.png"), tr("Move Down"), this);
     m_actHltForeColor = new QAction(tr("Color of the text"), this);
     m_actHltBackColor = new QAction(tr("Color of the background"), this);
+
+    // Filters
+    m_actAddFilter = new QAction(Style::getIcon("add_icon.png"), tr("Add Filter"), this);
+    m_actRmFilter = new QAction(Style::getIcon("remove_icon.png"), tr("Remove Filter"), this);
+    m_actMoveFilterUp = new QAction(Style::getIcon("up_icon.png"), tr("Move Up"), this);
+    m_actMoveFilterDown = new QAction(Style::getIcon("down_icon.png"), tr("Move Down"), this);
 }
 
 void TemplatesConfigDlg::createConnections()
@@ -651,6 +803,7 @@ void TemplatesConfigDlg::createConnections()
     connect(m_edtConfName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
     connect(m_edtRegex, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
 
+    // Columns
     connect(
         m_lstColumns,
         QOverload<int>::of(&QListWidget::currentRowChanged),
@@ -669,6 +822,7 @@ void TemplatesConfigDlg::createConnections()
     connect(m_edtColFormat, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateColumns);
     connect(m_chkNoMatchCol, &QCheckBox::stateChanged, this, &TemplatesConfigDlg::updateTemplateColumns);
 
+    // Highlighters
     connect(
         m_lstHighlighters,
         QOverload<int>::of(&QListWidget::currentRowChanged),
@@ -682,6 +836,20 @@ void TemplatesConfigDlg::createConnections()
     connect(m_actMoveHighlighterUp, &QAction::triggered, this, &TemplatesConfigDlg::moveHighlighterUp);
     connect(m_actMoveHighlighterDown, &QAction::triggered, this, &TemplatesConfigDlg::moveHighlighterDown);
 
+    // Filters
+    connect(
+        m_lstFilters,
+        QOverload<int>::of(&QListWidget::currentRowChanged),
+        this,
+        &TemplatesConfigDlg::setCurrentFilter);
+    connect(m_edtFltName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateFilter);
+    connect(m_fltSearchCtrl, &SearchParamControl::paramChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
+    connect(m_actAddFilter, &QAction::triggered, this, &TemplatesConfigDlg::addFilter);
+    connect(m_actRmFilter, &QAction::triggered, this, &TemplatesConfigDlg::rmFilter);
+    connect(m_actMoveFilterUp, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterUp);
+    connect(m_actMoveFilterDown, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterDown);
+
+    // Dialog buttons
     connect(m_btnApply, &QPushButton::clicked, this, &TemplatesConfigDlg::apply);
     connect(m_btnSave, &QPushButton::clicked, this, &TemplatesConfigDlg::save);
     connect(m_btnCancel, &QPushButton::clicked, this, &QDialog::reject);
@@ -906,6 +1074,63 @@ void TemplatesConfigDlg::buildLayout()
 
     m_tabWidgets->addTab(m_tabHighlighters, tr("Highlighters"));
     // Create highlighters tab ------------------------------------------------ (End)
+
+    // Create filters tab ----------------------------------------------------- (Start)
+    m_tabFilters = new QWidget();
+    auto hFiltersTab = new QHBoxLayout(m_tabFilters);
+
+    // Filters list ------------------------------------------------- (Start)
+    auto vFilters = new QVBoxLayout();
+    m_lstFilters = new QListWidget(m_tabFilters);
+    vFilters->addWidget(m_lstFilters);
+
+    auto hFiltersLstButtons = new QHBoxLayout();
+    auto btnAddFilter = new QToolButton(m_tabFilters);
+    btnAddFilter->setDefaultAction(m_actAddFilter);
+    hFiltersLstButtons->addWidget(btnAddFilter);
+
+    auto btnRmFilter = new QToolButton(m_tabFilters);
+    btnRmFilter->setDefaultAction(m_actRmFilter);
+    hFiltersLstButtons->addWidget(btnRmFilter);
+
+    hFiltersLstButtons->addStretch();
+
+    auto btnMoveFilterUp = new QToolButton(m_tabFilters);
+    btnMoveFilterUp->setDefaultAction(m_actMoveFilterUp);
+    hFiltersLstButtons->addWidget(btnMoveFilterUp);
+
+    auto btnMoveFilterDown = new QToolButton(m_tabFilters);
+    btnMoveFilterDown->setDefaultAction(m_actMoveFilterDown);
+    hFiltersLstButtons->addWidget(btnMoveFilterDown);
+
+    vFilters->addLayout(hFiltersLstButtons);
+
+    hFiltersTab->addLayout(vFilters);
+    // Filters list ------------------------------------------------- (End)
+
+    // Filters edit form -------------------------------------------- (Start)
+    auto frmFilter = new QFormLayout();
+
+    m_edtFltName = new QLineEdit(m_tabFilters);
+    frmFilter->addRow(tr("Name"), m_edtFltName);
+
+    m_cmbFltColumn = new QComboBox(m_tabFilters);
+    auto cmbFltColumnSizePolicy = m_cmbFltColumn->sizePolicy();
+    cmbFltColumnSizePolicy.setHorizontalPolicy(QSizePolicy::Expanding);
+    m_cmbFltColumn->setSizePolicy(cmbFltColumnSizePolicy);
+    frmFilter->addRow(tr("Column"), m_cmbFltColumn);
+
+    m_edtFltPattern = new QLineEdit(m_tabFilters);
+    frmFilter->addRow(tr("Pattern"), m_edtFltPattern);
+
+    m_fltSearchCtrl = new SearchParamControl(m_cmbFltColumn, m_edtFltPattern, m_tabFilters);
+    frmFilter->addRow(tr("Options"), m_fltSearchCtrl);
+
+    hFiltersTab->addLayout(frmFilter);
+    // Filters edit form -------------------------------------------- (End)
+
+    m_tabWidgets->addTab(m_tabFilters, tr("Filters"));
+    // Create filters tab ----------------------------------------------------- (End)
 
     vTemplFrameMain->addWidget(m_tabWidgets);
     vLayoutMain->addWidget(m_frameTempl);

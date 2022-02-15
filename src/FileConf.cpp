@@ -78,9 +78,10 @@ void FileConf::fromJson(const rapidjson::Document &jDoc)
 
     if (const auto &colsIt = jDoc.FindMember("columns"); colsIt != jDoc.MemberEnd())
     {
+        tp::SInt idx(0);
         for (const auto &col : colsIt->value.GetArray())
         {
-            tp::Column column;
+            tp::Column column(idx++);
             column.key = utl::GetValueOpt<std::string>(col, "key").value_or(std::string());
             column.name = utl::GetValueOpt<std::string>(col, "name").value_or(std::string());
             column.type = utl::GetValueOpt<tp::ColumnType>(col, "type").value_or(tp::ColumnType::Str);
@@ -105,6 +106,20 @@ void FileConf::fromJson(const rapidjson::Document &jDoc)
             m_highlighterParams.emplace_back(std::move(hParam));
         }
     }
+
+    if (const auto &fltIt = jDoc.FindMember("filters"); fltIt != jDoc.MemberEnd())
+    {
+        for (const auto &flt : fltIt->value.GetArray())
+        {
+            tp::FilterParam fParam;
+            fParam.searchParam.column = utl::GetValueOpt<tp::UInt>(flt, "column");
+            fParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(flt, "type").value_or(tp::SearchType::SubString);
+            fParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(flt, "options").value_or(tp::SearchFlags());
+            fParam.searchParam.pattern = utl::GetValueOpt<std::string>(flt, "pattern").value_or(std::string());
+            fParam.name = utl::GetValueOpt<std::string>(flt, "name").value_or(fParam.searchParam.pattern);
+            m_filterParams.emplace_back(std::move(fParam));
+        }
+    }
 }
 
 rapidjson::Document FileConf::toJson() const
@@ -117,34 +132,54 @@ rapidjson::Document FileConf::toJson() const
     jDoc.AddMember("regexPattern", m_regexPattern, alloc);
     jDoc.AddMember("noMatchColumn", m_noMatchColumn, alloc);
 
-    rapidjson::Value jCols(rapidjson::kArrayType);
-    for (const auto &col : m_columns)
     {
-        rapidjson::Value jCol(rapidjson::kObjectType);
-        jCol.AddMember("pos", col.pos, alloc);
-        jCol.AddMember("key", col.key, alloc);
-        jCol.AddMember("name", col.name, alloc);
-        jCol.AddMember("type", tp::toStr(col.type), alloc);
-        jCol.AddMember("format", col.format, alloc);
-        jCol.AddMember("width", col.width, alloc);
-        jCols.GetArray().PushBack(jCol, alloc);
+        rapidjson::Value jCols(rapidjson::kArrayType);
+        for (const auto &col : m_columns)
+        {
+            rapidjson::Value jCol(rapidjson::kObjectType);
+            jCol.AddMember("pos", col.pos, alloc);
+            jCol.AddMember("key", col.key, alloc);
+            jCol.AddMember("name", col.name, alloc);
+            jCol.AddMember("type", tp::toStr(col.type), alloc);
+            jCol.AddMember("format", col.format, alloc);
+            jCol.AddMember("width", col.width, alloc);
+            jCols.GetArray().PushBack(jCol, alloc);
+        }
+        jDoc.AddMember("columns", jCols, alloc);
     }
-    jDoc.AddMember("columns", jCols, alloc);
 
-    rapidjson::Value jHighlighters(rapidjson::kArrayType);
-    for (const auto &hlt : m_highlighterParams)
     {
-        rapidjson::Value jHlt(rapidjson::kObjectType);
-        jHlt.AddMember("textColor", utl::toStr(hlt.color.fg), alloc);
-        jHlt.AddMember("backColor", utl::toStr(hlt.color.bg), alloc);
-        jHlt.AddMember("type", tp::toStr(hlt.searchParam.type), alloc);
-        jHlt.AddMember("options", tp::toStr(hlt.searchParam.flags), alloc);
-        jHlt.AddMember("pattern", hlt.searchParam.pattern, alloc);
-        if (hlt.searchParam.column.has_value())
-            jHlt.AddMember("column", hlt.searchParam.column.value().idx, alloc);
-        jHighlighters.GetArray().PushBack(jHlt, alloc);
+        rapidjson::Value jHighlighters(rapidjson::kArrayType);
+        for (const auto &hlt : m_highlighterParams)
+        {
+            rapidjson::Value jHlt(rapidjson::kObjectType);
+            jHlt.AddMember("textColor", utl::toStr(hlt.color.fg), alloc);
+            jHlt.AddMember("backColor", utl::toStr(hlt.color.bg), alloc);
+            jHlt.AddMember("type", tp::toStr(hlt.searchParam.type), alloc);
+            jHlt.AddMember("options", tp::toStr(hlt.searchParam.flags), alloc);
+            jHlt.AddMember("pattern", hlt.searchParam.pattern, alloc);
+            if (hlt.searchParam.column.has_value())
+                jHlt.AddMember("column", hlt.searchParam.column.value().idx, alloc);
+            jHighlighters.GetArray().PushBack(jHlt, alloc);
+        }
+        jDoc.AddMember("highlighters", jHighlighters, alloc);
     }
-    jDoc.AddMember("highlighters", jHighlighters, alloc);
+
+    {
+        rapidjson::Value jFilters(rapidjson::kArrayType);
+        for (const auto &flt : m_filterParams)
+        {
+            rapidjson::Value jFlt(rapidjson::kObjectType);
+            jFlt.AddMember("name", flt.name, alloc);
+            jFlt.AddMember("type", tp::toStr(flt.searchParam.type), alloc);
+            jFlt.AddMember("options", tp::toStr(flt.searchParam.flags), alloc);
+            jFlt.AddMember("pattern", flt.searchParam.pattern, alloc);
+            if (flt.searchParam.column.has_value())
+                jFlt.AddMember("column", flt.searchParam.column.value().idx, alloc);
+            jFilters.GetArray().PushBack(jFlt, alloc);
+        }
+        jDoc.AddMember("filters", jFilters, alloc);
+    }
 
     return jDoc;
 }
@@ -157,6 +192,11 @@ bool FileConf::hasDefinedColumn(tp::SInt columnIdx) const
 bool FileConf::hasHighlighterParam(tp::SInt hltIdx) const
 {
     return ((-1L < hltIdx) && (hltIdx < m_highlighterParams.size()));
+}
+
+bool FileConf::hasFilterParam(tp::SInt fltIdx) const
+{
+    return ((-1L < fltIdx) && (fltIdx < m_filterParams.size()));
 }
 
 bool FileConf::isEqual(const FileConf::Ptr &other) const

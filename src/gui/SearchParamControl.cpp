@@ -10,8 +10,8 @@
 #include <QLineEdit>
 #include <QToolButton>
 #include <QComboBox>
-#include <QIdentityProxyModel>
 #include <QCompleter>
+#include <QIdentityProxyModel>
 
 class SearchParamProxyModel : public QIdentityProxyModel
 {
@@ -33,9 +33,9 @@ public:
             if (m_model->matchRowData(valueString, param))
                 return true;
 
-            param.name = valueString;
-            param.param = m_control->getSearchParam();
-            param.param.pattern = utl::toStr(valueString);
+            param.name = utl::toStr(valueString);
+            param.searchParam = m_control->getSearchParam();
+            param.searchParam.pattern = param.name;
             emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
             return true;
         }
@@ -53,34 +53,17 @@ public:
             m_currentText = currentText;
             m_control->setSearchParam(m_model->getSearchParam(idx));
         }
-        LOG_INF("setCurrentItemIdx idx: {} - name: {}", idx, utl::toStr(currentText));
     }
 
-    void setCurrentItemIdx(const QModelIndex &index)
-    {
-        if (index.isValid())
-        {
-            auto rowData = m_model->getRowData(index.row());
-            LOG_INF("Completer idx: {} - name: {}", index.row(), utl::toStr(rowData.name));
-            setCurrentItemIdx(index.row());
-        }
-    }
-
-    void setCurrentItemApplied()
+    void applyCurrentItem()
     {
         const auto idx = m_model->findByItemName(m_currentText);
         if (m_model->isValidIdx(idx))
         {
-            LOG_INF("Appplied idx: {} - name: {}", idx, utl::toStr(m_currentText));
             m_model->setSearchParam(idx, m_control->getSearchParam());
             m_model->moveRow(QModelIndex(), idx, QModelIndex(), 0);
             setCurrentItemIdx(0);
         }
-    }
-
-    QString getCurrentText()
-    {
-        return m_currentText;
     }
 
     SearchParamModel *m_model;
@@ -151,67 +134,29 @@ SearchParamControl::SearchParamControl(
     m_completer = m_cmbSearch->completer();
     m_completer->setCaseSensitivity(Qt::CaseInsensitive);
     m_completer->setCompletionMode(QCompleter::PopupCompletion);
-    //m_completer->setModel(m_proxyModel);
     m_completer->setCompletionRole(Qt::DisplayRole);
-    //m_edtPattern->setCompleter(m_completer);
 
     connect(
         m_cmbSearch,
         QOverload<int>::of(&QComboBox::currentIndexChanged),
-        this,
-        &SearchParamControl::setCurrentModelIdx);
-
-    connect(
-        m_cmbSearch,
-        &QComboBox::editTextChanged,
-        this,
-        &SearchParamControl::textChanged);
-
-    // connect(
-    //     completer,
-    //     QOverload<const QModelIndex &>::of(&QCompleter::activated),
-    //     m_proxyModel,
-    //     QOverload<const QModelIndex &>::of(&SearchParamProxyModel::setCurrentItemIdx));
-}
-
-
-void SearchParamControl::textChanged(const QString &text)
-{
-    m_cmbSearch->hidePopup();
-    auto s = utl::toStr(text);
-    LOG_INF("textChanged: {}", s);
+        m_proxyModel,
+        &SearchParamProxyModel::setCurrentItemIdx);
 }
 
 void SearchParamControl::apply()
 {
-    // if (m_completer != nullptr)
-    // {
-    //     m_completer->setCurrentRow(-1);
-    //     m_completer->setModel(nullptr);
-    // }
-
     updateParam();
     if (m_proxyModel != nullptr)
     {
-        m_proxyModel->setCurrentItemApplied();
+        m_proxyModel->applyCurrentItem();
+        if (m_completer != nullptr)
+        {
+            // Needs to reset the the Completer model to get the items in the right order after the current item was
+            // moved to the top. It should use QSortFilterProxyModel, but it didn't work well when adding new items
+            // after sorting. Verify if it's working fine in future Qt versions.
+            m_completer->setModel(m_proxyModel);
+        }
     }
-
-    LOG_INF("Pattern text: {}", utl::toStr(m_edtPattern->text()));
-    
-    if (m_completer != nullptr)
-    {
-        m_completer->setModel(m_proxyModel);
-        m_completer->setCurrentRow(0);
-    }
-}
-
-void SearchParamControl::setCurrentModelIdx(int idx)
-{
-    if (m_proxyModel == nullptr)
-        return;
-
-    LOG_INF("Completer text: {}", m_completer->currentCompletion().toStdString());
-    m_proxyModel->setCurrentItemIdx(idx);
 }
 
 void SearchParamControl::createActions()
@@ -241,7 +186,8 @@ void SearchParamControl::createConnections()
     connect(m_actNotOp, &QAction::triggered, this, [this]() { updateParam(); });
     connect(m_cmbColumns, QOverload<int>::of(&QComboBox::activated), this, [this]() { updateParam(); });
     connect(m_edtPattern, &QLineEdit::editingFinished, this, [this]() { updateParam(); });
-    connect(m_edtPattern, &QLineEdit::returnPressed, this, &SearchParamControl::searchRequested);
+    // Must be QueuedConnection due the Completer is not finished when returnPressed is emitted.
+    connect(m_edtPattern, &QLineEdit::returnPressed, this, &SearchParamControl::searchRequested, Qt::QueuedConnection);
 }
 
 void SearchParamControl::updateColumns(bool tryKeepSel)
@@ -352,15 +298,9 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
 
 void SearchParamControl::fixParam(const FileConf::Ptr &conf, tp::SearchParam &param)
 {
-    bool hasDefinedColumn(false);
-    if (conf && !conf->isNull() && conf->hasDefinedColumn(param.column->idx))
-    {
-        hasDefinedColumn = true;
-    }
-
     if (param.column.has_value())
     {
-        if (!hasDefinedColumn || (param.column.value().idx >= conf->getColumns().size()))
+        if (!conf || conf->isNull() || !conf->hasDefinedColumn(param.column.value().idx))
         {
             param.column = std::nullopt;
         }
