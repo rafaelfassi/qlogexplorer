@@ -186,7 +186,7 @@ SearchParamModel::RowData &SearchParamModel::getRowData(int idx)
 
 bool SearchParamModel::matchRowData(const QString &value, const RowData rowData) const
 {
-    return ((rowData.name == value) || (QString(rowData.param.pattern.c_str()) == value));
+    return (rowData.name == value);
 }
 
 void SearchParamModel::addRowData(const QString &name, const tp::SearchParam &param)

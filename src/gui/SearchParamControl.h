@@ -8,6 +8,7 @@
 class QAction;
 class QLineEdit;
 class QComboBox;
+class QCompleter;
 class SearchParamModel;
 class SearchParamProxyModel;
 
@@ -22,7 +23,7 @@ public:
         QComboBox *cmbSearch,
         SearchParamModel *searchModel,
         QWidget *parent = nullptr);
-    ~SearchParamControl();
+    ~SearchParamControl() = default;
     void createActions();
     void createConnections();
     void setFileConf(FileConf::Ptr conf);
@@ -40,6 +41,8 @@ public slots:
 
 private slots:
     void updateParam(bool notifyChanged = true);
+    void setCurrentModelIdx(int idx);
+    void textChanged(const QString &text);
 
 private:
     tp::SearchParam m_param;
@@ -51,5 +54,6 @@ private:
     QAction *m_actRange;
     QAction *m_actMatchCase;
     QAction *m_actNotOp;
+    QCompleter *m_completer = nullptr;
     SearchParamProxyModel *m_proxyModel = nullptr;
 };

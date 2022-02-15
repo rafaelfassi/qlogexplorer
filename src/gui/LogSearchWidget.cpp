@@ -91,6 +91,21 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
         param.column = tp::Column(0);
         m_searchParamModel->addRowData("@Error", param);
     }
+    {
+        tp::SearchParam param;
+        param.pattern = "test";
+        m_searchParamModel->addRowData("test", param);
+    }
+    {
+        tp::SearchParam param;
+        param.pattern = "two";
+        m_searchParamModel->addRowData("two", param);
+    }
+    {
+        tp::SearchParam param;
+        param.pattern = "other";
+        m_searchParamModel->addRowData("other", param);
+    }
 
     createConnections();
 

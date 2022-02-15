@@ -47,11 +47,22 @@ public:
         if (!m_model->isValidIdx(idx))
             return;
 
-        const auto& currentText = m_model->getItemName(idx);
+        const auto &currentText = m_model->getItemName(idx);
         if (m_currentText != currentText)
         {
             m_currentText = currentText;
             m_control->setSearchParam(m_model->getSearchParam(idx));
+        }
+        LOG_INF("setCurrentItemIdx idx: {} - name: {}", idx, utl::toStr(currentText));
+    }
+
+    void setCurrentItemIdx(const QModelIndex &index)
+    {
+        if (index.isValid())
+        {
+            auto rowData = m_model->getRowData(index.row());
+            LOG_INF("Completer idx: {} - name: {}", index.row(), utl::toStr(rowData.name));
+            setCurrentItemIdx(index.row());
         }
     }
 
@@ -60,9 +71,16 @@ public:
         const auto idx = m_model->findByItemName(m_currentText);
         if (m_model->isValidIdx(idx))
         {
+            LOG_INF("Appplied idx: {} - name: {}", idx, utl::toStr(m_currentText));
             m_model->setSearchParam(idx, m_control->getSearchParam());
             m_model->moveRow(QModelIndex(), idx, QModelIndex(), 0);
+            setCurrentItemIdx(0);
         }
+    }
+
+    QString getCurrentText()
+    {
+        return m_currentText;
     }
 
     SearchParamModel *m_model;
@@ -130,22 +148,70 @@ SearchParamControl::SearchParamControl(
     m_cmbSearch->setInsertPolicy(QComboBox::InsertAtTop);
     m_cmbSearch->setCurrentIndex(-1);
 
-    QCompleter *completer = new QCompleter(this);
-    completer->setCaseSensitivity(Qt::CaseInsensitive);
-    completer->setCompletionMode(QCompleter::InlineCompletion);
-    completer->setModel(m_proxyModel);
-    completer->setCompletionRole(Qt::DisplayRole);
-    m_edtPattern->setCompleter(completer);
+    m_completer = m_cmbSearch->completer();
+    m_completer->setCaseSensitivity(Qt::CaseInsensitive);
+    m_completer->setCompletionMode(QCompleter::PopupCompletion);
+    //m_completer->setModel(m_proxyModel);
+    m_completer->setCompletionRole(Qt::DisplayRole);
+    //m_edtPattern->setCompleter(m_completer);
 
     connect(
         m_cmbSearch,
         QOverload<int>::of(&QComboBox::currentIndexChanged),
-        m_proxyModel,
-        &SearchParamProxyModel::setCurrentItemIdx);
+        this,
+        &SearchParamControl::setCurrentModelIdx);
+
+    connect(
+        m_cmbSearch,
+        &QComboBox::editTextChanged,
+        this,
+        &SearchParamControl::textChanged);
+
+    // connect(
+    //     completer,
+    //     QOverload<const QModelIndex &>::of(&QCompleter::activated),
+    //     m_proxyModel,
+    //     QOverload<const QModelIndex &>::of(&SearchParamProxyModel::setCurrentItemIdx));
 }
 
-SearchParamControl::~SearchParamControl()
+
+void SearchParamControl::textChanged(const QString &text)
 {
+    m_cmbSearch->hidePopup();
+    auto s = utl::toStr(text);
+    LOG_INF("textChanged: {}", s);
+}
+
+void SearchParamControl::apply()
+{
+    // if (m_completer != nullptr)
+    // {
+    //     m_completer->setCurrentRow(-1);
+    //     m_completer->setModel(nullptr);
+    // }
+
+    updateParam();
+    if (m_proxyModel != nullptr)
+    {
+        m_proxyModel->setCurrentItemApplied();
+    }
+
+    LOG_INF("Pattern text: {}", utl::toStr(m_edtPattern->text()));
+    
+    if (m_completer != nullptr)
+    {
+        m_completer->setModel(m_proxyModel);
+        m_completer->setCurrentRow(0);
+    }
+}
+
+void SearchParamControl::setCurrentModelIdx(int idx)
+{
+    if (m_proxyModel == nullptr)
+        return;
+
+    LOG_INF("Completer text: {}", m_completer->currentCompletion().toStdString());
+    m_proxyModel->setCurrentItemIdx(idx);
 }
 
 void SearchParamControl::createActions()
@@ -247,13 +313,6 @@ void SearchParamControl::updateParam(bool notifyChanged)
         if (notifyChanged)
             emit paramChanged();
     }
-}
-
-void SearchParamControl::apply()
-{
-    updateParam();
-    if (m_proxyModel != nullptr)
-        m_proxyModel->setCurrentItemApplied();
 }
 
 void SearchParamControl::setFileConf(FileConf::Ptr conf)
