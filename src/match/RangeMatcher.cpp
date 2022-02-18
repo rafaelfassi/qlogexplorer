@@ -60,7 +60,9 @@ bool RangeMatcher::match(const std::string &text)
 
         if (validTo)
             res &= (val <= m_to);
+
+        return res;
     }
 
-    return res;
+    return false;
 }

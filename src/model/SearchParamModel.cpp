@@ -126,12 +126,15 @@ QModelIndexList SearchParamModel::match(
     Qt::MatchFlags flags) const
 {
     QModelIndexList indexLst;
-    const QString valueString = value.toString();
-    for (int row = index.row(); row < rowCount(); ++row)
+    if (index.isValid())
     {
-        const auto &param = m_data.at(row);
-        if (matchRowData(valueString, param))
-            indexLst.append(createIndex(row, 0));
+        const QString valueString = value.toString();
+        for (int row = index.row(); row < rowCount(); ++row)
+        {
+            const auto &param = m_data.at(row);
+            if (matchRowData(valueString, param))
+                indexLst.append(createIndex(row, 0));
+        }
     }
     return indexLst;
 }
@@ -166,7 +169,7 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
     return createIndex(row, 0);
 }
 
-void SearchParamModel::reloadParams(const tp::FilterParams &params)
+void SearchParamModel::loadParams(const tp::FilterParams &params)
 {
     beginResetModel();
     m_data.clear();
@@ -177,15 +180,23 @@ void SearchParamModel::reloadParams(const tp::FilterParams &params)
     endResetModel();
 }
 
-void SearchParamModel::appendDistinctParams(const tp::FilterParams &params)
+void SearchParamModel::updateParams(const tp::FilterParams &params)
 {
     for (const auto &param : params)
     {
-        if (findByItemName(param.name.c_str()) == -1)
+        const auto idx = findByItemName(param.name.c_str());
+        if (idx == -1)
         {
             beginInsertRows(QModelIndex(), m_data.size(), m_data.size());
             m_data.emplace_back(param);
             endInsertRows();
+        }
+        else
+        {
+            if(m_data.at(idx).searchParam != param.searchParam)
+            {
+                m_data.at(idx).searchParam = param.searchParam;
+            }
         }
     }
 }

@@ -41,8 +41,8 @@ public:
         int destinationChild) override;
     QModelIndex sibling(int row, int column, const QModelIndex &idx) const override;
 
-    void reloadParams(const tp::FilterParams &params);
-    void appendDistinctParams(const tp::FilterParams &params);
+    void loadParams(const tp::FilterParams &params);
+    void updateParams(const tp::FilterParams &params);
     tp::SearchParam getSearchParam(int idx);
     void setSearchParam(int idx, tp::SearchParam param);
     tp::FilterParam &getRowData(int idx);

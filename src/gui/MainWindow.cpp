@@ -276,27 +276,51 @@ void MainWindow::openFile(FileConf::Ptr conf)
 
 void MainWindow::openTemplatesConfig()
 {
-    auto conf = FileConf::make();
-    const auto tabIdx = m_tabViews->currentIndex();
-    LogTabWidget *tab(nullptr);
-    if (tabIdx >= 0)
+    auto currConf = FileConf::make();
+    const auto currTabIdx = m_tabViews->currentIndex();
+    LogTabWidget *currTab(nullptr);
+    if (currTabIdx >= 0)
     {
-        tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(tabIdx));
-        if (tab)
+        currTab = qobject_cast<LogTabWidget *>(m_tabViews->widget(currTabIdx));
+        if (currTab)
         {
-            conf = tab->getConf();
+            currConf = currTab->getConf();
         }
     }
 
-    TemplatesConfigDlg templConf(conf, this);
+    TemplatesConfigDlg templConf(currConf, this);
     if (templConf.exec() == QDialog::Accepted)
     {
         updateTemplates();
         updateRecentFiles();
-        if (tab && !conf->isNull())
+
+        if (currTab && !currConf->isNull())
         {
-            tab->reconfigure();
-            confCurrentTab(tabIdx);
+            currTab->reconfigure();
+            confCurrentTab(currTabIdx);
+        }
+
+        auto temlates = Settings::getTemplates();
+        for (int tabIdx = 0; tabIdx < m_tabViews->count(); ++tabIdx)
+        {
+            if (tabIdx == currTabIdx)
+                continue;
+
+            auto *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(tabIdx));
+            if (!tab)
+                continue;
+
+            auto tabConf = tab->getConf();
+            for (auto& templ : temlates)
+            {
+                if (templ->isSameType(tabConf) && !templ->isEqual(tabConf))
+                {
+                    const auto file = tabConf->getFileName();
+                    tabConf->copyFrom(templ);
+                    tabConf->setFileName(file);
+                    tab->reconfigure();
+                }
+            }
         }
     }
 }

@@ -66,6 +66,9 @@ public:
         }
     }
 
+    int getCurrentIdx() { return m_model->findByItemName(m_currentText); }
+
+private:
     SearchParamModel *m_model;
     SearchParamControl *m_control;
     QString m_currentText;
@@ -80,6 +83,8 @@ SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPatt
     Q_ASSERT_X(edtPattern != nullptr, "SearchParamControl", "edtPattern is null");
 
     createActions();
+
+    cmbColumns->setFocusPolicy(Qt::NoFocus);
 
     QToolButton *btnMatchCase = new QToolButton(this);
     btnMatchCase->setFocusPolicy(Qt::NoFocus);
@@ -214,6 +219,9 @@ void SearchParamControl::updateColumns(bool tryKeepSel)
     {
         m_cmbColumns->setCurrentIndex(0);
     }
+
+    if (m_cmbSearch != nullptr && m_proxyModel != nullptr)
+        m_cmbSearch->setCurrentIndex(m_proxyModel->getCurrentIdx());
 }
 
 void SearchParamControl::updateParam(bool notifyChanged)

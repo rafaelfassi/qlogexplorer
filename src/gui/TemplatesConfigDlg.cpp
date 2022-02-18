@@ -492,10 +492,12 @@ void TemplatesConfigDlg::setCurrentHighlighter(int index)
 
         if (!enable)
         {
-            m_actHltForeColor->setIcon(QIcon());
-            m_actHltForeColor->setData(palette().color(QPalette::Text));
-            m_actHltBackColor->setIcon(QIcon());
-            m_actHltBackColor->setData(palette().color(QPalette::Base));
+            const auto fgColor(palette().color(QPalette::Text));
+            const auto bgColor(palette().color(QPalette::Base));
+            m_actHltForeColor->setIcon(Style::makeIcon(fgColor));
+            m_actHltForeColor->setData(fgColor);
+            m_actHltBackColor->setIcon(Style::makeIcon(bgColor));
+            m_actHltBackColor->setData(bgColor);
             m_hltSearchCtrl->setSearchParam(tp::SearchParam());
         }
     };

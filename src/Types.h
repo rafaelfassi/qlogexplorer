@@ -106,7 +106,7 @@ using ColumnsRef = std::vector<std::reference_wrapper<Column>>;
 
 struct SearchParam
 {
-    SearchType type = SearchType::None;
+    SearchType type = SearchType::SubString;
     SearchFlags flags;
     std::string pattern;
     std::optional<Column> column;

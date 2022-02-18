@@ -86,7 +86,7 @@ LogSearchWidget::~LogSearchWidget()
 void LogSearchWidget::configure()
 {
     m_searchResults->configure(m_conf);
-    m_searchParamModel->reloadParams(m_conf->getFilterParams());
+    m_searchParamModel->loadParams(m_conf->getFilterParams());
 }
 
 void LogSearchWidget::reconfigure()
@@ -97,7 +97,7 @@ void LogSearchWidget::reconfigure()
     }
     m_searchResults->resetColumns();
     m_searchResults->configure(m_conf);
-    m_searchParamModel->appendDistinctParams(m_conf->getFilterParams());
+    m_searchParamModel->updateParams(m_conf->getFilterParams());
 }
 
 void LogSearchWidget::createActions()
