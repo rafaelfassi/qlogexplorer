@@ -13,6 +13,7 @@ class BaseLogModel;
 class ProxyModel;
 class SearchParamWidget;
 class SearchParamModel;
+class ProgressLabel;
 
 class LogSearchWidget : public QWidget
 {
@@ -57,6 +58,7 @@ private:
     BaseLogModel *m_sourceModel;
     LogViewWidget *m_searchResults;
     ProxyModel *m_proxyModel;
+    ProgressLabel *m_prlSearching;
     SearchParamModel *m_searchParamModel;
     QList<SearchParamWidget *> m_searchParamWidgets;
 };

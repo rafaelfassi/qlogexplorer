@@ -101,7 +101,8 @@ public:
     bool isFollowing() const;
 
 signals:
-    void parsingProgress(char progress);
+    void parsingProgressChanged(int progress);
+    void searchingProgressChanged(int progress);
     void valueFound(tp::SharedSIntList rowsPtr) const;
 
 public slots:

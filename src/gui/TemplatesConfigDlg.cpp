@@ -197,7 +197,7 @@ void TemplatesConfigDlg::setCurrentTemplate(int index)
     m_frameTempl->setVisible(true);
 
     const auto &conf = m_templates.at(index);
-    m_edtFileType->setText(tp::toStr(conf->getFileType()).c_str());
+    m_labFileType->setText(tp::toStr(conf->getFileType()).c_str());
     m_edtConfName->setText(conf->getConfigName().c_str());
     m_hltSearchCtrl->setFileConf(conf);
     m_fltSearchCtrl->setFileConf(conf);
@@ -933,13 +933,10 @@ void TemplatesConfigDlg::buildLayout()
     m_frmTemplMain = new QFormLayout();
 
     // File type
-    m_edtFileType = new QLineEdit(m_frameTempl);
-    auto edtFileTypePalette = m_edtFileType->palette();
-    edtFileTypePalette.setColor(QPalette::Disabled, QPalette::Base, edtFileTypePalette.color(QPalette::Window));
-    edtFileTypePalette.setColor(QPalette::Disabled, QPalette::Text, edtFileTypePalette.color(QPalette::WindowText));
-    m_edtFileType->setPalette(edtFileTypePalette);
-    m_edtFileType->setEnabled(false);
-    m_frmTemplMain->addRow(tr("Type"), m_edtFileType);
+    m_labFileType = new QLabel(m_frameTempl);
+    m_labFileType->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_labFileType->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
+    m_frmTemplMain->addRow(tr("Type"), m_labFileType);
 
     // Template name
     m_edtConfName = new QLineEdit(m_frameTempl);

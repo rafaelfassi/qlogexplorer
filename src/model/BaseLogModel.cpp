@@ -138,13 +138,19 @@ void BaseLogModel::search()
                 }
             }
 
-            if (!rowsPtr->empty() && timer.hasExpired(1000))
+            if (timer.hasExpired(1000))
             {
-                emit valueFound(rowsPtr);
-                rowsPtr = std::make_shared<tp::SIntList>();
-                searchTime += timer.restart();
+                searchingProgressChanged((row * 100) / m_rowCount.load());
+                if (!rowsPtr->empty())
+                {
+                    emit valueFound(rowsPtr);
+                    rowsPtr = std::make_shared<tp::SIntList>();
+                    searchTime += timer.restart();
+                }
             }
         }
+
+        searchingProgressChanged(100);
 
         if (!rowsPtr->empty())
         {
@@ -470,10 +476,13 @@ void BaseLogModel::loadChunks()
                 nextRow = rowCount;
                 m_rowCount.store(rowCount);
                 emit countChanged();
+                parsingProgressChanged((newLastParsedPos * 100) / fileSize);
             }
         }
 
     } while (m_watching.load(std::memory_order_relaxed) && (newLastParsedPos < fileSize));
+
+    parsingProgressChanged(100);
 
     chunkCount = m_chunks.size() - chunkCount;
     LOG_INF("{} chunks parsed in {} seconds", chunkCount, timer.elapsed() / 1000);

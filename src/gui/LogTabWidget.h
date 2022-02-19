@@ -8,6 +8,7 @@
 class BaseLogModel;
 class LogViewWidget;
 class LogSearchWidget;
+class ProgressLabel;
 
 class LogTabWidget : public QWidget
 {
@@ -33,4 +34,5 @@ private:
     FileConf::Ptr m_conf;
     QAction *m_actTrackFile;
     QAction *m_actAutoScrolling;
+    ProgressLabel *m_prlFileParsing;
 };

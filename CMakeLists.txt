@@ -75,6 +75,7 @@ set(GUI_HEADERS
     src/gui/LogTabWidget.h
     src/gui/HeaderView.h
     src/gui/Highlighter.h
+    src/gui/ProgressLabel.h
     src/gui/TemplatesConfigDlg.h
 )
 
@@ -89,6 +90,7 @@ set(GUI_SOURCES
     src/gui/LogTabWidget.cpp
     src/gui/HeaderView.cpp
     src/gui/Highlighter.cpp
+    src/gui/ProgressLabel.cpp
     src/gui/TemplatesConfigDlg.cpp
 )
 

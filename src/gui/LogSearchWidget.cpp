@@ -9,6 +9,7 @@
 #include "SearchParamWidget.h"
 #include "ProxyModel.h"
 #include "LongScrollBar.h"
+#include "ProgressLabel.h"
 #include "Style.h"
 #include <QTableView>
 #include <QVBoxLayout>
@@ -48,6 +49,9 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     btnExec->setFocusPolicy(Qt::NoFocus);
     btnExec->setDefaultAction(m_actExec);
 
+    m_prlSearching = new ProgressLabel(this);
+    m_prlSearching->setActionText(tr("Searching"));
+
     m_proxyModel = new ProxyModel(m_sourceModel);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
@@ -56,7 +60,7 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     hLayout->addWidget(btnClear);
     hLayout->addWidget(btnSyncMarks);
     hLayout->addWidget(btnExec);
-    hLayout->addStretch();
+    hLayout->addWidget(m_prlSearching);
     hLayout->addWidget(btnAddSearchParam);
 
     m_searchResults = new LogViewWidget(m_proxyModel, this);
@@ -131,6 +135,7 @@ void LogSearchWidget::createConnections()
     connect(m_actAddSearchParam, &QAction::triggered, this, &LogSearchWidget::addSearchParam);
     connect(m_sourceModel, &BaseLogModel::modelConfigured, this, &LogSearchWidget::sourceModelConfigured);
     connect(m_sourceModel, &BaseLogModel::valueFound, this, &LogSearchWidget::addSearchResult);
+    connect(m_sourceModel, &BaseLogModel::searchingProgressChanged, m_prlSearching, &ProgressLabel::setProgress);
     connect(m_searchResults, &LogViewWidget::rowSelected, m_mainLog, &LogViewWidget::goToRow);
 }
 

@@ -9,6 +9,7 @@
 #include "TextLogModel.h"
 #include "JsonLogModel.h"
 #include "LongScrollBar.h"
+#include "ProgressLabel.h"
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -46,9 +47,11 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     QToolBar *toolbar = new QToolBar(tr("File ToolBar"), this);
     toolbar->addAction(m_actTrackFile);
     toolbar->addAction(m_actAutoScrolling);
-    auto edtFileName = new QLineEdit(toolbar);
-    edtFileName->setText(conf->getFileName().c_str());
-    toolbar->addWidget(edtFileName);
+    m_prlFileParsing = new ProgressLabel(this);
+    m_prlFileParsing->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
+    m_prlFileParsing->setActionText(tr("Indexing"));
+    m_prlFileParsing->setText(conf->getFileName().c_str());
+    toolbar->addWidget(m_prlFileParsing);
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);
     m_logViewWidget->setMinimumSize(400, 200);
@@ -97,6 +100,7 @@ void LogTabWidget::createConnections()
     connect(m_actTrackFile, &QAction::toggled, m_logModel, &BaseLogModel::setFollowing);
     connect(m_actAutoScrolling, &QAction::toggled, m_logViewWidget, &LogViewWidget::setAutoScrolling);
     connect(m_logViewWidget, &LogViewWidget::autoScrollingChanged, m_actAutoScrolling, &QAction::setChecked);
+    connect(m_logModel, &BaseLogModel::parsingProgressChanged, m_prlFileParsing, &ProgressLabel::setProgress);
 }
 
 void LogTabWidget::reconfigure()

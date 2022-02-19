@@ -103,7 +103,7 @@ private:
     QFormLayout *m_frmTemplMain;
     QFrame *m_frameTempl;
     QComboBox *m_cmbTemplates;
-    QLineEdit *m_edtFileType;
+    QLabel *m_labFileType;
     QLineEdit *m_edtConfName;
     QHBoxLayout *m_hRegex;
     QLabel *m_labRegex;
