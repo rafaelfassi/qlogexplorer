@@ -24,6 +24,11 @@
 #include <QFileInfo>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDragLeaveEvent>
+#include <QDropEvent>
+#include <QMimeData>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -39,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     createConnections();
 
     loadConfig();
+
+    setAcceptDrops(true);
 }
 
 MainWindow::~MainWindow()
@@ -100,6 +107,24 @@ void MainWindow::loadConfig()
     updateRecentFiles();
 }
 
+QStringList MainWindow::getFilesToOpen()
+{
+    QStringList filesToOpen;
+
+    if (!m_filesToOpen.isEmpty())
+    {
+        filesToOpen = m_filesToOpen;
+    }
+    else
+    {
+        const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
+        if (!fileName.isEmpty())
+            filesToOpen.append(fileName);
+    }
+
+    return filesToOpen;
+}
+
 void MainWindow::updateTemplates()
 {
     for (auto &actTempl : m_actTemplates)
@@ -132,12 +157,13 @@ void MainWindow::handleOpenWithTemplate()
     if (idx >= 0 && idx < m_actTemplates.size())
     {
         auto conf = m_actTemplates[idx].second;
-        const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
-        if (fileName.isEmpty())
-            return;
-        auto newConf = FileConf::clone(conf);
-        newConf->setFileName(fileName.toStdString());
-        openFile(newConf);
+        const auto &files = getFilesToOpen();
+        for (const auto &fileName : files)
+        {
+            auto newConf = FileConf::clone(conf);
+            newConf->setFileName(fileName.toStdString());
+            openFile(newConf);
+        }
     }
 }
 
@@ -228,13 +254,11 @@ int MainWindow::findOpenedFileTab(const FileConf::Ptr &conf)
 
 void MainWindow::openFile(tp::FileType type)
 {
-    const auto fileName = QFileDialog::getOpenFileName(this, tr("Open File"));
-    if (fileName.isEmpty())
+    const auto &files = getFilesToOpen();
+    for (const auto &fileName : files)
     {
-        return;
+        openFile(fileName, type);
     }
-
-    openFile(fileName, type);
 }
 
 void MainWindow::openFile(const QString &fileName, tp::FileType type)
@@ -434,5 +458,40 @@ void MainWindow::saveConfAs()
         {
             confCurrentTab(idx);
         }
+    }
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+{
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragMoveEvent(QDragMoveEvent *event)
+{
+    event->acceptProposedAction();
+}
+
+void MainWindow::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    event->accept();
+}
+
+void MainWindow::dropEvent(QDropEvent *event)
+{
+    const QMimeData *mimeData = event->mimeData();
+    if (mimeData->hasUrls())
+    {
+        QList<QUrl> urlList = mimeData->urls();
+        for (int i = 0; i < urlList.size() && i < 32; ++i)
+        {
+            m_filesToOpen.append(urlList.at(i).toLocalFile());
+        }
+    }
+
+    if (!m_filesToOpen.empty())
+    {
+        if (m_fileOpenAsMenu->exec(mapToGlobal(event->pos())) != nullptr)
+            event->acceptProposedAction();
+        m_filesToOpen.clear();
     }
 }

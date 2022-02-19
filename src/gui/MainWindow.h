@@ -39,9 +39,16 @@ private slots:
     void handleOpenWithTemplate();
     void handleOpenRecentFile();
 
+protected:
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+
 private:
     void updateRecentFiles();
     int findOpenedFileTab(const FileConf::Ptr &conf);
+    QStringList getFilesToOpen();
 
 private:
     QAction *m_openFileAsText;
@@ -55,6 +62,7 @@ private:
     QMenu *m_fileOpenAsMenu;
     QMenu *m_templatesMenu;
     QTabWidget *m_tabViews;
+    QStringList m_filesToOpen;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actTemplates;
 };
