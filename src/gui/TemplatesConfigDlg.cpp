@@ -370,10 +370,15 @@ void TemplatesConfigDlg::setColumnType(int index)
     if (index != -1)
     {
         const auto colType = tp::fromInt<tp::ColumnType>(m_cmbColType->itemData(index).toInt());
-        m_edtColFormat->setEnabled(colType == tp::ColumnType::Time);
-        return;
+        if (colType == tp::ColumnType::Time)
+        {
+            m_edtColFormat->setEnabled(true);
+            m_edtColFormat->setPlaceholderText(tr("Date Time Format"));
+            return;
+        }
     }
     m_edtColFormat->setEnabled(false);
+    m_edtColFormat->setPlaceholderText(QString());
 }
 
 void TemplatesConfigDlg::updateTemplateColumns()
@@ -1002,7 +1007,6 @@ void TemplatesConfigDlg::buildLayout()
     m_frmColumn->addRow(tr("Type"), m_cmbColType);
 
     m_edtColFormat = new QLineEdit(m_tabColumns);
-    m_edtColFormat->setPlaceholderText(tr("Date Time Format"));
     m_frmColumn->addRow(tr("Format"), m_edtColFormat);
 
     // Will be added or removed according to the type of the file.

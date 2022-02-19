@@ -23,8 +23,10 @@
         <file>images/default/range_icon.png</file>
         <file>images/default/regex_icon.png</file>
         <file>images/default/remove_icon.png</file>
+        <file>images/default/scroll_down.png</file>
         <file>images/default/search_icon.png</file>
         <file>images/default/sync_icon.png</file>
+        <file>images/default/track_icon.png</file>
         <file>images/default/up_icon.png</file>
 
         <file>images/dark/add_icon.png</file>
@@ -42,8 +44,10 @@
         <file>images/dark/range_icon.png</file>
         <file>images/dark/regex_icon.png</file>
         <file>images/dark/remove_icon.png</file>
+        <file>images/dark/scroll_down.png</file>
         <file>images/dark/search_icon.png</file>
         <file>images/dark/sync_icon.png</file>
+        <file>images/dark/track_icon.png</file>
         <file>images/dark/up_icon.png</file>
     </qresource>
 </RCC>

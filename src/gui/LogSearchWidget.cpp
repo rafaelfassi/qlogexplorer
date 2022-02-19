@@ -116,7 +116,7 @@ void LogSearchWidget::createActions()
     m_actClear = new QAction(tr("Clear Results"), this);
     m_actClear->setIcon(Style::getIcon("clear_icon.png"));
 
-    m_actSyncMarks = new QAction(tr("Sync Bookmarks and Marked Texts"), this);
+    m_actSyncMarks = new QAction(tr("Sync Bookmarks and Marks"), this);
     m_actSyncMarks->setIcon(Style::getIcon("sync_icon.png"));
 
     m_actExec = new QAction(tr("Search"), this);

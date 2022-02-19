@@ -31,4 +31,6 @@ private:
     LogViewWidget *m_logViewWidget;
     LogSearchWidget *m_logSearchWidget;
     FileConf::Ptr m_conf;
+    QAction *m_actTrackFile;
+    QAction *m_actAutoScrolling;
 };

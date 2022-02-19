@@ -55,6 +55,7 @@ public:
 
 signals:
     void rowSelected(tp::SInt row);
+    void autoScrollingChanged(bool autoScrolling);
 
 public slots:
     void updateView();
@@ -78,6 +79,7 @@ public slots:
     void goToNextBookmark();
     void addTextMark(const QString &text, const tp::SectionColor &selColor);
     void removeTextMarks(const tp::SectionColor &selColor);
+    void setAutoScrolling(bool autoScrolling);
 
 protected slots:
     void configureColumns();
@@ -163,4 +165,5 @@ private:
     std::vector<Highlighter> m_highlightersRows;
     std::vector<tp::TextSelection> m_markedTexts;
     std::vector<tp::SectionColor> m_availableMarks;
+    bool m_autoScrolling = false;
 };

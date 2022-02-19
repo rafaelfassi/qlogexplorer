@@ -311,14 +311,17 @@ void MainWindow::openTemplatesConfig()
                 continue;
 
             auto tabConf = tab->getConf();
-            for (auto& templ : temlates)
+            if (tabConf->exists())
             {
-                if (templ->isSameType(tabConf) && !templ->isEqual(tabConf))
+                for (auto &templ : temlates)
                 {
-                    const auto file = tabConf->getFileName();
-                    tabConf->copyFrom(templ);
-                    tabConf->setFileName(file);
-                    tab->reconfigure();
+                    if (templ->isSameType(tabConf) && !templ->isEqual(tabConf))
+                    {
+                        const auto file = tabConf->getFileName();
+                        tabConf->copyFrom(templ);
+                        tabConf->setFileName(file);
+                        tab->reconfigure();
+                    }
                 }
             }
         }
@@ -368,6 +371,15 @@ void MainWindow::confCurrentTab(int index)
         m_actSaveConfAs->setVisible(false);
         m_actSaveConfAs->setText("");
     }
+
+    // Should it hide the tab bar when there's only one file opened?
+    // If so, it needs to add a close option in the File menu.
+    // const bool showTabBar(m_tabViews->count() > 1);
+    // auto tabBar = m_tabViews->tabBar();
+    // if (tabBar->isVisible() != showTabBar)
+    // {
+    //     tabBar->setVisible(showTabBar);
+    // }
 }
 
 void MainWindow::goToTab(int index)

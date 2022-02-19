@@ -227,6 +227,12 @@ void LogViewWidget::stabilizedUpdate()
 
 void LogViewWidget::vScrollBarPosChanged()
 {
+    if (m_autoScrolling)
+    {
+        m_autoScrolling = false;
+        emit autoScrollingChanged(m_autoScrolling);
+    }
+
     update();
 }
 
@@ -236,9 +242,21 @@ void LogViewWidget::hScrollBarPosChanged()
     update();
 }
 
+void LogViewWidget::setAutoScrolling(bool autoScrolling)
+{
+    if (m_autoScrolling != autoScrolling)
+    {
+        m_autoScrolling = autoScrolling;
+        if (m_autoScrolling)
+            m_vScrollBar->setPos(m_vScrollBar->getMax());
+    }
+}
+
 void LogViewWidget::modelCountChanged()
 {
     updateDisplaySize();
+    if (m_autoScrolling)
+        m_vScrollBar->setPos(m_vScrollBar->getMax());
     update();
 }
 
