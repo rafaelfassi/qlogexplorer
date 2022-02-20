@@ -48,6 +48,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setAcceptDrops(true);
 
     TemplatesConfigDlg::setMainWindow(this);
+
+    confCurrentTab(-1);
 }
 
 MainWindow::~MainWindow()
@@ -56,12 +58,20 @@ MainWindow::~MainWindow()
 
 void MainWindow::createActions()
 {
-    m_openFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
-    m_openFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
+    m_actOpenFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
+    m_actOpenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
+
+    m_actReopenFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
+    m_actReopenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
+
+    m_actCloseFile = new QAction(tr("Close File"), this);
+
     m_actSaveConf = new QAction("", this);
     m_actSaveConf->setVisible(false);
+
     m_actSaveConfAs = new QAction("", this);
     m_actSaveConfAs->setVisible(false);
+
     m_actTemplatesConfig = new QAction(tr("Configure Templates"), this);
 }
 
@@ -70,9 +80,20 @@ void MainWindow::createMenus()
     m_fileMenu = menuBar()->addMenu(tr("&File"));
 
     m_fileOpenAsMenu = m_fileMenu->addMenu(tr("Open As..."));
-    m_fileOpenAsMenu->addAction(m_openFileAsText);
-    m_fileOpenAsMenu->addAction(m_openFileAsJson);
+    m_fileOpenAsMenu->addAction(m_actOpenFileAsText);
+    m_fileOpenAsMenu->addAction(m_actOpenFileAsJson);
     m_actOpenAsSep = m_fileOpenAsMenu->addSeparator();
+
+    m_fileMenu->addSeparator();
+
+    m_fileReopenAsMenu = m_fileMenu->addMenu(tr("Reopen As..."));
+    m_fileReopenAsMenu->addAction(m_actReopenFileAsText);
+    m_fileReopenAsMenu->addAction(m_actReopenFileAsJson);
+    m_fileReopenAsMenu->addAction(m_actOpenAsSep);
+
+    m_fileMenu->addSeparator();
+
+    m_fileMenu->addAction(m_actCloseFile);
 
     m_fileMenu->addSeparator();
 
@@ -94,8 +115,14 @@ void MainWindow::createToolBars()
 
 void MainWindow::createConnections()
 {
-    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Text); });
-    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Json); });
+    connect(m_actOpenFileAsText, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Text); });
+    connect(m_actOpenFileAsJson, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Json); });
+
+    connect(m_actReopenFileAsText, &QAction::triggered, this, [this]() { reopenCurrentFile(tp::FileType::Text); });
+    connect(m_actReopenFileAsJson, &QAction::triggered, this, [this]() { reopenCurrentFile(tp::FileType::Json); });
+
+    connect(m_actCloseFile, &QAction::triggered, this, &MainWindow::closeCurrentTab);
+
     connect(m_actSaveConf, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
@@ -161,36 +188,56 @@ QStringList MainWindow::getFilesToOpen()
 
 void MainWindow::updateTemplates()
 {
-    for (auto &actTempl : m_actTemplates)
+    for (auto &act : m_actOpenWithTemplates)
     {
-        delete actTempl.first;
+        delete act.first;
     }
-    m_actTemplates.clear();
+    m_actOpenWithTemplates.clear();
 
-    const auto &templates = Settings::getTemplates();
+    for (auto &act : m_actReopenWithTemplates)
+    {
+        delete act.first;
+    }
+    m_actReopenWithTemplates.clear();
+
     int idx(0);
+    const auto &templates = Settings::getTemplates();
     for (auto conf : templates)
     {
-        QAction *act = new QAction(conf->getConfigName().c_str(), this);
-        act->setData(idx++);
-        connect(act, &QAction::triggered, this, &MainWindow::handleOpenWithTemplate);
-        m_actTemplates.emplace_back(std::make_pair(act, conf));
-        m_fileOpenAsMenu->addAction(act);
+        const QString name(conf->getConfigName().c_str());
+
+        {
+            QAction *actOpen = new QAction(name, this);
+            actOpen->setData(idx);
+            connect(actOpen, &QAction::triggered, this, &MainWindow::handleOpenFilesWithTemplate);
+            m_actOpenWithTemplates.emplace_back(std::make_pair(actOpen, conf));
+            m_fileOpenAsMenu->addAction(actOpen);
+        }
+
+        {
+            QAction *actReopen = new QAction(name, this);
+            actReopen->setData(idx);
+            connect(actReopen, &QAction::triggered, this, &MainWindow::handleReopenWithTemplate);
+            m_actReopenWithTemplates.emplace_back(std::make_pair(actReopen, conf));
+            m_fileReopenAsMenu->addAction(actReopen);
+        }
+
+        idx++;
     }
 
     m_actOpenAsSep->setVisible(!templates.empty());
 }
 
-void MainWindow::handleOpenWithTemplate()
+void MainWindow::handleOpenFilesWithTemplate()
 {
     QAction *action = qobject_cast<QAction *>(sender());
     if (action == nullptr || action->data().isNull())
         return;
 
     auto idx = action->data().toInt();
-    if (idx >= 0 && idx < m_actTemplates.size())
+    if (idx >= 0 && idx < m_actOpenWithTemplates.size())
     {
-        auto conf = m_actTemplates[idx].second;
+        auto conf = m_actOpenWithTemplates[idx].second;
         const auto &files = getFilesToOpen();
         for (const auto &fileName : files)
         {
@@ -201,6 +248,20 @@ void MainWindow::handleOpenWithTemplate()
     }
 
     clearFilesToOpen();
+}
+
+void MainWindow::handleReopenWithTemplate()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action == nullptr || action->data().isNull())
+        return;
+
+    auto idx = action->data().toInt();
+    if (idx >= 0 && idx < m_actReopenWithTemplates.size())
+    {
+        auto conf = m_actReopenWithTemplates[idx].second;
+        reopenCurrentFile(conf);
+    }
 }
 
 void MainWindow::setRecentFile(const FileConf::Ptr &conf)
@@ -254,12 +315,8 @@ void MainWindow::updateRecentFiles()
     const auto &recentFiles = Settings::getRecentFiles();
     for (const auto &conf : recentFiles)
     {
-        std::string typeStr = conf->getConfigName();
-        if (typeStr.empty())
-        {
-            typeStr = tp::toStr<tp::FileType>(conf->getFileType());
-        }
-        const auto dispName = tr("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr.c_str());
+        const QString typeStr = conf->getTemplateNameOrType().c_str();
+        const auto dispName = tr("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr);
         auto act = new QAction(dispName, this);
         act->setData(idx++);
         connect(act, &QAction::triggered, this, &MainWindow::handleOpenRecentFile);
@@ -303,7 +360,7 @@ bool MainWindow::hasOpenedType(const FileConf::Ptr &conf)
     return false;
 }
 
-void MainWindow::openFile(FileConf::Ptr conf)
+void MainWindow::openFile(FileConf::Ptr conf, int idx)
 {
     if (!conf)
     {
@@ -328,7 +385,12 @@ void MainWindow::openFile(FileConf::Ptr conf)
     conf->setFileName(fileInfo.filePath().toStdString());
     LogTabWidget *logTabWidget = new LogTabWidget(conf, this);
 
-    int newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
+    int newTabIdx(-1);
+    if (idx == -1)
+        newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
+    else
+        newTabIdx = m_tabViews->insertTab(idx, logTabWidget, fileInfo.fileName());
+
     goToTab(newTabIdx);
     setRecentFile(conf);
 }
@@ -376,6 +438,25 @@ void MainWindow::openFiles(const QString &typeOrTemplateName)
     clearFilesToOpen();
 }
 
+void MainWindow::reopenCurrentFile(FileConf::Ptr conf)
+{
+    auto tabIdx = getCurrentTabIdx();
+    auto tab = getTab(tabIdx);
+    if (tab == nullptr)
+        return;
+
+    auto newConf = FileConf::clone(conf);
+    newConf->setFileName(tab->getConf()->getFileName());
+    closeTab(tabIdx);
+    openFile(newConf, tabIdx);
+}
+
+void MainWindow::reopenCurrentFile(tp::FileType type)
+{
+    auto conf = FileConf::make(type);
+    reopenCurrentFile(conf);
+}
+
 void MainWindow::openTemplatesConfig()
 {
     TemplatesConfigDlg templConf;
@@ -384,7 +465,7 @@ void MainWindow::openTemplatesConfig()
 
 void MainWindow::closeTab(int index)
 {
-    LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
+    auto tab = getTab(index);
     if (!tab)
     {
         LOG_ERR("No tab for index {}", index);
@@ -395,10 +476,16 @@ void MainWindow::closeTab(int index)
     delete tab;
 }
 
+void MainWindow::closeCurrentTab()
+{
+    closeTab(getCurrentTabIdx());
+}
+
 void MainWindow::confCurrentTab(int index)
 {
+    const bool hasCurrentTab(index >= 0);
     bool currHasTemplate(false);
-    if (index >= 0)
+    if (hasCurrentTab)
     {
         LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
         if (!tab)
@@ -417,6 +504,9 @@ void MainWindow::confCurrentTab(int index)
             currHasTemplate = true;
         }
     }
+
+    m_fileReopenAsMenu->setEnabled(hasCurrentTab);
+    m_actCloseFile->setEnabled(hasCurrentTab);
 
     if (!currHasTemplate)
     {

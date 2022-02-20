@@ -33,11 +33,14 @@ public:
     void clearFilesToOpen();
 
 public slots:
-    void openFile(FileConf::Ptr conf);
+    void openFile(FileConf::Ptr conf, int idx = -1);
     void openFile(const QString &fileName, tp::FileType type);
     void openFiles(tp::FileType type);
     void openFiles(const QString &typeOrTemplateName);
+    void reopenCurrentFile(FileConf::Ptr conf);
+    void reopenCurrentFile(tp::FileType type);
     void closeTab(int index);
+    void closeCurrentTab();
     void confCurrentTab(int index);
     void goToTab(int index);
     void saveConf();
@@ -46,7 +49,8 @@ public slots:
     void setRecentFile(const FileConf::Ptr &conf);
 
 private slots:
-    void handleOpenWithTemplate();
+    void handleOpenFilesWithTemplate();
+    void handleReopenWithTemplate();
     void handleOpenRecentFile();
 
 protected:
@@ -64,8 +68,11 @@ private:
     void updateRecentFiles();
 
 private:
-    QAction *m_openFileAsText;
-    QAction *m_openFileAsJson;
+    QAction *m_actOpenFileAsText;
+    QAction *m_actOpenFileAsJson;
+    QAction *m_actReopenFileAsText;
+    QAction *m_actReopenFileAsJson;
+    QAction *m_actCloseFile;
     QAction *m_actSaveConf;
     QAction *m_actSaveConfAs;
     QAction *m_actTemplatesConfig;
@@ -73,9 +80,11 @@ private:
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
+    QMenu *m_fileReopenAsMenu;
     QMenu *m_templatesMenu;
     QTabWidget *m_tabViews;
     QStringList m_filesToOpen;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;
-    std::vector<std::pair<QAction *, FileConf::Ptr>> m_actTemplates;
+    std::vector<std::pair<QAction *, FileConf::Ptr>> m_actOpenWithTemplates;
+    std::vector<std::pair<QAction *, FileConf::Ptr>> m_actReopenWithTemplates;
 };

@@ -31,6 +31,7 @@ public:
     void setNoMatchColumn(tp::SInt columnIdx) { m_noMatchColumn = columnIdx; }
     bool exists() const { return !m_confFileName.empty(); }
     void setConfigName(const std::string &configName) { m_configName = configName; }
+    std::string getTemplateNameOrType() const;
 
     tp::Columns &getColumns() { return m_columns; }
     void clearColumns() { m_columns.clear(); }

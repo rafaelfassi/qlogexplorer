@@ -50,7 +50,8 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     m_prlFileParsing = new ProgressLabel(this);
     m_prlFileParsing->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
     m_prlFileParsing->setActionText(tr("Indexing"));
-    m_prlFileParsing->setText(conf->getFileName().c_str());
+    const QString typeStr = conf->getTemplateNameOrType().c_str();
+    m_prlFileParsing->setText(QString("%1 [%2]").arg(conf->getFileName().c_str()).arg(typeStr));
     toolbar->addWidget(m_prlFileParsing);
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);

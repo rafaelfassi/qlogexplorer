@@ -184,6 +184,14 @@ rapidjson::Document FileConf::toJson() const
     return jDoc;
 }
 
+std::string FileConf::getTemplateNameOrType() const
+{
+    if (!m_configName.empty())
+        return m_configName;
+    else
+        return tp::toStr<tp::FileType>(m_fileType);
+}
+
 bool FileConf::hasDefinedColumn(tp::SInt columnIdx) const
 {
     return (hasDefinedColumns() && (-1L < columnIdx) && (columnIdx < m_columns.size()));
