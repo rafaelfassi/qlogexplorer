@@ -8,6 +8,7 @@
 class QMenu;
 class QAction;
 class QTabWidget;
+class LogTabWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -16,6 +17,17 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    void updateMenus();
+
+    int getTabsCount() const;
+    int getCurrentTabIdx() const;
+    LogTabWidget *getCurrentTab() const;
+    LogTabWidget *getTab(int idx) const;
+
+    int findOpenedFileTab(const FileConf::Ptr &conf);
+    bool hasOpenedType(const FileConf::Ptr &conf);
+
     QStringList getFilesToOpen();
     void setFilesToOpen(const QStringList &files);
     void clearFilesToOpen();
@@ -48,10 +60,8 @@ private:
     void createMenus();
     void createToolBars();
     void createConnections();
-    void loadConfig();
     void updateTemplates();
     void updateRecentFiles();
-    int findOpenedFileTab(const FileConf::Ptr &conf);
 
 private:
     QAction *m_openFileAsText;

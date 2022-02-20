@@ -4,6 +4,8 @@
 #include "pch.h"
 #include "TemplatesConfigDlg.h"
 #include "SearchParamControl.h"
+#include "MainWindow.h"
+#include "LogTabWidget.h"
 #include "Settings.h"
 #include "Style.h"
 #include <QAction>
@@ -22,15 +24,39 @@
 #include <QIntValidator>
 #include <QColorDialog>
 
-TemplatesConfigDlg::TemplatesConfigDlg(FileConf::Ptr conf, QWidget *parent) : QDialog(parent), m_conf(conf)
+static MainWindow *g_mainWindow = nullptr;
+
+enum TemplTabs
+{
+    Columns,
+    Highlighters,
+    Filters
+};
+
+TemplatesConfigDlg::TemplatesConfigDlg() : QDialog(g_mainWindow)
 {
     setWindowTitle(tr("Templates Configuration"));
+
+    if (g_mainWindow == nullptr)
+    {
+        LOG_ERR("MainWindow is not set");
+        return;
+    }
+
     createActions();
     buildLayout();
 
-    if (!m_conf->isNull())
+    auto currTab = g_mainWindow->getCurrentTab();
+    if (currTab)
     {
-        m_templates.push_back(FileConf::clone(m_conf));
+        m_conf = currTab->getConf();
+        if (m_conf && !m_conf->isNull())
+            m_templates.push_back(FileConf::clone(m_conf));
+    }
+
+    if (!m_conf)
+    {
+        m_conf = FileConf::make();
     }
 
     auto templs = Settings::getTemplates();
@@ -56,6 +82,90 @@ TemplatesConfigDlg::TemplatesConfigDlg(FileConf::Ptr conf, QWidget *parent) : QD
     }
 
     createConnections();
+}
+
+void TemplatesConfigDlg::setMainWindow(MainWindow *mainWindow)
+{
+    g_mainWindow = mainWindow;
+}
+
+void TemplatesConfigDlg::handleOpenActions()
+{
+    if (m_openAction == OpenAction::None)
+        return;
+
+    switch (m_openAction)
+    {
+        case OpenAction::AddFilter:
+            m_tabWidgets->setCurrentIndex(TemplTabs::Filters);
+            addFilter(m_newFilter);
+            break;
+        default:
+            break;
+    }
+}
+
+void TemplatesConfigDlg::setOpenActionAddFilter(const tp::FilterParam &param)
+{
+    m_openAction = OpenAction::AddFilter;
+    m_newFilter = param;
+}
+
+void TemplatesConfigDlg::open()
+{
+    handleOpenActions();
+    QDialog::open();
+}
+
+int TemplatesConfigDlg::exec()
+{
+    handleOpenActions();
+    return QDialog::exec();
+}
+
+void TemplatesConfigDlg::updateTabs(bool currentOnly)
+{
+    g_mainWindow->updateMenus();
+
+    auto currTabIdx = g_mainWindow->getCurrentTabIdx();
+    if (currTabIdx >= 0)
+    {
+        auto currTab = g_mainWindow->getTab(currTabIdx);
+        if (currTab)
+        {
+            currTab->reconfigure();
+            g_mainWindow->confCurrentTab(currTabIdx);
+        }
+    }
+
+    if (currentOnly)
+        return;
+
+    auto temlates = Settings::getTemplates();
+    for (int tabIdx = 0; tabIdx < g_mainWindow->getTabsCount(); ++tabIdx)
+    {
+        if (tabIdx == currTabIdx)
+            continue;
+
+        auto tab = g_mainWindow->getTab(tabIdx);
+        if (!tab)
+            continue;
+
+        auto tabConf = tab->getConf();
+        if (tabConf->exists())
+        {
+            for (auto &templ : temlates)
+            {
+                if (templ->isSameType(tabConf) && !templ->isEqual(tabConf))
+                {
+                    const auto file = tabConf->getFileName();
+                    tabConf->copyFrom(templ);
+                    tabConf->setFileName(file);
+                    tab->reconfigure();
+                }
+            }
+        }
+    }
 }
 
 FileConf::Ptr TemplatesConfigDlg::getCuttentTempl() const
@@ -142,7 +252,14 @@ void TemplatesConfigDlg::save()
         Settings::deleteTemplate(delTempl);
     }
 
+    updateTabs(false);
     accept();
+}
+
+bool TemplatesConfigDlg::canApply() const
+{
+    auto conf = getCuttentTempl();
+    return (!m_conf->isNull() && conf->isSameType(m_conf) && !conf->isEqual(m_conf));
 }
 
 void TemplatesConfigDlg::apply()
@@ -152,6 +269,7 @@ void TemplatesConfigDlg::apply()
     {
         m_conf->copyFrom(conf);
         fixColumns(m_conf);
+        updateTabs(true);
         accept();
     }
 }
@@ -161,7 +279,7 @@ void TemplatesConfigDlg::updateStatus()
     const auto conf = getCuttentTempl();
     const bool isCurrentFile(!m_conf->isNull() && conf->isSameType(m_conf));
     m_actDeleteTempl->setEnabled(!isCurrentFile && conf->exists());
-    m_btnApply->setEnabled(isCurrentFile && !conf->isEqual(m_conf));
+    m_btnApply->setEnabled(canApply());
     m_btnSave->setEnabled(canSave());
 }
 
@@ -714,16 +832,19 @@ void TemplatesConfigDlg::updateTemplateFilter()
     updateStatus();
 }
 
-void TemplatesConfigDlg::addFilter()
+void TemplatesConfigDlg::addFilter(tp::FilterParam newFlt)
 {
     auto conf = getCuttentTempl();
     if (conf->isNull())
         return;
 
-    tp::FilterParam newFlt;
     const auto newFltPos(conf->getFilterParams().size() + 1);
-    newFlt.name = utl::toStr(tr("New Filter %1").arg(newFltPos));
-    newFlt.searchParam.pattern = utl::toStr(tr("Pattern Filter %1").arg(newFltPos));
+
+    if (newFlt.name.empty())
+        newFlt.name = utl::toStr(tr("New Filter %1").arg(newFltPos));
+    if (newFlt.searchParam.pattern.empty())
+        newFlt.searchParam.pattern = utl::toStr(tr("Pattern Filter %1").arg(newFltPos));
+
     conf->addFilterParam(std::move(newFlt));
 
     fillFilters(conf, conf->getFilterParams().size() - 1);
@@ -851,7 +972,7 @@ void TemplatesConfigDlg::createConnections()
         &TemplatesConfigDlg::setCurrentFilter);
     connect(m_edtFltName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateFilter);
     connect(m_fltSearchCtrl, &SearchParamControl::paramChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
-    connect(m_actAddFilter, &QAction::triggered, this, &TemplatesConfigDlg::addFilter);
+    connect(m_actAddFilter, &QAction::triggered, this, [this]() { addFilter(); });
     connect(m_actRmFilter, &QAction::triggered, this, &TemplatesConfigDlg::rmFilter);
     connect(m_actMoveFilterUp, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterUp);
     connect(m_actMoveFilterDown, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterDown);

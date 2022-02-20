@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "SearchParamControl.h"
 #include "SearchParamModel.h"
+#include "TemplatesConfigDlg.h"
 #include "Style.h"
 #include <QHBoxLayout>
 #include <QAction>
@@ -11,7 +12,48 @@
 #include <QToolButton>
 #include <QComboBox>
 #include <QCompleter>
+#include <QMenu>
+#include <QContextMenuEvent>
 #include <QIdentityProxyModel>
+
+class SearchLineEdit : public QLineEdit
+{
+public:
+    using QLineEdit::QLineEdit;
+    void setControl(SearchParamControl *control) { m_control = control; }
+
+protected:
+    void contextMenuEvent(QContextMenuEvent *event) override
+    {
+        QMenu *menu = createStandardContextMenu();
+        const auto currText = utl::toStr(text());
+        if (!currText.empty() && m_control && (m_control->getSearchParam().pattern == currText))
+        {
+            menu->addSeparator();
+            auto act = menu->addAction(tr("Add to Template"));
+            connect(act, &QAction::triggered, this, &SearchLineEdit::addToTemplate);
+        }
+
+        menu->exec(event->globalPos());
+        delete menu;
+    }
+
+private slots:
+    void addToTemplate()
+    {
+        if (!m_control)
+            return;
+
+        TemplatesConfigDlg dlg;
+        tp::FilterParam flt;
+        flt.searchParam = m_control->getSearchParam();
+        dlg.setOpenActionAddFilter(flt);
+        dlg.exec();
+    }
+
+private:
+    SearchParamControl *m_control = nullptr;
+};
 
 class SearchParamProxyModel : public QIdentityProxyModel
 {
@@ -126,15 +168,28 @@ SearchParamControl::SearchParamControl(
     QComboBox *cmbSearch,
     SearchParamModel *searchModel,
     QWidget *parent)
-    : SearchParamControl(cmbColumns, cmbSearch->lineEdit(), parent)
+    : SearchParamControl(
+          cmbColumns,
+          [cmbSearch]()
+          {
+              cmbSearch->setEditable(true);
+              auto lineEdit = new SearchLineEdit(nullptr);
+              cmbSearch->setLineEdit(lineEdit);
+              return lineEdit;
+          }(),
+          parent)
 {
-    Q_ASSERT_X(cmbSearch->isEditable(), "SearchParamControl", "cmbSearch not editable");
-
     m_proxyModel = new SearchParamProxyModel(searchModel, this);
     m_cmbSearch = cmbSearch;
     m_cmbSearch->setModel(m_proxyModel);
     m_cmbSearch->setInsertPolicy(QComboBox::InsertAtTop);
     m_cmbSearch->setCurrentIndex(-1);
+    auto lineEdit = static_cast<SearchLineEdit *>(m_cmbSearch->lineEdit());
+    if (lineEdit)
+    {
+        lineEdit->setParent(m_cmbSearch);
+        lineEdit->setControl(this);
+    }
 
     m_completer = m_cmbSearch->completer();
     m_completer->setCaseSensitivity(Qt::CaseInsensitive);

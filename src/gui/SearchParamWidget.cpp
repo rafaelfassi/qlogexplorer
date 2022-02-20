@@ -25,7 +25,6 @@ SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searc
     cmbSearchSizePolicy.setHorizontalPolicy(QSizePolicy::Expanding);
     m_cmbSearch->setSizePolicy(cmbSearchSizePolicy);
     m_cmbSearch->setFocusPolicy(Qt::StrongFocus);
-    m_cmbSearch->setEditable(true);
 
     m_control = new SearchParamControl(m_cmbColumns, m_cmbSearch, searchModel, this);
     m_control->setFileConf(conf);

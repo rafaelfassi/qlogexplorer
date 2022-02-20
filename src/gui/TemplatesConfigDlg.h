@@ -20,18 +20,30 @@ class QAction;
 class QFrame;
 class QIntValidator;
 class SearchParamControl;
+class MainWindow;
 
 class TemplatesConfigDlg : public QDialog
 {
     Q_OBJECT
 
 public:
-    TemplatesConfigDlg(FileConf::Ptr conf, QWidget *parent = nullptr);
+    enum class OpenAction
+    {
+        None,
+        AddFilter
+    };
+    TemplatesConfigDlg();
+    static void setMainWindow(MainWindow *mainWindow);
+
+    void setOpenActionAddFilter(const tp::FilterParam &param);
+    void open() override;
+    int exec() override;
 
 private slots:
     // Main
     bool canSave() const;
     void save();
+    bool canApply() const;
     void apply();
     void updateStatus();
     void updateCmbTemplates();
@@ -56,12 +68,14 @@ private slots:
     // Filters
     void setCurrentFilter(int index);
     void updateTemplateFilter();
-    void addFilter();
+    void addFilter(tp::FilterParam newFlt = tp::FilterParam());
     void rmFilter();
     void moveFilterUp();
     void moveFilterDown();
 
 private:
+    void handleOpenActions();
+    void updateTabs(bool currentOnly);
     FileConf::Ptr getCuttentTempl() const;
     void fillColumns(const FileConf::Ptr &conf, int selectRow = 0);
     void fillHighlighters(const FileConf::Ptr &conf, int selectRow = 0);
@@ -73,6 +87,8 @@ private:
     void buildLayout();
 
     // Data
+    OpenAction m_openAction = OpenAction::None;
+    tp::FilterParam m_newFilter;
     FileConf::Ptr m_conf;
     std::vector<FileConf::Ptr> m_templates;
     std::vector<FileConf::Ptr> m_deletedTemplates;
