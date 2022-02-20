@@ -73,13 +73,14 @@ private:
     QAction *m_actReopenFileAsText;
     QAction *m_actReopenFileAsJson;
     QAction *m_actCloseFile;
+    QAction *m_actQuit;
     QAction *m_actSaveConf;
     QAction *m_actSaveConfAs;
     QAction *m_actTemplatesConfig;
-    QAction *m_actRecentFilesSep;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
+    QMenu *m_fileOpenRecent;
     QMenu *m_fileReopenAsMenu;
     QMenu *m_templatesMenu;
     QTabWidget *m_tabViews;

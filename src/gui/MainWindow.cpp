@@ -65,6 +65,10 @@ void MainWindow::createActions()
     m_actReopenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
 
     m_actCloseFile = new QAction(tr("Close File"), this);
+    m_actCloseFile->setShortcut(QKeySequence::Close);
+
+    m_actQuit = new QAction(tr("Quit"), this);
+    m_actQuit->setShortcut(QKeySequence::Quit);
 
     m_actSaveConf = new QAction("", this);
     m_actSaveConf->setVisible(false);
@@ -79,14 +83,16 @@ void MainWindow::createMenus()
 {
     m_fileMenu = menuBar()->addMenu(tr("&File"));
 
-    m_fileOpenAsMenu = m_fileMenu->addMenu(tr("Open As..."));
+    m_fileOpenAsMenu = m_fileMenu->addMenu(tr("&Open As..."));
     m_fileOpenAsMenu->addAction(m_actOpenFileAsText);
     m_fileOpenAsMenu->addAction(m_actOpenFileAsJson);
     m_actOpenAsSep = m_fileOpenAsMenu->addSeparator();
 
+    m_fileOpenRecent = m_fileMenu->addMenu(tr("Open &Recent"));
+
     m_fileMenu->addSeparator();
 
-    m_fileReopenAsMenu = m_fileMenu->addMenu(tr("Reopen As..."));
+    m_fileReopenAsMenu = m_fileMenu->addMenu(tr("Reopen &As..."));
     m_fileReopenAsMenu->addAction(m_actReopenFileAsText);
     m_fileReopenAsMenu->addAction(m_actReopenFileAsJson);
     m_fileReopenAsMenu->addAction(m_actOpenAsSep);
@@ -97,7 +103,7 @@ void MainWindow::createMenus()
 
     m_fileMenu->addSeparator();
 
-    m_actRecentFilesSep = m_fileMenu->addSeparator();
+    m_fileMenu->addAction(m_actQuit);
 
     m_templatesMenu = menuBar()->addMenu(tr("&Templates"));
 
@@ -122,6 +128,8 @@ void MainWindow::createConnections()
     connect(m_actReopenFileAsJson, &QAction::triggered, this, [this]() { reopenCurrentFile(tp::FileType::Json); });
 
     connect(m_actCloseFile, &QAction::triggered, this, &MainWindow::closeCurrentTab);
+
+    connect(m_actQuit, &QAction::triggered, qApp, &QApplication::quit);
 
     connect(m_actSaveConf, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
@@ -321,10 +329,8 @@ void MainWindow::updateRecentFiles()
         act->setData(idx++);
         connect(act, &QAction::triggered, this, &MainWindow::handleOpenRecentFile);
         m_actRecentFiles.emplace_back(std::make_pair(act, conf));
-        m_fileMenu->addAction(act);
+        m_fileOpenRecent->addAction(act);
     }
-
-    m_actRecentFilesSep->setVisible(!recentFiles.empty());
 }
 
 int MainWindow::findOpenedFileTab(const FileConf::Ptr &conf)
