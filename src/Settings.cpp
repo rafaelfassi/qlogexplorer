@@ -155,6 +155,23 @@ FileConf::Ptr Settings::findConfByTemplateFileName(const std::string &templateFi
     return nullptr;
 }
 
+FileConf::Ptr Settings::findConfByTemplateName(const std::string &name)
+{
+    const auto &templates(inst().m_templates);
+
+    const auto it = std::find_if(
+        templates.begin(),
+        templates.end(),
+        [&name](const FileConf::Ptr &conf) { return (conf->getConfigName() == name); });
+
+    if (it != templates.end())
+    {
+        return *it;
+    }
+
+    return nullptr;
+}
+
 void Settings::loadTemplates()
 {
     const auto &templDir(inst().m_templatesDir);

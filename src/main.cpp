@@ -3,13 +3,14 @@
 
 #include "pch.h"
 #include "MainWindow.h"
+#include "Settings.h"
+#include "Style.h"
 #include <QApplication>
 #include <QFontDatabase>
 #include <QStyleFactory>
 #include <QStyle>
+#include <QCommandLineParser>
 #include <QDebug>
-#include "Settings.h"
-#include "Style.h"
 
 int main(int argc, char *argv[])
 {
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<tp::UInt>("tp::UInt");
     qRegisterMetaType<tp::SharedSIntList>("tp::SharedSIntList");
 
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
     QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
     Settings::initSettings();
     Style::initStyle();
@@ -25,7 +26,26 @@ int main(int argc, char *argv[])
 
     qDebug() << Style::availableStyles();
 
+    QCommandLineParser parser;
+    QCommandLineOption typeOption(
+        QStringList() << "t"
+                      << "type",
+        QCoreApplication::translate("main", "Opens as <FileTypeOrTemplateName>"),
+        "FileTypeOrTemplateName",
+        tp::toStr(tp::FileType::Text).c_str());
+    parser.addHelpOption();
+    parser.addOption(typeOption);
+    parser.process(app);
+
     MainWindow w;
     w.show();
-    return a.exec();
+
+    const QStringList files = parser.positionalArguments();
+    if (!files.isEmpty())
+    {
+        w.setFilesToOpen(files);
+        w.openFiles(parser.value(typeOption));
+    }
+
+    return app.exec();
 }

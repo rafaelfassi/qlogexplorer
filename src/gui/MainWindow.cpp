@@ -92,8 +92,8 @@ void MainWindow::createToolBars()
 
 void MainWindow::createConnections()
 {
-    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFile(tp::FileType::Text); });
-    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFile(tp::FileType::Json); });
+    connect(m_openFileAsText, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Text); });
+    connect(m_openFileAsJson, &QAction::triggered, this, [this]() { openFiles(tp::FileType::Json); });
     connect(m_actSaveConf, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
@@ -105,6 +105,16 @@ void MainWindow::loadConfig()
 {
     updateTemplates();
     updateRecentFiles();
+}
+
+void MainWindow::setFilesToOpen(const QStringList &files)
+{
+    m_filesToOpen = files;
+}
+
+void MainWindow::clearFilesToOpen()
+{
+    m_filesToOpen.clear();
 }
 
 QStringList MainWindow::getFilesToOpen()
@@ -165,6 +175,8 @@ void MainWindow::handleOpenWithTemplate()
             openFile(newConf);
         }
     }
+
+    clearFilesToOpen();
 }
 
 void MainWindow::setRecentFile(const FileConf::Ptr &conf)
@@ -252,22 +264,6 @@ int MainWindow::findOpenedFileTab(const FileConf::Ptr &conf)
     return -1;
 }
 
-void MainWindow::openFile(tp::FileType type)
-{
-    const auto &files = getFilesToOpen();
-    for (const auto &fileName : files)
-    {
-        openFile(fileName, type);
-    }
-}
-
-void MainWindow::openFile(const QString &fileName, tp::FileType type)
-{
-    auto conf = FileConf::make(type);
-    conf->setFileName(fileName.toStdString());
-    openFile(conf);
-}
-
 void MainWindow::openFile(FileConf::Ptr conf)
 {
     if (!conf)
@@ -296,6 +292,49 @@ void MainWindow::openFile(FileConf::Ptr conf)
     int newTabIdx = m_tabViews->addTab(logTabWidget, fileInfo.fileName());
     goToTab(newTabIdx);
     setRecentFile(conf);
+}
+
+void MainWindow::openFile(const QString &fileName, tp::FileType type)
+{
+    auto conf = FileConf::make(type);
+    conf->setFileName(fileName.toStdString());
+    openFile(conf);
+}
+
+void MainWindow::openFiles(tp::FileType type)
+{
+    const auto &files = getFilesToOpen();
+    for (const auto &fileName : files)
+    {
+        openFile(fileName, type);
+    }
+    clearFilesToOpen();
+}
+
+void MainWindow::openFiles(const QString &typeOrTemplateName)
+{
+    const auto &name = utl::toStr(typeOrTemplateName);
+
+    if (auto type = tp::fromStr<tp::FileType>(name); type != tp::FileType::None)
+    {
+        openFiles(type);
+    }
+    else if (auto conf = Settings::findConfByTemplateName(name); conf)
+    {
+        const auto &files = getFilesToOpen();
+        for (const auto &fileName : files)
+        {
+            auto newConf = FileConf::clone(conf);
+            newConf->setFileName(fileName.toStdString());
+            openFile(newConf);
+        }
+    }
+    else
+    {
+        LOG_ERR("Could not find any type or template that matches '{}'", name);
+    }
+
+    clearFilesToOpen();
 }
 
 void MainWindow::openTemplatesConfig()
@@ -479,19 +518,21 @@ void MainWindow::dragLeaveEvent(QDragLeaveEvent *event)
 void MainWindow::dropEvent(QDropEvent *event)
 {
     const QMimeData *mimeData = event->mimeData();
+    QStringList filesToOpen;
     if (mimeData->hasUrls())
     {
         QList<QUrl> urlList = mimeData->urls();
         for (int i = 0; i < urlList.size() && i < 32; ++i)
         {
-            m_filesToOpen.append(urlList.at(i).toLocalFile());
+            filesToOpen.append(urlList.at(i).toLocalFile());
         }
     }
 
-    if (!m_filesToOpen.empty())
+    if (!filesToOpen.empty())
     {
+        setFilesToOpen(filesToOpen);
         if (m_fileOpenAsMenu->exec(mapToGlobal(event->pos())) != nullptr)
             event->acceptProposedAction();
-        m_filesToOpen.clear();
+        clearFilesToOpen();
     }
 }

@@ -16,17 +16,15 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void createActions();
-    void createMenus();
-    void createToolBars();
-    void createConnections();
-    void loadConfig();
-    void updateTemplates();
+    QStringList getFilesToOpen();
+    void setFilesToOpen(const QStringList &files);
+    void clearFilesToOpen();
 
 public slots:
-    void openFile(tp::FileType type);
-    void openFile(const QString &fileName, tp::FileType type);
     void openFile(FileConf::Ptr conf);
+    void openFile(const QString &fileName, tp::FileType type);
+    void openFiles(tp::FileType type);
+    void openFiles(const QString &typeOrTemplateName);
     void closeTab(int index);
     void confCurrentTab(int index);
     void goToTab(int index);
@@ -46,9 +44,14 @@ protected:
     void dropEvent(QDropEvent *event) override;
 
 private:
+    void createActions();
+    void createMenus();
+    void createToolBars();
+    void createConnections();
+    void loadConfig();
+    void updateTemplates();
     void updateRecentFiles();
     int findOpenedFileTab(const FileConf::Ptr &conf);
-    QStringList getFilesToOpen();
 
 private:
     QAction *m_openFileAsText;

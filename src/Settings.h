@@ -21,6 +21,7 @@ public:
     static void setRecentFile(const FileConf::Ptr &conf);
 
     static FileConf::Ptr findConfByTemplateFileName(const std::string &templateFileName);
+    static FileConf::Ptr findConfByTemplateName(const std::string &name);
     static void loadTemplates();
     static void saveTemplate(FileConf::Ptr conf);
     static void saveTemplateAs(FileConf::Ptr conf, const QString &name);

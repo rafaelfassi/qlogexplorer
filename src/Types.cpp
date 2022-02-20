@@ -16,7 +16,7 @@ void enumToStr(const std::vector<std::pair<T, std::string>> &typeMap, const T &t
         str = it->second;
         return;
     }
-    LOG_ERR("ColumnType {} not found", toInt(type));
+    LOG_ERR("Type {} not found", toInt(type));
     str = "NONE";
 }
 
@@ -29,7 +29,7 @@ void enumFromStr(const std::vector<std::pair<T, std::string>> &typeMap, const st
         type = it->first;
         return;
     }
-    LOG_ERR("ColumnType '{}' not found", str);
+    LOG_ERR("Type '{}' not found", str);
     type = static_cast<T>(0);
 }
 
