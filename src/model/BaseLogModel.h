@@ -4,6 +4,7 @@
 #pragma once
 
 #include "AbstractModel.h"
+#include "InFileStream.h"
 #include "Matcher.h"
 #include <thread>
 #include <mutex>
@@ -136,7 +137,7 @@ private:
     void tryConfigure();
     FileConf::Ptr m_conf;
     std::string m_fileName;
-    mutable std::ifstream m_ifs;
+    mutable InFileStream::Ptr m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
     std::vector<Chunk> m_chunks;

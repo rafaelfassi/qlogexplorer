@@ -8,7 +8,7 @@ BaseLogModel::BaseLogModel(FileConf::Ptr conf, QObject *parent)
     : AbstractModel(parent),
       m_conf(conf),
       m_fileName(conf->getFileName()),
-      m_ifs(m_fileName, std::ifstream::in | std::ifstream::binary)
+      m_ifs(InFileStream::make(m_fileName))
 {
 }
 
@@ -20,9 +20,9 @@ BaseLogModel::~BaseLogModel()
         stop();
     }
 
-    if (m_ifs.is_open())
+    if (m_ifs->isOpen())
     {
-        m_ifs.close();
+        m_ifs->close();
     }
 }
 
@@ -173,9 +173,9 @@ void BaseLogModel::tryConfigure()
 {
     if (!m_configured.load())
     {
-        m_ifs.clear();
-        m_ifs.seekg(0, std::ios::beg);
-        if (configure(m_conf, m_ifs))
+        m_ifs->getStream().clear();
+        m_ifs->getStream().seekg(0, std::ios::beg);
+        if (configure(m_conf, m_ifs->getStream()))
         {
             m_configured.store(true);
             emit modelConfigured();
@@ -273,23 +273,23 @@ void BaseLogModel::keepWatching()
 
         if (m_watching.load())
         {
-            std::ifstream newIfs;
+            InFileStream::Ptr newIfs;
 
             do
             {
-                newIfs.open(m_fileName, std::ifstream::in | std::ifstream::binary);
-                if (newIfs.good())
+                newIfs = InFileStream::make(m_fileName);
+                if (newIfs->getStream().good() && newIfs->isOpen())
                 {
                     break;
                 }
-                newIfs.close();
+                newIfs->close();
                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
             } while (m_watching.load(std::memory_order_relaxed));
 
             if (m_watching.load())
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
-                m_ifs.close();
+                m_ifs->close();
                 m_ifs = std::move(newIfs);
                 clear();
             }
@@ -299,7 +299,7 @@ void BaseLogModel::keepWatching()
 
 WatchingResult BaseLogModel::watchFile()
 {
-    if (!m_ifs.is_open())
+    if (!m_ifs->isOpen())
     {
         LOG_WAR("File '{}' is not opened", m_fileName);
         return WatchingResult::FileClosed;
@@ -319,9 +319,9 @@ WatchingResult BaseLogModel::watchFile()
 
             tryConfigure();
 
-            m_ifs.clear();
-            m_ifs.seekg(0, std::ios::end);
-            auto fileSize = m_ifs.tellg();
+            m_ifs->getStream().clear();
+            m_ifs->getStream().seekg(0, std::ios::end);
+            auto fileSize = m_ifs->getStream().tellg();
 
             if (m_lastParsedPos != fileSize)
             {
@@ -331,9 +331,9 @@ WatchingResult BaseLogModel::watchFile()
                     return WatchingResult::FileRecreated;
                 }
 
-                m_ifs.seekg(m_lastParsedPos, std::ios::beg);
-                m_ifs.peek();
-                if (m_ifs.fail())
+                m_ifs->getStream().seekg(m_lastParsedPos, std::ios::beg);
+                m_ifs->getStream().peek();
+                if (m_ifs->getStream().fail())
                 {
                     LOG_ERR("File '{}' is on fail status", m_fileName);
                     return WatchingResult::UnknownFailure;
@@ -341,7 +341,7 @@ WatchingResult BaseLogModel::watchFile()
 
                 if ((m_lastParsedPos == 0) || m_following.load())
                 {
-                    if (!m_ifs.eof())
+                    if (!m_ifs->getStream().eof())
                     {
                         // mutex needs to be released belore starting to load chunks.
                         mustLoadChunks = true;
@@ -436,12 +436,12 @@ void BaseLogModel::loadChunks()
 
     {
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
-        if (!m_ifs.good())
+        if (!m_ifs->getStream().good())
         {
             LOG_ERR("The ifstream is not good");
             return;
         }
-        fileSize = getFileSize(m_ifs);
+        fileSize = getFileSize(m_ifs->getStream());
         chunkCount = m_chunks.size();
         if (!m_chunks.empty())
         {
@@ -454,9 +454,9 @@ void BaseLogModel::loadChunks()
 
     do
     {
-        std::ifstream ifs(m_fileName, std::ifstream::in | std::ifstream::binary);
-        moveFilePos(ifs, m_lastParsedPos);
-        newLastParsedPos = parseChunks(ifs, chunks, m_lastParsedPos, nextRow, fileSize);
+        auto ifs(InFileStream::make(m_fileName));
+        moveFilePos(ifs->getStream(), m_lastParsedPos);
+        newLastParsedPos = parseChunks(ifs->getStream(), chunks, m_lastParsedPos, nextRow, fileSize);
         const std::lock_guard<std::mutex> lock(m_ifsMutex);
 
         m_ifs = std::move(ifs);
@@ -494,7 +494,7 @@ bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
     if ((chunk != m_chunks.end()) && chunk->countainRow(row))
     {
         ChunkRows tmpChunkRows(*chunk);
-        loadChunkRows(m_ifs, tmpChunkRows);
+        loadChunkRows(m_ifs->getStream(), tmpChunkRows);
         if (tmpChunkRows.rowCount() != chunk->getRowCount())
         {
             LOG_ERR(

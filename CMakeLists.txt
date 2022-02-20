@@ -30,6 +30,8 @@ set(MAIN_SOURCES
     src/Utils.cpp
     src/Settings.h
     src/Settings.cpp
+    src/InFileStream.h
+    src/InFileStream.cpp
 )
 
 set(MODEL_HEADERS
