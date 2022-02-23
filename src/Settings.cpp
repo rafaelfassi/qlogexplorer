@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include <QSettings>
 #include <QStandardPaths>
+#include <QFontDatabase>
 
 Settings &Settings::inst()
 {
@@ -48,6 +49,7 @@ void Settings::initSettings()
     const auto &settingsFile = s.m_settingsDir.absoluteFilePath("settings.ini");
     s.m_settings = new QSettings(settingsFile, QSettings::IniFormat);
 
+    QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
     const auto fontName = s.m_settings->value("fontName", "DejaVu Sans Mono").toString();
     const auto fontSize = s.m_settings->value("fontSize", 12).toInt();
     s.m_font = QFont(fontName, fontSize);
@@ -265,4 +267,14 @@ void Settings::setStyle(const QString styleName)
 QString Settings::getStyle()
 {
     return inst().m_settings->value("styleName", "Dark").toString();
+}
+
+void Settings::setSingleInstance(bool singleInstance)
+{
+    inst().m_settings->setValue("singleInstance", singleInstance);
+}
+
+bool Settings::getSingleInstance()
+{
+    return inst().m_settings->value("singleInstance", true).toBool();
 }

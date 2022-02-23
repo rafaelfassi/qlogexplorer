@@ -31,6 +31,9 @@ public:
     static void setStyle(const QString styleName);
     static QString getStyle();
 
+    static void setSingleInstance(bool singleInstance);
+    static bool getSingleInstance();
+
 private:
     Settings() = default;
     static Settings &inst();

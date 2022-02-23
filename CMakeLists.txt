@@ -16,6 +16,7 @@ add_definitions(-DAPP_BASE_SRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Network REQUIRED)
 find_package(Threads REQUIRED)
 find_package(TBB)
 
@@ -114,9 +115,13 @@ target_include_directories(${PROJECT_NAME}
     src/gui
 )
 
+add_subdirectory(3rdparty/qtsingleapplication)
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Network
+    QtSolutions::SingleApplication
     Threads::Threads
 )
 
