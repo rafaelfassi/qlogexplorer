@@ -146,6 +146,7 @@ void HeaderView::changedColumnsCount(int, int)
         else if (column.idx != idx)
         {
             LOG_ERR("Column idx mismatch {} - {}", idx, column.idx);
+            return;
         }
 
         if (column.pos < 0)
