@@ -2,6 +2,8 @@
 
 Advanced tool for exploring log files.
 
+![image](https://user-images.githubusercontent.com/3150631/155901410-3ff2aa01-b62d-43e4-a3f5-a9e31a9fe293.png)
+
 ## Main features
 
 * [Very fast and can handle huge files](#file-handler)
@@ -46,8 +48,9 @@ To open a file, it's require to specify if the file is of JSON type or TEXT type
 When a template is saved, it will be include as another option to open the file.
 
 As `QLogExplorer` is template oriented, even when the file is opened as JSON or TEXT, a temporary template is created to handle that file, so `Columns` can be defined, as well as `Highlighters` and `Predefined Filters`.  
-__WARNING__ If the template is not saved until the file to be closed, all the changed applied on the file will be lost.  
 Only the template name is required to save a template, so after defining a name, the save option will be enabled.
+
+__WARNING__ If the template is not saved until the file to be closed, all the changed applied on the file will be lost.
 
 ## Columns
 
@@ -138,7 +141,7 @@ Highlighters can be defined in the template to change the color of rows that con
 
 ## Predefined search parameters
 
-Each kind of log have specific entries that are frequently to the log analysis, like start, shutdown, errors, warnings, etc...  
+Each kind of log have specific entries that are frequently used to the log analysis, like start, shutdown, errors, warnings, etc...  
 The template can have all the interesting entries saved and properly named to speed up the log analysis task.  
 Example:
 
@@ -174,7 +177,7 @@ The range expression must be provided in the format: `<From> -> <To>` as follow:
 ```
 28-12-2021 18:00:00.0 -> 28-12-2021 19:00:00.0
 ```
-`<From>` or `<To>` may be omitted for open intervals.
+Either `<From>` or `<To>` can be omitted for open intervals.
 
 __Example:__
 
@@ -192,6 +195,6 @@ To see everything before *28-12-2021 19:00:00.0*:
 -> 28-12-2021 19:00:00.0
 ```
 
-### Merging searching results
+### Merging results
 
 If the merging option is selected, the result of new searches will be merged to the previous ones.

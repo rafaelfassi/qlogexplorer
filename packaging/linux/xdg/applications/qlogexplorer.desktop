@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=QLogExplorer
+GenericName=Logs Viewer
+Comment=Advanced log viewer
+Exec=qlogexplorer %F
+Icon=qlogexplorer
+Keywords=log;viewer;monitor;
+Terminal=false
+StartupNotify=true
+Categories=Utility;Development;
+MimeType=text/plain;
+Actions=open-file
+
+[Desktop Action open-file]
+Name=QLogExplorer
+Exec=qlogexplorer %F

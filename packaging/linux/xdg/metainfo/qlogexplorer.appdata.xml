@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.rafaelfassi.QLogExplorer</id>
+  
+  <name>QLogExplorer</name>
+  <summary>Fast log files viewer with advanced tools</summary>
+  
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  
+  <description>
+    <p>
+      QLogExplorer is a free and open source cross-platform log files viewer.
+      It supports very big files, JSON log files, columns definition and highlighters.
+    </p>
+  </description>
+  
+  <launchable type="desktop-id">qlogexplorer.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://user-images.githubusercontent.com/3150631/155901410-3ff2aa01-b62d-43e4-a3f5-a9e31a9fe293.png</image>
+    </screenshot>
+    <screenshot>
+      <image>https://user-images.githubusercontent.com/3150631/155901961-08a865e1-b825-4b1c-b465-f003eb6af120.png</image>
+    </screenshot>
+  </screenshots>
+</component>

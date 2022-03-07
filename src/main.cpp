@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
 
     Settings::initSettings();
 
+    qDebug() << "SettingsDir:" << Settings::getSettingsDir().path();
+
     app.initialize(QString(), Settings::getSettingsDir().absolutePath());
 
     if (Settings::getSingleInstance())
@@ -53,7 +55,7 @@ int main(int argc, char *argv[])
     Style::initStyle();
     Style::loadStyle(Settings::getStyle());
 
-    qDebug() << Style::availableStyles();
+    qDebug() << "AvailableStyles:" << Style::availableStyles();
 
     MainWindow w;
     w.show();

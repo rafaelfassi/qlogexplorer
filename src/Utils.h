@@ -3,7 +3,7 @@
 
 #pragma once
 
-#ifdef HAS_TBB_ENABLED
+#ifndef NO_STD_PARALLEL_ALGORITHMS
 #include <execution>
 #define PARALLEL_SORT(it_first, it_last) std::sort(std::execution::par, it_first, it_last);
 #else

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(qlogexplorer LANGUAGES CXX)
-set(VERSION 0.0.1)
+project(qlogexplorer VERSION 0.0.1 LANGUAGES CXX)
+set(APP_NAME "QLogExplorer")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
@@ -12,13 +12,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+add_definitions(-DAPP_VERSION="${CMAKE_PROJECT_VERSION}")
+add_definitions(-DAPP_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
+add_definitions(-DAPP_VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR})
+add_definitions(-DAPP_VERSION_PATCH=${CMAKE_PROJECT_VERSION_PATCH})
+add_definitions(-DAPP_NAME="${APP_NAME}")
 add_definitions(-DAPP_BASE_SRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Network REQUIRED)
 find_package(Threads REQUIRED)
-find_package(TBB)
 
 set(MAIN_SOURCES
     qlogexplorer.qrc
@@ -34,6 +38,10 @@ set(MAIN_SOURCES
     src/InFileStream.h
     src/InFileStream.cpp
 )
+
+if(WIN32)
+    list(APPEND MAIN_SOURCES packaging/win/qlogexplorer.rc)
+endif(WIN32)
 
 set(MODEL_HEADERS
     src/model/AbstractModel.h
@@ -125,11 +133,20 @@ target_link_libraries(${PROJECT_NAME}
     Threads::Threads
 )
 
-if(TBB_FOUND)
-    target_link_libraries(${PROJECT_NAME} PRIVATE TBB::tbb)
-    add_definitions(-DHAS_TBB_ENABLED)
-else()
-    MESSAGE(STATUS "TBB not found. Configure TBB to improve performance.")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+        message("Compiler does not support parallel algorithms.")
+        add_definitions(-DNO_STD_PARALLEL_ALGORITHMS)
+    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
+        # GCC 9 supports parallel algorithms, but it requires libtbb
+        target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
+    endif()
 endif()
 
+if(WIN32)
+    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+endif(WIN32)
+
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

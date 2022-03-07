@@ -7,5 +7,3 @@ qrc_*
 build/*
 .vscode/*
 dev/*
-images/dark/*
-images/default/*

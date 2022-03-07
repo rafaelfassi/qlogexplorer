@@ -32,6 +32,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
+    setWindowTitle(APP_NAME);
     QRect rec = QApplication::desktop()->screenGeometry();
     setMinimumSize(std::min(800, rec.width()), std::min(600, rec.height()));
     createActions();
