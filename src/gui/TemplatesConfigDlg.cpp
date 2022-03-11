@@ -349,7 +349,7 @@ void TemplatesConfigDlg::createColumnsFromRegex()
         QString fixHltMsg;
         if (conf->hasHighlighterParams())
         {
-            fixHltMsg = tr("You may need to fix highlighters that are refereicing the existent columns.\n");
+            fixHltMsg = tr("You may need to fix the highlighters that are referencing the existing columns.\n");
         }
         if (QMessageBox::warning(
                 this,

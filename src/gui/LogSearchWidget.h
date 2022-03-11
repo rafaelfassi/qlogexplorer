@@ -24,12 +24,14 @@ public:
     ~LogSearchWidget();
     void configure();
     void reconfigure();
+    void retranslateUi();
 
 private:
     void createActions();
     void createMenus();
     void createToolBars();
     void createConnections();
+    void translateUi();
 
 signals:
     void rowSelected(tp::SInt row);

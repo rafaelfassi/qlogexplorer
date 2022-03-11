@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "MainWindow.h"
 #include "Settings.h"
+#include "Style.h"
 #include "LogTabWidget.h"
 #include "LogViewWidget.h"
 #include "TextLogModel.h"
@@ -12,6 +13,7 @@
 #include "LogSearchWidget.h"
 #include "HeaderView.h"
 #include "TemplatesConfigDlg.h"
+#include "SettingsDlg.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -42,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     m_tabViews->setTabsClosable(true);
     setCentralWidget(m_tabViews);
 
+    translateUi();
+
     createConnections();
 
     updateMenus();
@@ -65,35 +69,37 @@ void MainWindow::createActions()
     m_actReopenFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
     m_actReopenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
 
-    m_actCloseFile = new QAction(tr("Close File"), this);
+    m_actCloseFile = new QAction(this);
     m_actCloseFile->setShortcut(QKeySequence::Close);
 
-    m_actQuit = new QAction(tr("Quit"), this);
+    m_actQuit = new QAction(this);
     m_actQuit->setShortcut(QKeySequence::Quit);
 
-    m_actSaveConf = new QAction("", this);
+    m_actSaveConf = new QAction(this);
     m_actSaveConf->setVisible(false);
 
-    m_actSaveConfAs = new QAction("", this);
+    m_actSaveConfAs = new QAction(this);
     m_actSaveConfAs->setVisible(false);
 
-    m_actTemplatesConfig = new QAction(tr("Configure Templates"), this);
+    m_actTemplatesConfig = new QAction(this);
+
+    m_actSettings = new QAction(this);
 }
 
 void MainWindow::createMenus()
 {
-    m_fileMenu = menuBar()->addMenu(tr("&File"));
+    m_fileMenu = menuBar()->addMenu("File");
 
-    m_fileOpenAsMenu = m_fileMenu->addMenu(tr("&Open As..."));
+    m_fileOpenAsMenu = m_fileMenu->addMenu("Open As...");
     m_fileOpenAsMenu->addAction(m_actOpenFileAsText);
     m_fileOpenAsMenu->addAction(m_actOpenFileAsJson);
     m_actOpenAsSep = m_fileOpenAsMenu->addSeparator();
 
-    m_fileOpenRecent = m_fileMenu->addMenu(tr("Open &Recent"));
+    m_fileOpenRecent = m_fileMenu->addMenu("Open Recent");
 
     m_fileMenu->addSeparator();
 
-    m_fileReopenAsMenu = m_fileMenu->addMenu(tr("Reopen &As..."));
+    m_fileReopenAsMenu = m_fileMenu->addMenu("Reopen As...");
     m_fileReopenAsMenu->addAction(m_actReopenFileAsText);
     m_fileReopenAsMenu->addAction(m_actReopenFileAsJson);
     m_fileReopenAsMenu->addAction(m_actOpenAsSep);
@@ -106,18 +112,19 @@ void MainWindow::createMenus()
 
     m_fileMenu->addAction(m_actQuit);
 
-    m_templatesMenu = menuBar()->addMenu(tr("&Templates"));
+    m_templatesMenu = menuBar()->addMenu("Templates");
 
     m_templatesMenu->addAction(m_actSaveConf);
     m_templatesMenu->addAction(m_actSaveConfAs);
     m_templatesMenu->addSeparator();
     m_templatesMenu->addAction(m_actTemplatesConfig);
+
+    m_toolsMenu = menuBar()->addMenu("Utilities");
+    m_toolsMenu->addAction(m_actSettings);
 }
 
 void MainWindow::createToolBars()
 {
-    // auto fileToolBar = addToolBar(tr("&File"));
-    // fileToolBar->addAction(m_toggeFollowing);
 }
 
 void MainWindow::createConnections()
@@ -135,8 +142,53 @@ void MainWindow::createConnections()
     connect(m_actSaveConf, &QAction::triggered, this, &MainWindow::saveConf);
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
+    connect(m_actSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::confCurrentTab);
+}
+
+void MainWindow::translateUi()
+{
+    m_actCloseFile->setText(tr("Close File"));
+    m_actQuit->setText(tr("Quit"));
+    m_actTemplatesConfig->setText(tr("Configure Templates"));
+    m_actSettings->setText(tr("Settings"));
+
+    m_fileMenu->setTitle(tr("&File"));
+    m_fileOpenAsMenu->setTitle(tr("&Open As..."));
+    m_fileOpenRecent->setTitle(tr("Open &Recent"));
+    m_fileReopenAsMenu->setTitle(tr("Reopen &As..."));
+    m_templatesMenu->setTitle(tr("&Templates"));
+    m_toolsMenu->setTitle(tr("&Utilities"));
+}
+
+void MainWindow::retranslateUi()
+{
+    translateUi();
+
+    Style::updateWidget(this);
+    Style::updateWidget(menuBar());
+    Style::updateWidget(m_tabViews->tabBar());
+    for (int tabIdx = 0; tabIdx < getTabsCount(); ++tabIdx)
+    {
+        auto tab = getTab(tabIdx);
+        if (tab)
+        {
+            tab->retranslateUi();
+        }
+    }
+}
+
+void MainWindow::reconfigure()
+{
+    for (int tabIdx = 0; tabIdx < getTabsCount(); ++tabIdx)
+    {
+        auto tab = getTab(tabIdx);
+        if (tab)
+        {
+            tab->reconfigure();
+        }
+    }
 }
 
 void MainWindow::updateMenus()
@@ -470,6 +522,17 @@ void MainWindow::openTemplatesConfig()
     templConf.exec();
 }
 
+void MainWindow::openSettings()
+{
+    SettingsDlg settingsDlg(this);
+    if (settingsDlg.exec() == QDialog::Accepted)
+    {
+        retranslateUi();
+        reconfigure();
+        confCurrentTab(getCurrentTabIdx());
+    }
+}
+
 void MainWindow::closeTab(int index)
 {
     auto tab = getTab(index);
@@ -523,14 +586,19 @@ void MainWindow::confCurrentTab(int index)
         m_actSaveConfAs->setText("");
     }
 
-    // Should it hide the tab bar when there's only one file opened?
-    // If so, it needs to add a close option in the File menu.
-    // const bool showTabBar(m_tabViews->count() > 1);
-    // auto tabBar = m_tabViews->tabBar();
-    // if (tabBar->isVisible() != showTabBar)
-    // {
-    //     tabBar->setVisible(showTabBar);
-    // }
+    auto tabBar = m_tabViews->tabBar();
+    if (Settings::getHideUniqueTab())
+    {
+        const bool showTabBar(m_tabViews->count() > 1);
+        if (tabBar->isVisible() != showTabBar)
+        {
+            tabBar->setVisible(showTabBar);
+        }
+    }
+    else if (!tabBar->isVisible())
+    {
+        tabBar->setVisible(true);
+    }
 }
 
 void MainWindow::goToTab(int index)

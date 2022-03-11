@@ -7,6 +7,8 @@
 
 class ProgressLabel : public QLabel
 {
+    Q_OBJECT
+
 public:
     ProgressLabel(QWidget *parent = nullptr);
     void updateProgress();

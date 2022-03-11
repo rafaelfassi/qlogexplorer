@@ -4,6 +4,8 @@
 #include "pch.h"
 #include "Settings.h"
 #include <QSettings>
+#include <QTranslator>
+#include <QApplication>
 #include <QStandardPaths>
 #include <QFontDatabase>
 
@@ -45,16 +47,61 @@ void Settings::initSettings()
     }
 
     s.m_settings = new QSettings();
+    s.m_translator = new QTranslator();
 
     const auto &settingsFile = s.m_settingsDir.absoluteFilePath("settings.ini");
     s.m_settings = new QSettings(settingsFile, QSettings::IniFormat);
 
     QFontDatabase::addApplicationFont(":/fonts/DejaVuSansMono.ttf");
-    const auto fontName = s.m_settings->value("fontName", "DejaVu Sans Mono").toString();
-    const auto fontSize = s.m_settings->value("fontSize", 12).toInt();
-    s.m_font = QFont(fontName, fontSize);
+    s.loadLanguage();
+    s.loadFont();
+    s.loadSingleInstance();
+    s.loadHideUniqueTab();
+    s.loadDefaultSearchType();
 
     loadTemplates();
+}
+
+void Settings::loadLanguage()
+{
+    m_language = m_settings->value("language", QString()).toString();
+    if (m_language.isEmpty())
+    {
+        m_language = QLocale::system().name();
+    }
+
+    if (m_translator->load(m_language, ":/languages"))
+    {
+        qApp->installTranslator(m_translator);
+    }
+    else
+    {
+        m_language = "en";
+    }
+}
+
+QStringList Settings::availableLangs()
+{
+    QStringList langs;
+    langs << "en";
+    QDir langDir(":/languages");
+    for (const auto &langFile : langDir.entryList())
+    {
+        QFileInfo info(langFile);
+        langs << info.baseName();
+    }
+    return langs;
+}
+
+QString Settings::getLanguage()
+{
+    return inst().m_language;
+}
+
+void Settings::setLanguage(const QString &lang)
+{
+    inst().m_settings->setValue("language", lang);
+    inst().loadLanguage();
 }
 
 QDir Settings::getSettingsDir(const QString &subDir)
@@ -65,6 +112,11 @@ QDir Settings::getSettingsDir(const QString &subDir)
         dir.setPath(dir.absolutePath() + QDir::separator() + subDir);
     }
     return dir;
+}
+
+QDir Settings::gettemplatesDir()
+{
+    return inst().m_templatesDir;
 }
 
 tp::SInt Settings::getMaxRecentFiles()
@@ -269,12 +321,68 @@ QString Settings::getStyle()
     return inst().m_settings->value("styleName", "Dark").toString();
 }
 
+void Settings::loadFont()
+{
+    const auto fontFamily = m_settings->value("fontFamily", "DejaVu Sans Mono").toString();
+    const auto fontSize = m_settings->value("fontSize", 12).toInt();
+    m_font = QFont(fontFamily, fontSize);
+}
+
+void Settings::setFont(const QString &family, int size)
+{
+    Settings &s = inst();
+    s.m_settings->setValue("fontFamily", family);
+    s.m_settings->setValue("fontSize", size);
+    s.loadFont();
+}
+
+void Settings::loadSingleInstance()
+{
+    m_singleInstance = m_settings->value("singleInstance", true).toBool();
+}
+
 void Settings::setSingleInstance(bool singleInstance)
 {
     inst().m_settings->setValue("singleInstance", singleInstance);
+    inst().loadSingleInstance();
 }
 
 bool Settings::getSingleInstance()
 {
-    return inst().m_settings->value("singleInstance", true).toBool();
+    return inst().m_singleInstance;
+}
+
+void Settings::loadHideUniqueTab()
+{
+    m_hideUniqueTab = inst().m_settings->value("hideUniqueTab", false).toBool();
+}
+
+void Settings::setHideUniqueTab(bool hideTab)
+{
+    inst().m_settings->setValue("hideUniqueTab", hideTab);
+    inst().loadHideUniqueTab();
+}
+
+bool Settings::getHideUniqueTab()
+{
+    return inst().m_hideUniqueTab;
+}
+
+void Settings::loadDefaultSearchType()
+{
+    const auto searchTypeStr =
+        inst().m_settings->value("defaultSearchType", tp::toStr(tp::SearchType::Regex).c_str()).toString();
+    m_searchType = tp::fromStr<tp::SearchType>(utl::toStr(searchTypeStr));
+}
+
+void Settings::setDefaultSearchType(tp::SearchType searchType)
+{
+    const QString searchTypeStr(tp::toStr<tp::SearchType>(searchType).c_str());
+    inst().m_settings->setValue("defaultSearchType", searchTypeStr);
+    inst().loadDefaultSearchType();
+}
+
+tp::SearchType Settings::getDefaultSearchType()
+{
+    return inst().m_searchType;
 }

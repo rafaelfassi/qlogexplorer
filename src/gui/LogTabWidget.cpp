@@ -73,6 +73,8 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     vLayout->addWidget(toolbar);
     vLayout->addWidget(splitter);
 
+    translateUi();
+
     setLayout(vLayout);
 
     createConnections();
@@ -85,13 +87,11 @@ LogTabWidget::~LogTabWidget()
 
 void LogTabWidget::createActions()
 {
-    m_actTrackFile = new QAction(tr("Track File"), this);
-    m_actTrackFile->setIcon(Style::getIcon("track_icon.png"));
+    m_actTrackFile = new QAction(this);
     m_actTrackFile->setCheckable(true);
     m_actTrackFile->setChecked(true);
 
-    m_actAutoScrolling = new QAction(tr("Auto Scrolling"), this);
-    m_actAutoScrolling->setIcon(Style::getIcon("scroll_down.png"));
+    m_actAutoScrolling = new QAction(this);
     m_actAutoScrolling->setCheckable(true);
     m_actAutoScrolling->setChecked(false);
 }
@@ -104,10 +104,26 @@ void LogTabWidget::createConnections()
     connect(m_logModel, &BaseLogModel::parsingProgressChanged, m_prlFileParsing, &ProgressLabel::setProgress);
 }
 
+void LogTabWidget::translateUi()
+{
+    m_actTrackFile->setText(tr("Track File"));
+    m_actTrackFile->setIcon(Style::getIcon("track_icon.png"));
+
+    m_actAutoScrolling->setText(tr("Auto Scrolling"));
+    m_actAutoScrolling->setIcon(Style::getIcon("scroll_down.png"));
+}
+
+void LogTabWidget::retranslateUi()
+{
+    translateUi();
+    Style::updateWidget(m_prlFileParsing);
+    m_logViewWidget->retranslateUi();
+    m_logSearchWidget->retranslateUi();
+}
+
 void LogTabWidget::reconfigure()
 {
-    m_logViewWidget->resetColumns();
-    m_logViewWidget->configure(m_conf);
+    m_logViewWidget->reconfigure(m_conf);
     m_logSearchWidget->reconfigure();
     m_logModel->reconfigure();
 }

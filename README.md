@@ -50,7 +50,7 @@ When a template is saved, it will be include as another option to open the file.
 As `QLogExplorer` is template oriented, even when the file is opened as JSON or TEXT, a temporary template is created to handle that file, so `Columns` can be defined, as well as `Highlighters` and `Predefined Filters`.  
 Only the template name is required to save a template, so after defining a name, the save option will be enabled.
 
-__WARNING__ If the template is not saved until the file to be closed, all the changed applied on the file will be lost.
+__WARNING__ If the template is not saved until the file to be closed, all the configurations applied will be lost.
 
 ## Columns
 

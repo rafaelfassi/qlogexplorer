@@ -30,6 +30,8 @@ public:
     tp::SearchParam getSearchParam() const;
     void setSearchParam(const tp::SearchParam &param, bool notifyChanged = false);
     static void fixParam(const FileConf::Ptr &conf, tp::SearchParam &param);
+    void reconfigure();
+    void retranslateUi();
 
 signals:
     void paramChanged();
@@ -43,6 +45,8 @@ private slots:
     void updateParam(bool notifyChanged = true);
 
 private:
+    void translateUi();
+
     tp::SearchParam m_param;
     QComboBox *m_cmbColumns;
     QLineEdit *m_edtPattern;

@@ -49,5 +49,7 @@
         <file>images/dark/sync_icon.png</file>
         <file>images/dark/track_icon.png</file>
         <file>images/dark/up_icon.png</file>
+
+        <file>languages/pt.qm</file>
     </qresource>
 </RCC>

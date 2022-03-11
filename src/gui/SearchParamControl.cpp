@@ -6,6 +6,7 @@
 #include "SearchParamModel.h"
 #include "TemplatesConfigDlg.h"
 #include "Style.h"
+#include "Settings.h"
 #include <QHBoxLayout>
 #include <QAction>
 #include <QLineEdit>
@@ -157,6 +158,8 @@ SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPatt
     pol.setHorizontalPolicy(QSizePolicy::Minimum);
     setSizePolicy(pol);
 
+    translateUi();
+
     setLayout(hLayout);
     createConnections();
     updateParam(false);
@@ -221,21 +224,42 @@ void SearchParamControl::apply()
 
 void SearchParamControl::createActions()
 {
-    m_actRegex = new QAction(tr("Regular Expression"), this);
-    m_actRegex->setIcon(Style::getIcon("regex_icon.png"));
+    m_actRegex = new QAction(this);
     m_actRegex->setCheckable(true);
+    m_actRegex->setChecked(Settings::getDefaultSearchType() == tp::SearchType::Regex);
 
-    m_actRange = new QAction(tr("Range match (from -> to)"), this);
-    m_actRange->setIcon(Style::getIcon("range_icon.png"));
+    m_actRange = new QAction(this);
     m_actRange->setCheckable(true);
 
-    m_actMatchCase = new QAction(tr("Match Case"), this);
-    m_actMatchCase->setIcon(Style::getIcon("case_sensitive_icon.png"));
+    m_actMatchCase = new QAction(this);
     m_actMatchCase->setCheckable(true);
 
-    m_actNotOp = new QAction(tr("Not (invert the match)"), this);
-    m_actNotOp->setIcon(Style::getIcon("not_icon.png"));
+    m_actNotOp = new QAction(this);
     m_actNotOp->setCheckable(true);
+}
+
+void SearchParamControl::translateUi()
+{
+    m_actRegex->setText(tr("Regular Expression"));
+    m_actRegex->setIcon(Style::getIcon("regex_icon.png"));
+
+    m_actRange->setText(tr("Range match (from -> to)"));
+    m_actRange->setIcon(Style::getIcon("range_icon.png"));
+
+    m_actMatchCase->setText(tr("Match Case"));
+    m_actMatchCase->setIcon(Style::getIcon("case_sensitive_icon.png"));
+
+    m_actNotOp->setText(tr("Not (invert the match)"));
+    m_actNotOp->setIcon(Style::getIcon("not_icon.png"));
+}
+
+void SearchParamControl::retranslateUi()
+{
+    translateUi();
+    Style::updateWidget(m_cmbColumns);
+    Style::updateWidget(m_edtPattern);
+    if (m_cmbSearch != nullptr)
+        Style::updateWidget(m_cmbSearch);
 }
 
 void SearchParamControl::createConnections()
@@ -248,6 +272,11 @@ void SearchParamControl::createConnections()
     connect(m_edtPattern, &QLineEdit::editingFinished, this, [this]() { updateParam(); });
     // Must be QueuedConnection due the Completer is not finished when returnPressed is emitted.
     connect(m_edtPattern, &QLineEdit::returnPressed, this, &SearchParamControl::searchRequested, Qt::QueuedConnection);
+}
+
+void SearchParamControl::reconfigure()
+{
+    updateColumns(true);
 }
 
 void SearchParamControl::updateColumns(bool tryKeepSel)

@@ -20,13 +20,9 @@
 
 LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(parent), m_model(model)
 {
-    auto pal = palette();
-    pal.setColor(QPalette::Window, Style::getHeaderColor().bg);
-    setPalette(pal);
+    updatePalette();
 
     m_header = new HeaderView(this);
-    m_header->setMaximumHeight(Style::getTextHeight(true));
-    m_header->setFixedHeight(m_header->maximumHeight());
     auto headerPolicy = m_header->sizePolicy();
     headerPolicy.setHorizontalPolicy(QSizePolicy::Expanding);
     headerPolicy.setVerticalPolicy(QSizePolicy::Fixed);
@@ -49,16 +45,11 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(pa
 
     m_btnExpandColumns = new QPushButton(this);
     m_btnExpandColumns->setFocusPolicy(Qt::NoFocus);
-    m_btnExpandColumns->setIcon(Style::getIcon("expand_icon.png"));
-    m_btnExpandColumns->setToolTip("Expand All Columns");
     m_btnExpandColumns->setFlat(true);
-    m_btnExpandColumns->setFixedHeight(m_header->maximumHeight());
     m_btnExpandColumns->setFixedWidth(Style::getScrollBarThickness());
 
     m_btnFitColumns = new QPushButton(this);
     m_btnFitColumns->setFocusPolicy(Qt::NoFocus);
-    m_btnFitColumns->setIcon(Style::getIcon("fit_icon.png"));
-    m_btnFitColumns->setToolTip("Adjust Columns to Fit");
     m_btnFitColumns->setFlat(true);
     m_btnFitColumns->setFixedHeight(Style::getScrollBarThickness());
     m_btnFitColumns->setFixedWidth(Style::getScrollBarThickness());
@@ -80,77 +71,79 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(pa
     hLayout->addLayout(m_hScrollBarLayout, 1);
     hLayout->addLayout(m_vScrollBarLayout);
 
+    updateHeaderSize();
+
     setLayout(hLayout);
 
     m_stabilizedUpdateTimer = new QTimer(this);
     m_stabilizedUpdateTimer->setInterval(200);
 
-    m_actGoUp = new QAction("Up", this);
+    m_actGoUp = new QAction(this);
     m_actGoUp->setShortcut(QKeySequence::MoveToPreviousLine);
     m_actGoUp->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoUp);
 
-    m_actGoDown = new QAction("Down", this);
+    m_actGoDown = new QAction(this);
     m_actGoDown->setShortcut(QKeySequence::MoveToNextLine);
     m_actGoDown->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoDown);
 
-    m_actGoPrevPage = new QAction("Previous Page", this);
+    m_actGoPrevPage = new QAction(this);
     m_actGoPrevPage->setShortcut(QKeySequence::MoveToPreviousPage);
     m_actGoPrevPage->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoPrevPage);
 
-    m_actGoNextPage = new QAction("Next Page", this);
+    m_actGoNextPage = new QAction(this);
     m_actGoNextPage->setShortcut(QKeySequence::MoveToNextPage);
     m_actGoNextPage->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoNextPage);
 
-    m_actGoFirstRow = new QAction("First Row", this);
+    m_actGoFirstRow = new QAction(this);
     m_actGoFirstRow->setShortcut(QKeySequence::MoveToStartOfDocument);
     m_actGoFirstRow->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoFirstRow);
 
-    m_actGoLastRow = new QAction("Last Row", this);
+    m_actGoLastRow = new QAction(this);
     m_actGoLastRow->setShortcut(QKeySequence::MoveToEndOfDocument);
     m_actGoLastRow->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoLastRow);
 
-    m_actGoLeft = new QAction("Left", this);
+    m_actGoLeft = new QAction(this);
     m_actGoLeft->setShortcut(QKeySequence::MoveToPreviousChar);
     m_actGoLeft->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoLeft);
 
-    m_actGoRight = new QAction("Right", this);
+    m_actGoRight = new QAction(this);
     m_actGoRight->setShortcut(QKeySequence::MoveToNextChar);
     m_actGoRight->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoRight);
 
-    m_actGoFullLeft = new QAction("Start of Line", this);
+    m_actGoFullLeft = new QAction(this);
     m_actGoFullLeft->setShortcut(QKeySequence::MoveToStartOfLine);
     m_actGoFullLeft->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoFullLeft);
 
-    m_actGoFullRight = new QAction("End of Line", this);
+    m_actGoFullRight = new QAction(this);
     m_actGoFullRight->setShortcut(QKeySequence::MoveToEndOfLine);
     m_actGoFullRight->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actGoFullRight);
 
-    m_actCopy = new QAction("Copy", this);
+    m_actCopy = new QAction(this);
     m_actCopy->setShortcut(QKeySequence::Copy);
     m_actCopy->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actCopy);
 
-    m_actBookmark = new QAction("Toggle Bookmark", this);
+    m_actBookmark = new QAction(this);
     m_actBookmark->setShortcut(Qt::CTRL + Qt::Key_M);
     m_actBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actBookmark);
 
-    m_actPrevBookmark = new QAction("Previous Bookmark", this);
+    m_actPrevBookmark = new QAction(this);
     m_actPrevBookmark->setShortcut(Qt::CTRL + Qt::Key_Up);
     m_actPrevBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actPrevBookmark);
 
-    m_actNextBookmark = new QAction("Next Bookmark", this);
+    m_actNextBookmark = new QAction(this);
     m_actNextBookmark->setShortcut(Qt::CTRL + Qt::Key_Down);
     m_actNextBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actNextBookmark);
@@ -189,10 +182,73 @@ LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(pa
     m_availableMarks.emplace_back("#000000", "#fff8dc");
     m_availableMarks.emplace_back("#ffffff", "#9932cc");
     m_availableMarks.emplace_back("#ffffff", "#ff8c00");
+
+    translateUi();
 }
 
 LogViewWidget::~LogViewWidget()
 {
+}
+
+void LogViewWidget::updatePalette()
+{
+    auto pal = palette();
+    pal.setColor(QPalette::Window, Style::getHeaderColor().bg);
+    setPalette(pal);
+}
+
+void LogViewWidget::updateHeaderSize()
+{
+    const int headerHeight = Style::getTextHeight(true);
+    m_header->setMaximumHeight(headerHeight);
+    m_header->setFixedHeight(headerHeight);
+    m_btnExpandColumns->setMaximumHeight(headerHeight);
+    m_btnExpandColumns->setFixedHeight(headerHeight);
+}
+
+void LogViewWidget::translateUi()
+{
+    m_actGoUp->setText(tr("Up"));
+
+    m_actGoDown->setText(tr("Down"));
+
+    m_actGoPrevPage->setText(tr("Previous Page"));
+
+    m_actGoNextPage->setText(tr("Next Page"));
+
+    m_actGoFirstRow->setText(tr("First Row"));
+
+    m_actGoLastRow->setText(tr("Last Row"));
+
+    m_actGoLeft->setText(tr("Left"));
+
+    m_actGoRight->setText(tr("Right"));
+
+    m_actGoFullLeft->setText(tr("Start of Line"));
+
+    m_actGoFullRight->setText(tr("End of Line"));
+
+    m_actCopy->setText(tr("Copy"));
+
+    m_actBookmark->setText(tr("Toggle Bookmark"));
+
+    m_actPrevBookmark->setText(tr("Previous Bookmark"));
+
+    m_actNextBookmark->setText(tr("Next Bookmark"));
+
+    m_btnExpandColumns->setToolTip("Expand All Columns");
+    m_btnExpandColumns->setIcon(Style::getIcon("expand_icon.png"));
+
+    m_btnFitColumns->setToolTip("Adjust Columns to Fit");
+    m_btnFitColumns->setIcon(Style::getIcon("fit_icon.png"));
+}
+
+void LogViewWidget::retranslateUi()
+{
+    translateUi();
+    Style::updateWidget(this);
+    updatePalette();
+    updateHeaderSize();
 }
 
 AbstractModel *LogViewWidget::getModel()
@@ -775,6 +831,12 @@ void LogViewWidget::configure(FileConf::Ptr conf)
     {
         m_highlightersRows.push_back(Highlighter(param));
     }
+}
+
+void LogViewWidget::reconfigure(FileConf::Ptr conf)
+{
+    resetColumns();
+    configure(conf);
 }
 
 void LogViewWidget::configureColumns()

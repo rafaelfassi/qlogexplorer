@@ -50,7 +50,6 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     btnExec->setDefaultAction(m_actExec);
 
     m_prlSearching = new ProgressLabel(this);
-    m_prlSearching->setActionText(tr("Searching"));
 
     m_proxyModel = new ProxyModel(m_sourceModel);
 
@@ -73,6 +72,8 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     vLayout->addLayout(m_searchParamsLayout);
     vLayout->addLayout(hLayout);
     vLayout->addWidget(m_searchResults);
+
+    translateUi();
 
     setLayout(vLayout);
 
@@ -97,34 +98,60 @@ void LogSearchWidget::reconfigure()
 {
     for (auto paramWidget : m_searchParamWidgets)
     {
-        paramWidget->updateColumns();
+        paramWidget->reconfigure();
     }
-    m_searchResults->resetColumns();
-    m_searchResults->configure(m_conf);
+    m_searchResults->reconfigure(m_conf);
     m_searchParamModel->updateParams(m_conf->getFilterParams());
 }
 
 void LogSearchWidget::createActions()
 {
-    m_actAddSearchParam = new QAction(tr("Add Search Parameter"), this);
-    m_actAddSearchParam->setIcon(Style::getIcon("add_icon.png"));
+    m_actAddSearchParam = new QAction(this);
 
-    m_actMergeResults = new QAction(tr("Merge Results"), this);
-    m_actMergeResults->setIcon(Style::getIcon("merge_icon.png"));
+    m_actMergeResults = new QAction(this);
     m_actMergeResults->setCheckable(true);
 
-    m_actOrOperator = new QAction(tr("Use OR operator"), this);
-    m_actOrOperator->setIcon(Style::getIcon("or_icon.png"));
+    m_actOrOperator = new QAction(this);
     m_actOrOperator->setCheckable(true);
 
-    m_actClear = new QAction(tr("Clear Results"), this);
+    m_actClear = new QAction(this);
+
+    m_actSyncMarks = new QAction(this);
+
+    m_actExec = new QAction(this);
+}
+
+void LogSearchWidget::translateUi()
+{
+    m_actAddSearchParam->setText(tr("Add Search Parameter"));
+    m_actAddSearchParam->setIcon(Style::getIcon("add_icon.png"));
+
+    m_actMergeResults->setText(tr("Merge Results"));
+    m_actMergeResults->setIcon(Style::getIcon("merge_icon.png"));
+
+    m_actOrOperator->setText(tr("Use OR operator"));
+    m_actOrOperator->setIcon(Style::getIcon("or_icon.png"));
+
+    m_actClear->setText(tr("Clear Results"));
     m_actClear->setIcon(Style::getIcon("clear_icon.png"));
 
-    m_actSyncMarks = new QAction(tr("Sync Bookmarks and Marks"), this);
+    m_actSyncMarks->setText(tr("Sync Bookmarks and Marks"));
     m_actSyncMarks->setIcon(Style::getIcon("sync_icon.png"));
 
-    m_actExec = new QAction(tr("Search"), this);
+    m_actExec->setText(tr("Search"));
     m_actExec->setIcon(Style::getIcon("search_icon.png"));
+
+    m_prlSearching->setActionText(tr("Searching"));
+}
+
+void LogSearchWidget::retranslateUi()
+{
+    translateUi();
+    for (auto paramWidget : m_searchParamWidgets)
+    {
+        paramWidget->retranslateUi();
+    }
+    m_searchResults->retranslateUi();
 }
 
 void LogSearchWidget::createConnections()

@@ -29,4 +29,4 @@ modules:
       - cp -r packaging/linux/xdg ${FLATPAK_DEST}/share
     sources:
       - type: archive
-        path: /home/rafael/Dev/QLogExplorer/flatpak/qlogexplorer.tar.gz
+        path: <tarball-file>.tar.gz

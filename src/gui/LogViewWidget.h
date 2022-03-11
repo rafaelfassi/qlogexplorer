@@ -52,6 +52,8 @@ public:
     void clearBookmarks();
     bool hasBookmark(tp::SInt row) const;
     void configure(FileConf::Ptr conf);
+    void reconfigure(FileConf::Ptr conf);
+    void retranslateUi();
 
 signals:
     void rowSelected(tp::SInt row);
@@ -131,6 +133,10 @@ protected:
     bool hasTextSelected();
 
 private:
+    void translateUi();
+    void updatePalette();
+    void updateHeaderSize();
+
     AbstractModel *m_model;
     HeaderView *m_header = nullptr;
     LongScrollBar *m_vScrollBar = nullptr;

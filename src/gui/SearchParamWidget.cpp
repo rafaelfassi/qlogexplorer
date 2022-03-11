@@ -45,6 +45,8 @@ SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searc
     hLayout->addWidget(btnDisableMe);
     hLayout->addWidget(btnRemoveMe);
 
+    translateUi();
+
     setLayout(hLayout);
 
     createConnections();
@@ -56,12 +58,25 @@ SearchParamWidget::~SearchParamWidget()
 
 void SearchParamWidget::createActions()
 {
-    m_actDisableMe = new QAction(tr("Disable Parameter"), this);
-    m_actDisableMe->setIcon(Style::getIcon("filter_off_icon.png"));
+    m_actDisableMe = new QAction(this);
     m_actDisableMe->setCheckable(true);
 
-    m_actRemoveMe = new QAction(tr("Remove Parameter"), this);
+    m_actRemoveMe = new QAction(this);
+}
+
+void SearchParamWidget::translateUi()
+{
+    m_actDisableMe->setText(tr("Disable Parameter"));
+    m_actDisableMe->setIcon(Style::getIcon("filter_off_icon.png"));
+
+    m_actRemoveMe->setText(tr("Remove Parameter"));
     m_actRemoveMe->setIcon(Style::getIcon("delete_icon.png"));
+}
+
+void SearchParamWidget::retranslateUi()
+{
+    translateUi();
+    m_control->retranslateUi();
 }
 
 void SearchParamWidget::createConnections()
@@ -75,9 +90,9 @@ void SearchParamWidget::apply()
     m_control->apply();
 }
 
-void SearchParamWidget::updateColumns()
+void SearchParamWidget::reconfigure()
 {
-    m_control->updateColumns(true);
+    m_control->reconfigure();
 }
 
 bool SearchParamWidget::getIsEnabled() const

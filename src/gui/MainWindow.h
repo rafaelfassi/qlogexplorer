@@ -19,6 +19,8 @@ public:
     ~MainWindow();
 
     void updateMenus();
+    void retranslateUi();
+    void reconfigure();
 
     int getTabsCount() const;
     int getCurrentTabIdx() const;
@@ -46,6 +48,7 @@ public slots:
     void saveConf();
     void saveConfAs();
     void openTemplatesConfig();
+    void openSettings();
     void setRecentFile(const FileConf::Ptr &conf);
 
 private slots:
@@ -64,6 +67,7 @@ private:
     void createMenus();
     void createToolBars();
     void createConnections();
+    void translateUi();
     void updateTemplates();
     void updateRecentFiles();
 
@@ -77,12 +81,14 @@ private:
     QAction *m_actSaveConf;
     QAction *m_actSaveConfAs;
     QAction *m_actTemplatesConfig;
+    QAction *m_actSettings;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
     QMenu *m_fileOpenRecent;
     QMenu *m_fileReopenAsMenu;
     QMenu *m_templatesMenu;
+    QMenu *m_toolsMenu;
     QTabWidget *m_tabViews;
     QStringList m_filesToOpen;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;

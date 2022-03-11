@@ -3,11 +3,14 @@
 
 #include "pch.h"
 #include "Style.h"
+#include "Settings.h"
 #include <QPalette>
 #include <QFontMetrics>
 #include <QApplication>
 #include <QStyleFactory>
-#include <Settings.h>
+#include <QWidget>
+
+#define DEF_IMG_DIR ":/images/default"
 
 Style &Style::inst()
 {
@@ -18,6 +21,8 @@ Style &Style::inst()
 void Style::initStyle()
 {
     Style &s = inst();
+
+    s.m_paletteOri = qApp->palette();
 
     QStringList qtStyles = QStyleFactory::keys();
     for (const auto qtStyle : qtStyles)
@@ -47,7 +52,7 @@ void Style::initStyle()
         }
     }
 
-    s.m_imgDir.setPath(":/images/default");
+    s.m_imgDir.setPath(DEF_IMG_DIR);
 }
 
 QStringList Style::availableStyles()
@@ -57,16 +62,43 @@ QStringList Style::availableStyles()
 
 void Style::loadStyleSheetFile(const QString &fileName)
 {
-    QFile qssFile(fileName);
-    if (qssFile.exists() && qssFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!fileName.isEmpty())
     {
-        const QString qss = qssFile.readAll();
-        qApp->setStyleSheet(qss);
+        QFile qssFile(fileName);
+        if (qssFile.exists() && qssFile.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            const QString qss = qssFile.readAll();
+            qApp->setStyleSheet(qss);
+        }
+        else
+        {
+            LOG_ERR("Cannot open StyleSheet '{}'", fileName.toStdString());
+        }
     }
     else
     {
-        LOG_ERR("Cannot open StyleSheet '{}'", fileName.toStdString());
+        qApp->setStyleSheet(QString());
     }
+}
+
+void Style::clearStyle()
+{
+    const QString nullString;
+    const tp::SectionColor nullSectionColor;
+
+    m_qtStyle = nullString;
+    m_qtStyleSheet = nullString;
+    m_imgDir.setPath(DEF_IMG_DIR);
+    m_textAreaColor = nullSectionColor;
+    m_selectedColor = nullSectionColor;
+    m_headerColor = nullSectionColor;
+    m_scrollBarColor = nullSectionColor;
+    m_selectedTextMarkColor = nullSectionColor;
+    m_bookmarkColor = nullSectionColor;
+    m_palette = m_paletteOri;
+    m_textPadding = -1;
+    m_columnMargin = -1;
+    m_scrollBarThickness = -1;
 }
 
 void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
@@ -228,7 +260,7 @@ void Style::loadStyle(const QString &styleName)
     osKey = "osLinux";
 #endif
 
-    style.m_palette = qApp->palette();
+    style.clearStyle();
 
     style.loadStyleFromJson(d);
     if (!osKey.empty() && d.HasMember(osKey))
@@ -285,10 +317,7 @@ void Style::loadStyle(const QString &styleName)
         qApp->setStyle(QStyleFactory::create(qtStyle));
     }
 
-    if (!style.m_qtStyleSheet.isEmpty())
-    {
-        loadStyleSheetFile(style.m_qtStyleSheet);
-    }
+    loadStyleSheetFile(style.m_qtStyleSheet);
 
     qApp->setPalette(style.m_palette);
     qApp->setFont(getFont());
@@ -304,6 +333,11 @@ QIcon Style::makeIcon(const QColor &color, int w, int h)
 const QFont &Style::getFont()
 {
     return Settings::getFont();
+}
+
+const QPalette &Style::getPalette()
+{
+    return inst().m_palette;
 }
 
 tp::SInt Style::getTextHeight(bool addPadding)
@@ -340,4 +374,13 @@ QString Style::getElidedText(const QString &text, tp::SInt width, Qt::TextElideM
 {
     QFontMetrics fm(getFont());
     return fm.elidedText(text, elideMode, width, flags);
+}
+
+void Style::updateWidget(QWidget *widget)
+{
+    const auto& s(inst());
+    widget->setStyle(qApp->style());
+    widget->setStyleSheet(qApp->styleSheet());
+    widget->setPalette(s.getPalette());
+    widget->setFont(s.getFont());
 }

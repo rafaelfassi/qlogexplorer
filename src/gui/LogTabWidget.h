@@ -19,6 +19,7 @@ public:
     LogTabWidget(FileConf::Ptr conf, QWidget *parent = nullptr);
     ~LogTabWidget();
     void reconfigure();
+    void retranslateUi();
     FileConf::Ptr getConf();
 
 protected:
@@ -26,6 +27,7 @@ protected:
     void createMenus();
     void createToolBars();
     void createConnections();
+    void translateUi();
 
 private:
     BaseLogModel *m_logModel;

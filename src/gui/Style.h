@@ -6,6 +6,8 @@
 #include <QFont>
 #include <QIcon>
 
+class QWidget;
+
 class Style
 {
 public:
@@ -26,6 +28,7 @@ public:
     static tp::SInt getScrollBarThickness() { return inst().m_scrollBarThickness; }
 
     static const QFont &getFont();
+    static const QPalette &getPalette();
     static tp::SInt getTextHeight(bool addPadding);
     static tp::SInt getCharWidth();
     static double getCharWidthF();
@@ -33,9 +36,12 @@ public:
     static double getTextWidthF(const QString &text);
     static QString getElidedText(const QString &text, tp::SInt width, Qt::TextElideMode elideMode, int flags = 0);
 
+    static void updateWidget(QWidget *widget);
+
 private:
     Style() = default;
     static Style &inst();
+    void clearStyle();
     void loadStyleFromJson(const rapidjson::Value &jsonObj);
 
     QMap<QString, QString> m_availableStyles;
@@ -50,6 +56,7 @@ private:
     QString m_qtStyleSheet;
     QDir m_imgDir;
     QPalette m_palette;
+    QPalette m_paletteOri;
     tp::SInt m_textPadding = -1;
     tp::SInt m_columnMargin = -1;
     tp::SInt m_scrollBarThickness = -1;

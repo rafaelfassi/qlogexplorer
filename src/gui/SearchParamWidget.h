@@ -19,7 +19,8 @@ public:
     SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searchModel, QWidget *parent = nullptr);
     ~SearchParamWidget();
     void apply();
-    void updateColumns();
+    void reconfigure();
+    void retranslateUi();
     bool getIsEnabled() const;
     tp::SearchParam getSearchParam() const;
 
@@ -30,6 +31,7 @@ signals:
 private:
     void createActions();
     void createConnections();
+    void translateUi();
 
     QAction *m_actDisableMe;
     QAction *m_actRemoveMe;

@@ -88,6 +88,7 @@ set(GUI_HEADERS
     src/gui/Highlighter.h
     src/gui/ProgressLabel.h
     src/gui/TemplatesConfigDlg.h
+    src/gui/SettingsDlg.h
 )
 
 set(GUI_SOURCES
@@ -103,6 +104,7 @@ set(GUI_SOURCES
     src/gui/Highlighter.cpp
     src/gui/ProgressLabel.cpp
     src/gui/TemplatesConfigDlg.cpp
+    src/gui/SettingsDlg.cpp
 )
 
 add_executable(${PROJECT_NAME}
