@@ -50,6 +50,7 @@ public slots:
     void openTemplatesConfig();
     void openSettings();
     void setRecentFile(const FileConf::Ptr &conf);
+    void openAbout();
 
 private slots:
     void handleOpenFilesWithTemplate();
@@ -82,6 +83,7 @@ private:
     QAction *m_actSaveConfAs;
     QAction *m_actTemplatesConfig;
     QAction *m_actSettings;
+    QAction *m_actAbout;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
     QMenu *m_fileOpenAsMenu;
@@ -89,6 +91,7 @@ private:
     QMenu *m_fileReopenAsMenu;
     QMenu *m_templatesMenu;
     QMenu *m_toolsMenu;
+    QMenu *m_helpMenu;
     QTabWidget *m_tabViews;
     QStringList m_filesToOpen;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;

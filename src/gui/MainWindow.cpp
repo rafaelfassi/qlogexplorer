@@ -31,10 +31,12 @@
 #include <QDragLeaveEvent>
 #include <QDropEvent>
 #include <QMimeData>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(APP_NAME);
+    setWindowIcon(QIcon(":/packaging/qlogexplorer.svg"));
     QRect rec = QApplication::desktop()->screenGeometry();
     setMinimumSize(std::min(800, rec.width()), std::min(600, rec.height()));
     createActions();
@@ -84,6 +86,8 @@ void MainWindow::createActions()
     m_actTemplatesConfig = new QAction(this);
 
     m_actSettings = new QAction(this);
+
+    m_actAbout = new QAction(this);
 }
 
 void MainWindow::createMenus()
@@ -121,6 +125,9 @@ void MainWindow::createMenus()
 
     m_toolsMenu = menuBar()->addMenu("Utilities");
     m_toolsMenu->addAction(m_actSettings);
+
+    m_helpMenu = menuBar()->addMenu("Help");
+    m_helpMenu->addAction(m_actAbout);
 }
 
 void MainWindow::createToolBars()
@@ -143,23 +150,28 @@ void MainWindow::createConnections()
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
     connect(m_actSettings, &QAction::triggered, this, &MainWindow::openSettings);
+    connect(m_actAbout, &QAction::triggered, this, &MainWindow::openAbout);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::confCurrentTab);
 }
 
 void MainWindow::translateUi()
 {
-    m_actCloseFile->setText(tr("Close File"));
-    m_actQuit->setText(tr("Quit"));
-    m_actTemplatesConfig->setText(tr("Configure Templates"));
-    m_actSettings->setText(tr("Settings"));
-
     m_fileMenu->setTitle(tr("&File"));
     m_fileOpenAsMenu->setTitle(tr("&Open As..."));
     m_fileOpenRecent->setTitle(tr("Open &Recent"));
     m_fileReopenAsMenu->setTitle(tr("Reopen &As..."));
+    m_actCloseFile->setText(tr("Close File"));
+    m_actQuit->setText(tr("Quit"));
+
     m_templatesMenu->setTitle(tr("&Templates"));
+    m_actTemplatesConfig->setText(tr("Configure Templates"));
+
     m_toolsMenu->setTitle(tr("&Utilities"));
+    m_actSettings->setText(tr("&Settings"));
+
+    m_helpMenu->setTitle(tr("&Help"));
+    m_actAbout->setText("&About");
 }
 
 void MainWindow::retranslateUi()
@@ -329,6 +341,36 @@ void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 {
     Settings::setRecentFile(conf);
     updateRecentFiles();
+}
+
+void MainWindow::openAbout()
+{
+    const QString copyright(R"__(&copy; 2022 Rafael Fassi Lobao)__");
+    const QString license(R"__(<a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>)__");
+    const QString project(
+        QString(R"__(<a href="https://github.com/rafaelfassi/qlogexplorer">%1</a>)__").arg(tr("project")));
+
+    // clang-format off
+    QMessageBox::about(
+        this,
+        tr("About %1").arg(APP_NAME),
+        QString("<h2>%1 %2</h2>").arg(APP_NAME, APP_VERSION)
+        + "<p>" + tr("Advanced tool for exploring log files") + "</p>"
+        + "<p>" + tr("Copyright %1").arg(copyright) + "</p>"
+        + "<p>" + tr("This software is licensed under %1").arg(license) + "</p>"
+        + "<p>" + tr("Using Qt version %1").arg(QT_VERSION_STR) + "</p>"
+        + "<p>" + tr("Visit the %1").arg(project) + "</p>"
+        + QString(R"__(
+            <p>
+                <b>%1</b>
+                <ul>
+                    <li><a href="https://www.qt.io">Qt</a></li>
+                    <li><a href="https://github.com/fmtlib/fmt">fmt</a></li>
+                    <li><a href="https://rapidjson.org">RapidJSON</a></li>
+                </ul>
+            </p>
+        )__").arg(tr("Credits")));
+    // clang-format on
 }
 
 void MainWindow::handleOpenRecentFile()

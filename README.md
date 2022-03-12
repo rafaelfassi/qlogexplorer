@@ -92,7 +92,7 @@ The regex could have provided the names of the columns as named groups: `^(?<Lev
 By using named groups the name of the columns are initially filled with it, and the maintenance of the template is more easy.
 
 In the previous example the time format follows the ISO format, where the most significant info comes from left to right, and therefore it can be used for merging and range filtering.  
-But, if the format of the column **Time** were like `18-02-2022 15:37:12.137`, it must to be defined as `Time` type having its format as `dd-MM-yyyy hh:mm:ss.z`.  
+But, if the format of the column **Date Time** were like `18-02-2022 15:37:12.137`, it must to be defined as `Date Time` type having its format as `dd-MM-yyyy hh:mm:ss.z`.  
 The following tables show the available date and time formats:
 
 ### Date format

@@ -50,6 +50,8 @@
         <file>images/dark/track_icon.png</file>
         <file>images/dark/up_icon.png</file>
 
+        <file>packaging/qlogexplorer.svg</file>
+
         <file>languages/pt.qm</file>
     </qresource>
 </RCC>
