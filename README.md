@@ -2,7 +2,9 @@
 
 Advanced tool for exploring log files.
 
-![image](https://user-images.githubusercontent.com/3150631/155901410-3ff2aa01-b62d-43e4-a3f5-a9e31a9fe293.png)
+<p align="center">
+  <img src="screenshots/Main.png?raw=true">
+</p>
 
 ## Main features
 
@@ -74,15 +76,20 @@ WARNING 2022-02-19 15:37:13.427 0x52CB Not in UTC timezone
 ERROR   2022-02-20 15:37:15.753 0xBF32 Payment gateway has returned 3456 code
 ```
 Each captured group of the regex (starting from 1) is considered a column.  
-For the example, the columns may be named as (**Level**, **Date Time**, **Thread**, **Message**), resulting the following table:
+For the example, the columns may be named as (**Level**, **Date Time**, **Thread**, **Message**) as follow:
 
-|Level  |Date Time              |Thread|Message                               |
-|-------|-----------------------|------|--------------------------------------|
-|INFO   |2022-02-18 15:37:12.137|0xBF32|System initialized                    |
-|WARNING|2022-02-19 15:37:13.427|0x52CB|Not in UTC timezone                   |
-|ERROR  |2022-02-20 15:37:15.753|0xBF32|Payment gateway has returned 3456 code|
+<p align="center">
+  <img src="screenshots/TemplateColumns.png?raw=true">
+</p>
 
-The regex could have provided the names of the columns as named groups, avoiding the need of defining it after.
+As the result:
+
+<p align="center">
+  <img src="screenshots/ExampleColumns.png?raw=true">
+</p>
+
+The regex could have provided the names of the columns as named groups: `^(?<Level>[A-Z]+)\s+(?<DateTime>[0-9:.\s-]+?)\s+(?<Thread>0x[0-9A-F]+)\s+(?<Message>.+)$`  
+By using named groups the name of the columns are initially filled with it, and the maintenance of the template is more easy.
 
 In the previous example the time format follows the ISO format, where the most significant info comes from left to right, and therefore it can be used for merging and range filtering.  
 But, if the format of the column **Time** were like `18-02-2022 15:37:12.137`, it must to be defined as `Time` type having its format as `dd-MM-yyyy hh:mm:ss.z`.  
@@ -122,33 +129,39 @@ The following tables show the available date and time formats:
 
 In some cases the log entry may have line breaks as follow:
 ```
-ERROR   2022-02-20 15:37:15.753 0xBF32 DB Error: unique constraint violation at email:
-INSERT INTO user (name, email, age)
-VALUES ('Someone', 'someone@mail.com', 99)
+ERROR   2022-02-19 15:14:10.437 0xF1D2 DB Error: unique constraint violation at username:
+INSERT INTO user (name, username, age)
+VALUES ('John Constantine', 'john_constantine', 99)
 ```
 
-In that case, the first line will match the regex, but the other two lines will not. To fix that, the column **Message** can be defined as the `no matches` column, so the content of all lines that do not match the regex will be placed in the **Message** column.
+In that case, the first line will match the regex, but the other two lines will not. To fix that, the column **Message** can be defined as the `no matches column`.
 
-|Level|Date Time              |Thread|Message                                           |
-|-----|-----------------------|------|--------------------------------------------------|
-|ERROR|2022-02-20 15:37:15.753|0xBF32|DB Error: unique constraint violation at uq_email:|
-|     |                       |      |INSERT INTO user (name, email, age)               |
-|     |                       |      |VALUES ('Someone', 'someone@mail.com', 99)        |
+<p align="center">
+  <img src="screenshots/TemplateNoMatchColumn.png?raw=true">
+</p>
+
+Now the content of all lines that don't match the regex will be placed in the **Message** column.
+
+<p align="center">
+  <img src="screenshots/ExampleNoMatchColumn.png?raw=true">
+</p>
 
 ## Highlighters
 
 Highlighters can be defined in the template to change the color of rows that contain entries that requires more attention.
 
+<p align="center">
+  <img src="screenshots/TemplateHighlighters.png?raw=true">
+</p>
+
 ## Predefined search parameters
 
 Each kind of log have specific entries that are frequently used to the log analysis, like start, shutdown, errors, warnings, etc...  
 The template can have all the interesting entries saved and properly named to speed up the log analysis task.  
-Example:
 
-**@SystemStart** - `Type`: SubString, `Column`: Message, `What`: Initiating log service  
-**@SystemShutdown** - `Type`: SubString, `Column`: Message, `What`: Closing DB connection  
-**@Error** -  `Type`: Regex, `Column`: Level, `What`: ^(ERROR|SEVERE)  
-**@PaymentGatewayIssues** -  `Type`: Regex, `Column`: Message, `What`: .+\/pg-service\/trx.*has returned \d+
+<p align="center">
+  <img src="screenshots/TemplateFilters.png?raw=true">
+</p>
 
 It's a good idea to have the predefined search parameters starting with some prefix character, so by typing the prefix in the search filed, it will list all available predefined parameters. `@` was used as prefix in the previous example.
 
@@ -160,6 +173,10 @@ Each parameter can:
 * Have the search expression as SubString, Regex or Range.
 * Be limited to a specific column.
 * Use the negation operator.
+
+<p align="center">
+  <img src="screenshots/ExampleFilters.png?raw=true">
+</p>
 
 ### SubString search
 
