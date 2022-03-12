@@ -564,6 +564,8 @@ void MainWindow::confCurrentTab(int index)
             return;
         }
 
+        tab->updateConfName();
+
         auto conf = tab->getConf();
         if (conf->exists())
         {

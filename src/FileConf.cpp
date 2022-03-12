@@ -184,6 +184,72 @@ rapidjson::Document FileConf::toJson() const
     return jDoc;
 }
 
+void FileConf::fillFkColumnKeys()
+{
+    const auto fillFkColumnKeysFunc = [this](std::optional<tp::Column> &colRef)
+    {
+        if (colRef.has_value())
+        {
+            const auto idx = colRef->idx;
+            if (hasDefinedColumn(idx))
+            {
+                colRef->key = m_columns[idx].key;
+            }
+        }
+    };
+
+    for (auto &hlt : m_highlighterParams)
+    {
+        fillFkColumnKeysFunc(hlt.searchParam.column);
+    }
+
+    for (auto &flt : m_filterParams)
+    {
+        fillFkColumnKeysFunc(flt.searchParam.column);
+    }
+}
+
+void FileConf::remapFkColumnFromKeys()
+{
+    const auto remapFkColumnFromKeysFunc = [this](std::optional<tp::Column> &colRef)
+    {
+        if (!colRef.has_value())
+        {
+            return;
+        }
+
+        if (!colRef->key.empty())
+        {
+            const auto it = std::find_if(
+                m_columns.begin(),
+                m_columns.end(),
+                [&colRef](const tp::Column &col) { return (col.key == colRef->key); });
+            if (it != m_columns.end())
+            {
+                if (colRef->idx == m_noMatchColumn)
+                {
+                    m_noMatchColumn = it->idx;
+                }
+                colRef->idx = it->idx;
+            }
+            else
+            {
+                colRef = std::nullopt;
+            }
+        }
+    };
+
+    for (auto &hlt : m_highlighterParams)
+    {
+        remapFkColumnFromKeysFunc(hlt.searchParam.column);
+    }
+
+    for (auto &flt : m_filterParams)
+    {
+        remapFkColumnFromKeysFunc(flt.searchParam.column);
+    }
+}
+
 std::string FileConf::getTemplateNameOrType() const
 {
     if (!m_configName.empty())

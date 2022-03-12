@@ -21,7 +21,6 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QMessageBox>
-#include <QIntValidator>
 #include <QColorDialog>
 
 static MainWindow *g_mainWindow = nullptr;
@@ -346,15 +345,10 @@ void TemplatesConfigDlg::createColumnsFromRegex()
 
     if (conf->hasDefinedColumns())
     {
-        QString fixHltMsg;
-        if (conf->hasHighlighterParams())
-        {
-            fixHltMsg = tr("You may need to fix the highlighters that are referencing the existing columns.\n");
-        }
         if (QMessageBox::warning(
                 this,
                 tr("Warning"),
-                tr("All columns will be deleted and recreated.\n%1Do you want to continue?").arg(fixHltMsg),
+                tr("All columns will be deleted and recreated.") + "\n" + tr("Do you want to continue?"),
                 QMessageBox::Yes | QMessageBox::No,
                 QMessageBox::No) != QMessageBox::Yes)
             return;
@@ -363,18 +357,18 @@ void TemplatesConfigDlg::createColumnsFromRegex()
     QRegularExpression rx(m_edtRegex->text());
     if (!rx.isValid())
     {
-        QMessageBox::critical(this, "Error", tr("The regular expression is not valid.\n%1").arg(rx.errorString()));
+        QMessageBox::critical(this, tr("Error"), tr("The regular expression is not valid.\n%1").arg(rx.errorString()));
         return;
     }
 
+    conf->fillFkColumnKeys();
     conf->clearColumns();
 
     const auto groupsCount = rx.captureCount();
-    const auto &namedGroups = rx.namedCaptureGroups();
+    const auto namedGroups = rx.namedCaptureGroups();
     for (auto g = 1; g <= groupsCount; ++g)
     {
         tp::Column cl(g - 1);
-        cl.key = std::to_string(g);
 
         if (g < namedGroups.size())
         {
@@ -383,18 +377,28 @@ void TemplatesConfigDlg::createColumnsFromRegex()
 
         if (cl.name.empty())
         {
+            cl.key = std::to_string(g);
             cl.name = cl.key;
+        }
+        else
+        {
+            cl.key = cl.name;
         }
 
         conf->addColumn(std::move(cl));
     }
 
+    conf->remapFkColumnFromKeys();
+
     if (conf->getColumns().empty())
         conf->addColumn(tp::Column(0));
 
-    conf->setNoMatchColumn(0);
+    if (!conf->hasDefinedColumn(conf->getNoMatchColumn()))
+        conf->setNoMatchColumn(0);
 
     fillColumns(conf);
+    fillHighlighters(conf);
+    fillFilters(conf);
 }
 
 void TemplatesConfigDlg::updateTemplateMainInfo()
@@ -562,9 +566,21 @@ void TemplatesConfigDlg::rmColumn()
     const int colIdx = m_lstColumns->currentRow();
     if (conf->hasDefinedColumn(colIdx))
     {
+        conf->fillFkColumnKeys();
+
         auto &columns(conf->getColumns());
         columns.erase(columns.begin() + colIdx);
+
+        tp::SInt idx(0);
+        for (auto &col : columns)
+        {
+            col.idx = idx++;
+        }
+
+        conf->remapFkColumnFromKeys();
         fillColumns(conf, colIdx < columns.size() ? colIdx : colIdx - 1);
+        fillHighlighters(conf);
+        fillFilters(conf);
     }
 }
 
@@ -995,7 +1011,6 @@ void TemplatesConfigDlg::configureRegexMode(const FileConf::Ptr &conf)
             m_frmTemplMain->addRow(m_labRegex, m_hRegex);
             m_chkNoMatchCol->setVisible(true);
             m_frmColumn->addRow(m_chkNoMatchCol);
-            m_edtColKey->setValidator(m_rxGroupValidator);
         }
         m_labColKey->setText(tr("Group"));
         m_edtColKey->setPlaceholderText(tr("Regex capturing group"));
@@ -1030,8 +1045,6 @@ void TemplatesConfigDlg::buildLayout()
     {
         resize(600, 500);
     }
-
-    m_rxGroupValidator = new QIntValidator(this);
 
     // Root layout -------------------------------------------------------------------------------- (Start)
     auto vLayoutMain = new QVBoxLayout(this);

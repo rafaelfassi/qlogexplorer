@@ -18,8 +18,9 @@ public:
     // LogTabWidget gets ownership of conf
     LogTabWidget(FileConf::Ptr conf, QWidget *parent = nullptr);
     ~LogTabWidget();
-    void reconfigure();
     void retranslateUi();
+    void reconfigure();
+    void updateConfName();
     FileConf::Ptr getConf();
 
 protected:

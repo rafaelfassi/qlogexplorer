@@ -18,7 +18,6 @@ class QToolButton;
 class QVBoxLayout;
 class QAction;
 class QFrame;
-class QIntValidator;
 class SearchParamControl;
 class MainWindow;
 
@@ -111,9 +110,6 @@ private:
     QAction *m_actRmFilter;
     QAction *m_actMoveFilterUp;
     QAction *m_actMoveFilterDown;
-
-    // Validators -------------------------------
-    QIntValidator *m_rxGroupValidator;
 
     // Layout -----------------------------------
     QFormLayout *m_frmTemplMain;

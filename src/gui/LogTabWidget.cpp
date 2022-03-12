@@ -49,9 +49,6 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     toolbar->addAction(m_actAutoScrolling);
     m_prlFileParsing = new ProgressLabel(this);
     m_prlFileParsing->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
-    m_prlFileParsing->setActionText(tr("Indexing"));
-    const QString typeStr = conf->getTemplateNameOrType().c_str();
-    m_prlFileParsing->setText(QString("%1 [%2]").arg(conf->getFileName().c_str()).arg(typeStr));
     toolbar->addWidget(m_prlFileParsing);
 
     m_logViewWidget = new LogViewWidget(m_logModel, this);
@@ -74,6 +71,7 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     vLayout->addWidget(splitter);
 
     translateUi();
+    updateConfName();
 
     setLayout(vLayout);
 
@@ -111,6 +109,8 @@ void LogTabWidget::translateUi()
 
     m_actAutoScrolling->setText(tr("Auto Scrolling"));
     m_actAutoScrolling->setIcon(Style::getIcon("scroll_down.png"));
+
+    m_prlFileParsing->setActionText(tr("Indexing"));
 }
 
 void LogTabWidget::retranslateUi()
@@ -126,6 +126,12 @@ void LogTabWidget::reconfigure()
     m_logViewWidget->reconfigure(m_conf);
     m_logSearchWidget->reconfigure();
     m_logModel->reconfigure();
+}
+
+void LogTabWidget::updateConfName()
+{
+    const QString typeStr = m_conf->getTemplateNameOrType().c_str();
+    m_prlFileParsing->setText(QString("%1 [%2]").arg(m_conf->getFileName().c_str()).arg(typeStr));
 }
 
 FileConf::Ptr LogTabWidget::getConf()

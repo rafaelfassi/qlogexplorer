@@ -67,7 +67,8 @@ void Settings::loadLanguage()
     m_language = m_settings->value("language", QString()).toString();
     if (m_language.isEmpty())
     {
-        m_language = QLocale::system().name();
+        const auto sysLang = QLocale::system().language();
+        m_language = QLocale::languageToString(sysLang);
     }
 
     if (m_translator->load(m_language, ":/languages"))

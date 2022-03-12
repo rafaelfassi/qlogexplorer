@@ -140,7 +140,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
         message("Compiler does not support parallel algorithms.")
         add_definitions(-DNO_STD_PARALLEL_ALGORITHMS)
     elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
-        # GCC 9 supports parallel algorithms, but it requires libtbb
+        # GCC 9 supports parallel algorithms, but it requires libtbb.
+        # FIXME: It should be applied for Clang as well, looking at libstdc++ version.
         target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
     endif()
 endif()

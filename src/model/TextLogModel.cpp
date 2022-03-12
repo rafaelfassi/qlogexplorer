@@ -49,12 +49,29 @@ bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) co
         QRegularExpressionMatch match = m_rx.match(rawText.c_str());
         if (match.hasMatch())
         {
+            std::string value;
+
             for (const auto &col : getColumns())
             {
                 try
                 {
-                    const auto group = std::stoi(col.key);
-                    rowData.push_back(match.captured(group).toStdString());
+                    if (!col.key.empty())
+                    {
+                        if (QChar::isDigit(col.key.front()))
+                        {
+                            value = match.captured(std::stoi(col.key)).toStdString();
+                        }
+                        else
+                        {
+                            value = match.captured(col.key.c_str()).toStdString();
+                        }
+                    }
+                    else
+                    {
+                        value.clear();
+                    }
+
+                    rowData.push_back(value);
                 }
                 catch (const std::exception &e)
                 {

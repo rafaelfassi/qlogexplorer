@@ -20,6 +20,11 @@ public:
     void fromJson(const rapidjson::Document &jDoc);
     rapidjson::Document toJson() const;
 
+    // Call this function before some action that may change the index of the columns
+    void fillFkColumnKeys();
+    // Call this function after some action that may have changed the index of the columns
+    void remapFkColumnFromKeys();
+
     const std::string &getFileName() const { return m_fileName; }
     void setFileName(const std::string &fileName) { m_fileName = fileName; }
     tp::FileType getFileType() const { return m_fileType; }
