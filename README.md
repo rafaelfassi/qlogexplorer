@@ -3,7 +3,7 @@
 Advanced tool for exploring log files.
 
 <p align="center">
-  <img src="screenshots/Main.png?raw=true">
+  <img src="screenshots/main.png?raw=true">
 </p>
 
 ## Main features
@@ -79,13 +79,13 @@ Each captured group of the regex (starting from 1) is considered a column.
 For the example, the columns may be named as (**Level**, **Date Time**, **Thread**, **Message**) as follow:
 
 <p align="center">
-  <img src="screenshots/TemplateColumns.png?raw=true">
+  <img src="screenshots/template-columns.png?raw=true">
 </p>
 
 As the result:
 
 <p align="center">
-  <img src="screenshots/ExampleColumns.png?raw=true">
+  <img src="screenshots/example-columns.png?raw=true">
 </p>
 
 The regex could have provided the names of the columns as named groups: `^(?<Level>[A-Z]+)\s+(?<DateTime>[0-9:.\s-]+?)\s+(?<Thread>0x[0-9A-F]+)\s+(?<Message>.+)$`  
@@ -137,13 +137,13 @@ VALUES ('John Constantine', 'john_constantine', 99)
 In that case, the first line will match the regex, but the other two lines will not. To fix that, the column **Message** can be defined as the `no matches column`.
 
 <p align="center">
-  <img src="screenshots/TemplateNoMatchColumn.png?raw=true">
+  <img src="screenshots/template-no-match-column.png?raw=true">
 </p>
 
 Now the content of all lines that don't match the regex will be placed in the **Message** column.
 
 <p align="center">
-  <img src="screenshots/ExampleNoMatchColumn.png?raw=true">
+  <img src="screenshots/example-no-match-column.png?raw=true">
 </p>
 
 ## Highlighters
@@ -151,7 +151,7 @@ Now the content of all lines that don't match the regex will be placed in the **
 Highlighters can be defined in the template to change the color of rows that contain entries that requires more attention.
 
 <p align="center">
-  <img src="screenshots/TemplateHighlighters.png?raw=true">
+  <img src="screenshots/template-highlighters.png?raw=true">
 </p>
 
 ## Predefined search parameters
@@ -160,7 +160,7 @@ Each kind of log have specific entries that are frequently used to the log analy
 The template can have all the interesting entries saved and properly named to speed up the log analysis task.  
 
 <p align="center">
-  <img src="screenshots/TemplateFilters.png?raw=true">
+  <img src="screenshots/template-filters.png?raw=true">
 </p>
 
 It's a good idea to have the predefined search parameters starting with some prefix character, so by typing the prefix in the search filed, it will list all available predefined parameters. `@` was used as prefix in the previous example.
@@ -175,7 +175,7 @@ Each parameter can:
 * Use the negation operator.
 
 <p align="center">
-  <img src="screenshots/ExampleFilters.png?raw=true">
+  <img src="screenshots/example-filters.png?raw=true">
 </p>
 
 ### SubString search
