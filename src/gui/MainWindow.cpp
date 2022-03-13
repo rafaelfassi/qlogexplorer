@@ -32,6 +32,7 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QMessageBox>
+#include <QDesktopServices>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -87,6 +88,7 @@ void MainWindow::createActions()
 
     m_actSettings = new QAction(this);
 
+    m_actOpenDoc = new QAction(this);
     m_actAbout = new QAction(this);
 }
 
@@ -127,6 +129,7 @@ void MainWindow::createMenus()
     m_toolsMenu->addAction(m_actSettings);
 
     m_helpMenu = menuBar()->addMenu("Help");
+    m_helpMenu->addAction(m_actOpenDoc);
     m_helpMenu->addAction(m_actAbout);
 }
 
@@ -150,6 +153,7 @@ void MainWindow::createConnections()
     connect(m_actSaveConfAs, &QAction::triggered, this, &MainWindow::saveConfAs);
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
     connect(m_actSettings, &QAction::triggered, this, &MainWindow::openSettings);
+    connect(m_actOpenDoc, &QAction::triggered, this, &MainWindow::openDocumentation);
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::openAbout);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::confCurrentTab);
@@ -161,16 +165,17 @@ void MainWindow::translateUi()
     m_fileOpenAsMenu->setTitle(tr("&Open As..."));
     m_fileOpenRecent->setTitle(tr("Open &Recent"));
     m_fileReopenAsMenu->setTitle(tr("Reopen &As..."));
-    m_actCloseFile->setText(tr("Close File"));
-    m_actQuit->setText(tr("Quit"));
+    m_actCloseFile->setText(tr("&Close File"));
+    m_actQuit->setText(tr("&Quit"));
 
     m_templatesMenu->setTitle(tr("&Templates"));
-    m_actTemplatesConfig->setText(tr("Configure Templates"));
+    m_actTemplatesConfig->setText(tr("&Configure Templates"));
 
     m_toolsMenu->setTitle(tr("&Utilities"));
     m_actSettings->setText(tr("&Settings"));
 
     m_helpMenu->setTitle(tr("&Help"));
+    m_actOpenDoc->setText(tr("&Documentation"));
     m_actAbout->setText("&About");
 }
 
@@ -341,6 +346,11 @@ void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 {
     Settings::setRecentFile(conf);
     updateRecentFiles();
+}
+
+void MainWindow::openDocumentation()
+{
+    QDesktopServices::openUrl(QUrl("https://github.com/rafaelfassi/qlogexplorer/wiki", QUrl::TolerantMode));
 }
 
 void MainWindow::openAbout()
@@ -611,9 +621,9 @@ void MainWindow::confCurrentTab(int index)
         auto conf = tab->getConf();
         if (conf->exists())
         {
-            m_actSaveConf->setText(tr("Save [%1]").arg(conf->getConfigName().c_str()));
+            m_actSaveConf->setText(tr("&Save [%1]").arg(conf->getConfigName().c_str()));
             m_actSaveConf->setVisible(true);
-            m_actSaveConfAs->setText(tr("Save [%1] As...").arg(conf->getConfigName().c_str()));
+            m_actSaveConfAs->setText(tr("Save [%1] &As...").arg(conf->getConfigName().c_str()));
             m_actSaveConfAs->setVisible(true);
             currHasTemplate = true;
         }

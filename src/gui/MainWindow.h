@@ -50,6 +50,7 @@ public slots:
     void openTemplatesConfig();
     void openSettings();
     void setRecentFile(const FileConf::Ptr &conf);
+    void openDocumentation();
     void openAbout();
 
 private slots:
@@ -83,6 +84,7 @@ private:
     QAction *m_actSaveConfAs;
     QAction *m_actTemplatesConfig;
     QAction *m_actSettings;
+    QAction *m_actOpenDoc;
     QAction *m_actAbout;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;
