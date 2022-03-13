@@ -171,13 +171,10 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
 
 void SearchParamModel::loadParams(const tp::FilterParams &params)
 {
-    beginResetModel();
-    m_data.clear();
     for (const auto &param : params)
     {
         m_data.emplace_back(param);
     }
-    endResetModel();
 }
 
 void SearchParamModel::updateParams(const tp::FilterParams &params)
@@ -193,7 +190,7 @@ void SearchParamModel::updateParams(const tp::FilterParams &params)
         }
         else
         {
-            if(m_data.at(idx).searchParam != param.searchParam)
+            if (m_data.at(idx).searchParam != param.searchParam)
             {
                 m_data.at(idx).searchParam = param.searchParam;
             }
