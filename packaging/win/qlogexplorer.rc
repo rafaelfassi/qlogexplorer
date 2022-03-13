@@ -1,15 +1,11 @@
-IDI_ICON1	ICON	DISCARDABLE	"qlogexplorer.ico"
+
+IDI_ICON1 ICON DISCARDABLE "qlogexplorer.ico"
 
 #include <windows.h>
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
-#define CURRENT_VERSION     APP_VERSION_MAJOR,APP_VERSION_MINOR,APP_VERSION_PATCH,0
-#define CURRENT_VERSION_STR STR(APP_VERSION_MAJOR) "." STR(APP_VERSION_MINOR) "." STR(APP_VERSION_PATCH)
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     CURRENT_VERSION
-PRODUCTVERSION  CURRENT_VERSION
+FILEVERSION     0,0,1,0
+PRODUCTVERSION  0,0,1,0
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -17,12 +13,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",        "QLogExplorer Project"
             VALUE "FileDescription",    "QLogExplorer - Advanced Log Viewer"
-            VALUE "FileVersion",        CURRENT_VERSION_STR ".0\0"
+            VALUE "FileVersion",        "0.0.1.0\0"
             VALUE "InternalName",       "QLogExplorer"
-            VALUE "LegalCopyright",     "(C) 2022 QLogExplorer Project"
+            VALUE "LegalCopyright",     "(c) 2022 QLogExplorer Project"
             VALUE "OriginalFilename",   "qlogexplorer.exe"
             VALUE "ProductName",        "QLogExplorer"
-            VALUE "ProductVersion",     CURRENT_VERSION_STR "\0"
+            VALUE "ProductVersion",     "0.0.1\0"
         END
     END
 

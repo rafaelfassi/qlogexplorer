@@ -8,6 +8,8 @@
         <file>styles/Dark.json</file>
         <file>styles/Dark.qss</file>
 
+        <file>images/qlogexplorer.png</file>
+
         <file>images/default/add_icon.png</file>
         <file>images/default/case_sensitive_icon.png</file>
         <file>images/default/clear_icon.png</file>
@@ -49,8 +51,6 @@
         <file>images/dark/sync_icon.png</file>
         <file>images/dark/track_icon.png</file>
         <file>images/dark/up_icon.png</file>
-
-        <file>packaging/qlogexplorer.svg</file>
 
         <file>languages/pt.qm</file>
     </qresource>

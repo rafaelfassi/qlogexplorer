@@ -50,10 +50,10 @@ bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
                         cl.type = tp::ColumnType::Str;
                         break;
                     case rapidjson::kNumberType:
-                        if (i->value.IsUint64())
-                            cl.type = tp::ColumnType::UInt;
                         if (i->value.IsInt64())
                             cl.type = tp::ColumnType::Int;
+                        else if (i->value.IsUint64())
+                            cl.type = tp::ColumnType::UInt;
                         else
                             cl.type = tp::ColumnType::Float;
                         break;
@@ -91,10 +91,10 @@ bool JsonLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) co
                     colText = i->value.GetString();
                     break;
                 case rapidjson::kNumberType:
-                    if (i->value.IsUint64())
-                        colText = std::to_string(i->value.GetUint64());
                     if (i->value.IsInt64())
                         colText = std::to_string(i->value.GetInt64());
+                    else if (i->value.IsUint64())
+                        colText = std::to_string(i->value.GetUint64());
                     else
                         colText = std::to_string(i->value.GetDouble());
                     break;

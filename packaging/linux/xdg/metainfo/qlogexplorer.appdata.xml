@@ -3,22 +3,39 @@
   <id>io.github.rafaelfassi.QLogExplorer</id>
   
   <name>QLogExplorer</name>
-  <summary>Fast log files viewer with advanced tools</summary>
+  <summary>Fast log explorer with advanced tools</summary>
   
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   
   <description>
-    <p>
-      QLogExplorer is a free and open source cross-platform log files viewer.
-      It supports very big files, JSON log files, columns definition and highlighters.
-    </p>
+    <p>QLogExplorer is a free and open source cross-platform log files viewer.</p>
+    <p>Main features:</p>
+    <ul>
+      <li>Fast and can handle huge files</li>
+      <li>Never locks the file</li>
+      <li>Supports plain text and JSON</li>
+      <li>Template oriented</li>
+      <li>Allows to define columns even for plain text files</li>
+      <li>Customizable highlighters</li>
+      <li>Predefined search parameters</li>
+      <li>Advanced search with multi-parameters</li>
+    </ul>
   </description>
   
   <launchable type="desktop-id">qlogexplorer.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>https://github.com/rafaelfassi/qlogexplorer/raw/master/screenshots/main.png</image>
+      <caption>Main overview</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/rafaelfassi/qlogexplorer/raw/master/screenshots/example-filters.png</image>
+      <caption>Advanced filters</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/rafaelfassi/qlogexplorer/raw/master/screenshots/template-no-match-column.png</image>
+      <caption>Columns definition</caption>
     </screenshot>
   </screenshots>
 </component>

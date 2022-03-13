@@ -37,7 +37,7 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(APP_NAME);
-    setWindowIcon(QIcon(":/packaging/qlogexplorer.svg"));
+    setWindowIcon(QIcon(":/images/qlogexplorer.png"));
     QRect rec = QApplication::desktop()->screenGeometry();
     setMinimumSize(std::min(800, rec.width()), std::min(600, rec.height()));
     createActions();
@@ -350,15 +350,14 @@ void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 
 void MainWindow::openWiki()
 {
-    QDesktopServices::openUrl(QUrl("https://github.com/rafaelfassi/qlogexplorer/wiki", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl(WIKI_URL, QUrl::TolerantMode));
 }
 
 void MainWindow::openAbout()
 {
     const QString copyright(R"__(&copy; 2022 Rafael Fassi Lobao)__");
     const QString license(R"__(<a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>)__");
-    const QString project(
-        QString(R"__(<a href="https://github.com/rafaelfassi/qlogexplorer">%1</a>)__").arg(tr("project")));
+    const QString project(QString(R"__(<a href="%1">%2</a>)__").arg(PROJ_URL, tr("project")));
 
     // clang-format off
     QMessageBox::about(

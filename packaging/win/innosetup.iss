@@ -1,11 +1,15 @@
+; Will be replaced by the release script
+#define ProjName "qlogexplorer"
 #define AppName "QLogExplorer"
-#define AppVersion "1.0.0"
-#define AppPublisher "Fassi"
+#define AppVersion "0.0.1"
 #define AppURL "https://rafaelfassi.github.io/qlogexplorer/"
-#define AppExeName "qlogexplorer.exe"
-#define AppAssocName AppName
+; Calculated and fixed values
 #define AppAssocExt ".log"
+#define AppPublisher AppName + " Project"
 #define AppAssocKey AppName + ".id"
+#define AppExeName ProjName + ".exe"
+#define AppAssocName AppName
+; Needs to be set manually before running innosetup
 #define SrcDir "<project-source-folder>"
 #define BuildBinDir "<build-folder>"
 #define QtDir "<qt-folder>"
@@ -28,7 +32,7 @@ LicenseFile={#SrcDir}\LICENSE
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputBaseFilename={#AppName}-{#AppVersion}-{#PlatformType}
-SetupIconFile={#SrcDir}\packaging\win\qlogexplorer.ico
+SetupIconFile={#SrcDir}\packaging\win\{#ProjName}.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

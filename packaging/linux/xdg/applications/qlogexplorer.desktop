@@ -2,14 +2,14 @@
 Version=1.0
 Type=Application
 Name=QLogExplorer
-GenericName=Logs Viewer
-Comment=Advanced log viewer
+GenericName=Log Explorer
+Comment=Advanced log files viewer
 Exec=qlogexplorer %F
 Icon=qlogexplorer
 Keywords=log;viewer;monitor;
 Terminal=false
 StartupNotify=true
-Categories=Utility;Development;
+Categories=Utility;
 MimeType=text/plain;
 Actions=open-file
 
