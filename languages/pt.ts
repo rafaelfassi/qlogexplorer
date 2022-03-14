@@ -188,7 +188,7 @@
     <message>
         <location filename="../src/gui/MainWindow.cpp" line="172"/>
         <source>&amp;Configure Templates</source>
-        <translation>&amp;Configurar Modelos</translation>
+        <translation>Configurar &amp;Modelos</translation>
     </message>
     <message>
         <location filename="../src/gui/MainWindow.cpp" line="174"/>
@@ -203,7 +203,7 @@
     <message>
         <location filename="../src/gui/MainWindow.cpp" line="177"/>
         <source>&amp;Help</source>
-        <translation>&amp;Ajuda</translation>
+        <translation>Aju&amp;da</translation>
     </message>
     <message>
         <location filename="../src/gui/MainWindow.cpp" line="178"/>
