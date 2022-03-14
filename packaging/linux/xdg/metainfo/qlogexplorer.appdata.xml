@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>io.github.rafaelfassi.QLogExplorer</id>
-  
+
   <name>QLogExplorer</name>
   <summary>Fast log explorer with advanced tools</summary>
-  
+
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  
+
   <description>
     <p>QLogExplorer is a free and open source cross-platform log files viewer.</p>
     <p>Main features:</p>
@@ -22,7 +22,7 @@
       <li>Advanced search with multi-parameters</li>
     </ul>
   </description>
-  
+
   <launchable type="desktop-id">qlogexplorer.desktop</launchable>
   <screenshots>
     <screenshot type="default">
@@ -38,4 +38,21 @@
       <caption>Columns definition</caption>
     </screenshot>
   </screenshots>
+  <releases>
+    <release version="1.0.1" date="2022-03-14">
+      <description>
+        <p>This release contains fixes and improvements</p>
+        <ul>
+          <li>Minor packing fixes for xdg and flatpak</li>
+          <li>Full pt-br translation</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2022-03-13">
+      <description>
+        <p>First release</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
 </component>
