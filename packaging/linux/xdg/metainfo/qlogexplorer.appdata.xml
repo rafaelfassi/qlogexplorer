@@ -3,10 +3,15 @@
   <id>io.github.rafaelfassi.QLogExplorer</id>
 
   <name>QLogExplorer</name>
-  <summary>Fast log explorer with advanced tools</summary>
+  <url type="homepage">https://rafaelfassi.github.io/qlogexplorer/</url>
+  <developer_name>QLogExplorer Project</developer_name>
 
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
+
+  <launchable type="desktop-id">qlogexplorer.desktop</launchable>
+
+  <summary>Fast log explorer with advanced tools</summary>
 
   <description>
     <p>QLogExplorer is a free and open source cross-platform log files viewer.</p>
@@ -23,7 +28,6 @@
     </ul>
   </description>
 
-  <launchable type="desktop-id">qlogexplorer.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>https://github.com/rafaelfassi/qlogexplorer/raw/master/screenshots/main.png</image>
@@ -39,6 +43,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.0.2" date="2022-03-14">
+      <description>
+        <p>Minor fix in app data and pt-br shortcuts</p>
+      </description>
+    </release>
     <release version="1.0.1" date="2022-03-14">
       <description>
         <p>This release contains fixes and improvements</p>

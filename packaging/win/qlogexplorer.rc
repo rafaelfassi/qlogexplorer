@@ -4,8 +4,8 @@ IDI_ICON1 ICON DISCARDABLE "qlogexplorer.ico"
 #include <windows.h>
 
 VS_VERSION_INFO VERSIONINFO
-FILEVERSION     1,0,1,0
-PRODUCTVERSION  1,0,1,0
+FILEVERSION     1,0,2,0
+PRODUCTVERSION  1,0,2,0
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -13,12 +13,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName",        "QLogExplorer Project"
             VALUE "FileDescription",    "QLogExplorer - Advanced Log Viewer"
-            VALUE "FileVersion",        "1.0.1.0\0"
+            VALUE "FileVersion",        "1.0.2.0\0"
             VALUE "InternalName",       "QLogExplorer"
             VALUE "LegalCopyright",     "(c) 2022 QLogExplorer Project"
             VALUE "OriginalFilename",   "qlogexplorer.exe"
             VALUE "ProductName",        "QLogExplorer"
-            VALUE "ProductVersion",     "1.0.1\0"
+            VALUE "ProductVersion",     "1.0.2\0"
         END
     END
 

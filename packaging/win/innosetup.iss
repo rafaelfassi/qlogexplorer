@@ -1,7 +1,7 @@
 ; Will be replaced by the release script
 #define ProjName "qlogexplorer"
 #define AppName "QLogExplorer"
-#define AppVersion "1.0.1"
+#define AppVersion "1.0.2"
 #define AppURL "https://rafaelfassi.github.io/qlogexplorer/"
 ; Calculated and fixed values
 #define AppAssocExt ".log"
@@ -31,7 +31,7 @@ LicenseFile={#SrcDir}\LICENSE
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputBaseFilename={#AppName}-{#AppVersion}-{#PlatformType}
+OutputBaseFilename={#AppName}-{#AppVersion}-{#PlatformType}-Setup
 SetupIconFile={#SrcDir}\packaging\win\{#ProjName}.ico
 Compression=lzma
 SolidCompression=yes
