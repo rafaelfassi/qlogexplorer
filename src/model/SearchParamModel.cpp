@@ -33,33 +33,17 @@ QVariant SearchParamModel::data(const QModelIndex &index, int role) const
 {
     if (index.row() < 0 || index.row() >= m_data.size())
         return QVariant();
-    if (role == Qt::DisplayRole)
+    if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
     {
         const auto &param = m_data.at(index.row());
-        return param.name.c_str();
-    }
-    if (role == Qt::EditRole)
-    {
-        const auto &param = m_data.at(index.row());
-        return param.searchParam.pattern.c_str();
+        return getParamName(param, role);
     }
     return QVariant();
 }
 
 bool SearchParamModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-    if (index.row() >= 0 && index.row() < rowCount() && (role == Qt::EditRole || role == Qt::DisplayRole))
-    {
-        const QString valueString = value.toString();
-        auto &param = getRowData(index.row());
-        if (matchRowData(valueString, param))
-            return true;
-
-        param.name = utl::toStr(valueString);
-        param.searchParam.pattern = param.name;
-        emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-        return true;
-    }
+    LOG_ERR("setData must be implemented in the proxy model");
     return false;
 }
 
@@ -70,8 +54,8 @@ QMap<int, QVariant> SearchParamModel::itemData(const QModelIndex &index) const
 
     auto &param = m_data.at(index.row());
     return QMap<int, QVariant>{
-        {std::make_pair<int>(Qt::DisplayRole, param.name.c_str()),
-         std::make_pair<int>(Qt::EditRole, param.searchParam.pattern.c_str())}};
+        {std::make_pair<int>(Qt::DisplayRole, getParamName(param, Qt::DisplayRole)),
+         std::make_pair<int>(Qt::EditRole, getParamName(param, Qt::EditRole))}};
 }
 
 bool SearchParamModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles)
@@ -101,6 +85,8 @@ bool SearchParamModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     if (count < 1 || row < 0 || row > rowCount(parent))
         return false;
+
+    LOG_INF("insertRows - row: {}, count: {}", row, count);
     beginInsertRows(QModelIndex(), row, row + count - 1);
     m_data.insert(m_data.begin() + row, count, tp::FilterParam());
     endInsertRows();
@@ -111,6 +97,8 @@ bool SearchParamModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     if (count <= 0 || row < 0 || (row + count) > rowCount(parent))
         return false;
+
+    LOG_INF("removeRows - row: {}, count: {}", row, count);
     beginRemoveRows(QModelIndex(), row, row + count - 1);
     const auto it = m_data.begin() + row;
     m_data.erase(it, it + count);
@@ -132,8 +120,11 @@ QModelIndexList SearchParamModel::match(
         for (int row = index.row(); row < rowCount(); ++row)
         {
             const auto &param = m_data.at(row);
-            if (matchRowData(valueString, param))
+            if (matchRowData(valueString, param, role))
+            {
                 indexLst.append(createIndex(row, 0));
+                return indexLst;
+            }
         }
     }
     return indexLst;
@@ -146,6 +137,7 @@ bool SearchParamModel::moveRows(
     const QModelIndex &destinationParent,
     int destinationChild)
 {
+    LOG_INF("moveRows");
     if (sourceRow < 0 || sourceRow + count - 1 >= rowCount(sourceParent) || destinationChild < 0 ||
         destinationChild > rowCount(destinationParent) || sourceRow == destinationChild || count <= 0 ||
         sourceParent.isValid() || destinationParent.isValid())
@@ -171,19 +163,33 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
 
 void SearchParamModel::loadParams(const tp::FilterParams &params)
 {
+    LOG_INF("loadParams - count: {}", params.size());
+    if (params.empty())
+    {
+        return;
+    }
+    const auto fromRow = rowCount();
+    const auto toRow = fromRow + params.size() - 1;
+    LOG_INF("loadParams - inserting fromRow: {}, toRow: {}", fromRow, toRow);
+    beginInsertRows(QModelIndex(), fromRow, toRow);
     for (const auto &param : params)
     {
         m_data.emplace_back(param);
     }
+    endInsertRows();
+
+    m_ready = true;
 }
 
 void SearchParamModel::updateParams(const tp::FilterParams &params)
 {
+    LOG_INF("Updating parameters...");
     for (const auto &param : params)
     {
         const auto idx = findByItemName(param.name.c_str());
         if (idx == -1)
         {
+            LOG_INF("updateParams - insert - name {}, pattern {}", param.name, param.searchParam.pattern);
             beginInsertRows(QModelIndex(), m_data.size(), m_data.size());
             m_data.emplace_back(param);
             endInsertRows();
@@ -200,14 +206,14 @@ void SearchParamModel::updateParams(const tp::FilterParams &params)
 
 tp::SearchParam SearchParamModel::getSearchParam(int idx)
 {
-    if (-1 < idx && idx < m_data.size())
+    if (isValidIdx(idx))
         return m_data.at(idx).searchParam;
     return tp::SearchParam();
 }
 
 void SearchParamModel::setSearchParam(int idx, tp::SearchParam param)
 {
-    if (-1 < idx && idx < m_data.size())
+    if (isValidIdx(idx))
         m_data.at(idx).searchParam = param;
 }
 
@@ -216,22 +222,29 @@ tp::FilterParam &SearchParamModel::getRowData(int idx)
     return m_data.at(idx);
 }
 
-bool SearchParamModel::matchRowData(const QString &value, const tp::FilterParam &param) const
+bool SearchParamModel::matchRowData(const QString &value, const tp::FilterParam &param, int role) const
 {
     const auto &s(utl::toStr(value));
-    return (param.name == s || param.searchParam.pattern == s);
+    switch (role)
+    {
+        case Qt::DisplayRole:
+            return (!param.name.empty() && param.name == s);
+        case Qt::EditRole:
+            return (param.searchParam.pattern == s);
+        case ParamModelRoles::NotPredefinedParam:
+            return (param.name.empty() && param.searchParam.pattern == s);
+        case ParamModelRoles::DisplayAndEditRoles:
+            return ((!param.name.empty() && param.name == s) || param.searchParam.pattern == s);
+        default:
+            LOG_ERR("Invalid role {}", role);
+            break;
+    }
+    return false;
 }
 
 bool SearchParamModel::isValidIdx(int idx) const
 {
     return ((-1 < idx) && (idx < rowCount()));
-}
-
-QString SearchParamModel::getItemName(int idx) const
-{
-    if (isValidIdx(idx))
-        return data(index(idx, 0), Qt::DisplayRole).toString();
-    return QString();
 }
 
 QString SearchParamModel::getItemPattern(int idx) const
@@ -243,10 +256,37 @@ QString SearchParamModel::getItemPattern(int idx) const
 
 int SearchParamModel::findByItemName(const QString &name)
 {
-    for (int row = 0; row < rowCount(); ++row)
+    if (!name.isEmpty())
     {
-        if (m_data.at(row).name.c_str() == name)
-            return row;
+        for (int row = 0; row < rowCount(); ++row)
+        {
+            if (m_data.at(row).name.c_str() == name)
+                return row;
+        }
     }
     return -1;
 }
+
+SearchParamProxyModel *SearchParamModel::newProxy(
+    QObject *owner,
+    const std::function<tp::SearchParam(void)> &getParamFunc)
+{
+    auto proxy = new SearchParamProxyModel(this, owner, getParamFunc);
+    m_proxes.emplace_back(proxy);
+    proxy->sort(0, Qt::DescendingOrder);
+    return proxy;
+}
+
+void SearchParamModel::applyItem(int idx)
+{
+    appliedOrderMap[idx] = ++m_appliedItemsCnt;
+    for (auto &proxy : m_proxes)
+    {
+        if (proxy)
+        {
+            proxy->sort(0, Qt::DescendingOrder);
+        }
+    }
+}
+
+// **************** SearchParamProxyModel *************************************************************

@@ -96,7 +96,7 @@ void LogSearchWidget::configure()
 
 void LogSearchWidget::reconfigure()
 {
-    for (auto paramWidget : m_searchParamWidgets)
+    for (auto paramWidget : qAsConst(m_searchParamWidgets))
     {
         paramWidget->reconfigure();
     }
@@ -147,7 +147,7 @@ void LogSearchWidget::translateUi()
 void LogSearchWidget::retranslateUi()
 {
     translateUi();
-    for (auto paramWidget : m_searchParamWidgets)
+    for (auto paramWidget : qAsConst(m_searchParamWidgets))
     {
         paramWidget->retranslateUi();
     }
@@ -169,7 +169,10 @@ void LogSearchWidget::createConnections()
 void LogSearchWidget::addSearchParam()
 {
     SearchParamWidget *param = new SearchParamWidget(m_conf, m_searchParamModel, this);
-    param->sizePolicy().setVerticalPolicy(QSizePolicy::Minimum);
+
+    auto paramSizePolicy = param->sizePolicy();
+    paramSizePolicy.setVerticalPolicy(QSizePolicy::Minimum);
+    param->setSizePolicy(paramSizePolicy);
     connect(param, &SearchParamWidget::searchRequested, this, &LogSearchWidget::startSearch);
     connect(param, &SearchParamWidget::deleteRequested, this, &LogSearchWidget::deleteParamWidget);
     m_searchParamWidgets.append(param);
@@ -185,7 +188,7 @@ void LogSearchWidget::startSearch()
 
     tp::SearchParams params;
 
-    for (auto paramWidget : m_searchParamWidgets)
+    for (auto paramWidget : qAsConst(m_searchParamWidgets))
     {
         if (paramWidget->getIsEnabled())
         {

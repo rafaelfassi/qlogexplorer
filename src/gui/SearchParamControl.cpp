@@ -15,7 +15,7 @@
 #include <QCompleter>
 #include <QMenu>
 #include <QContextMenuEvent>
-#include <QIdentityProxyModel>
+#include <QSortFilterProxyModel>
 
 class SearchLineEdit : public QLineEdit
 {
@@ -54,67 +54,6 @@ private slots:
 
 private:
     SearchParamControl *m_control = nullptr;
-};
-
-class SearchParamProxyModel : public QIdentityProxyModel
-{
-public:
-    SearchParamProxyModel(SearchParamModel *model, SearchParamControl *control)
-        : QIdentityProxyModel(control),
-          m_model(model),
-          m_control(control)
-    {
-        setSourceModel(m_model);
-    }
-
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override
-    {
-        if (index.row() >= 0 && index.row() < m_model->rowCount() && (role == Qt::EditRole || role == Qt::DisplayRole))
-        {
-            const QString valueString = value.toString();
-            auto &param = m_model->getRowData(index.row());
-            if (m_model->matchRowData(valueString, param))
-                return true;
-
-            param.name = utl::toStr(valueString);
-            param.searchParam = m_control->getSearchParam();
-            param.searchParam.pattern = param.name;
-            emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-            return true;
-        }
-        return false;
-    }
-
-    void setCurrentItemIdx(int idx)
-    {
-        if (!m_model->isValidIdx(idx))
-            return;
-
-        const auto &currentText = m_model->getItemName(idx);
-        if (m_currentText != currentText)
-        {
-            m_currentText = currentText;
-            m_control->setSearchParam(m_model->getSearchParam(idx));
-        }
-    }
-
-    void applyCurrentItem()
-    {
-        const auto idx = m_model->findByItemName(m_currentText);
-        if (m_model->isValidIdx(idx))
-        {
-            m_model->setSearchParam(idx, m_control->getSearchParam());
-            m_model->moveRow(QModelIndex(), idx, QModelIndex(), 0);
-            setCurrentItemIdx(0);
-        }
-    }
-
-    int getCurrentIdx() { return m_model->findByItemName(m_currentText); }
-
-private:
-    SearchParamModel *m_model;
-    SearchParamControl *m_control;
-    QString m_currentText;
 };
 
 SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPattern, QWidget *parent)
@@ -182,10 +121,10 @@ SearchParamControl::SearchParamControl(
           }(),
           parent)
 {
-    m_proxyModel = new SearchParamProxyModel(searchModel, this);
+    m_proxyModel = searchModel->newProxy(this, std::bind(&SearchParamControl::getSearchParam, this));
     m_cmbSearch = cmbSearch;
     m_cmbSearch->setModel(m_proxyModel);
-    m_cmbSearch->setInsertPolicy(QComboBox::InsertAtTop);
+    m_cmbSearch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbSearch->setCurrentIndex(-1);
     auto lineEdit = static_cast<SearchLineEdit *>(m_cmbSearch->lineEdit());
     if (lineEdit)
@@ -202,23 +141,85 @@ SearchParamControl::SearchParamControl(
     connect(
         m_cmbSearch,
         QOverload<int>::of(&QComboBox::currentIndexChanged),
-        m_proxyModel,
-        &SearchParamProxyModel::setCurrentItemIdx);
+        this,
+        &SearchParamControl::cmbSearchCurrentIndexChanged);
+}
+
+void SearchParamControl::cmbSearchCurrentIndexChanged(int idx)
+{
+    LOG_INF("cmbSearch - IndexChanged {}", idx);
+    if (m_proxyModel != nullptr)
+    {
+        if (m_proxyModel->isReady())
+        {
+            const auto &searchParam = m_proxyModel->setCurrentItemIdx(idx);
+            if (searchParam.has_value())
+            {
+                setSearchParam(searchParam.value());
+            }
+        }
+        else if ((m_cmbSearch != nullptr) && (m_cmbSearch->currentIndex() != -1))
+        {
+            LOG_INF("cmbSearch - Model is not ready yet");
+            m_cmbSearch->setCurrentIndex(-1);
+        }
+    }
 }
 
 void SearchParamControl::apply()
 {
     updateParam();
+
+    if (m_cmbSearch != nullptr && m_proxyModel != nullptr)
+    {
+        if (!m_cmbSearch->currentText().isEmpty() && m_proxyModel->isReady())
+        {
+            if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
+            {
+                // If the pattern dont exists, needs to be added
+                m_cmbSearch->addItem(m_cmbSearch->currentText());
+                m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
+            }
+            else if (const auto &searchParam = m_proxyModel->getCurrentItemParam(); searchParam.has_value())
+            {
+                const auto &currSearchParam = getSearchParam();
+                if (!tp::areSimilar(searchParam.value(), currSearchParam))
+                {
+                    // The search params are not the same and needs to be updated
+                    const auto idx =
+                        m_cmbSearch->findData(m_cmbSearch->currentText(), ParamModelRoles::NotPredefinedParam);
+                    if (idx == -1)
+                    {
+                        // There are only the predefined parameter
+                        // Cannot update it, so adding a not predefined one
+                        m_cmbSearch->addItem(m_cmbSearch->currentText());
+                        m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
+                    }
+                    else
+                    {
+                        // Updates the search param
+                        m_proxyModel->setSearchParam(idx, currSearchParam);
+                        if (idx != m_cmbSearch->currentIndex())
+                        {
+                            // A predefined parameter is selected, but there is a not predefined one with the same
+                            // pattern.
+                            // Selects the not predefined one.
+                            m_cmbSearch->setCurrentIndex(idx);
+                        }
+                    }
+                }
+            }
+        }
+        else if (m_cmbSearch->currentIndex() != -1)
+        {
+            // The m_cmbSearch text is empty or its model is not ready
+            m_cmbSearch->setCurrentIndex(-1);
+        }
+    }
+
     if (m_proxyModel != nullptr)
     {
         m_proxyModel->applyCurrentItem();
-        if (m_completer != nullptr)
-        {
-            // Needs to reset the the Completer model to get the items in the right order after the current item was
-            // moved to the top. It should use QSortFilterProxyModel, but it didn't work well when adding new items
-            // after sorting. Verify if it's working fine in future Qt versions.
-            m_completer->setModel(m_proxyModel);
-        }
     }
 }
 

@@ -43,6 +43,7 @@ public slots:
 
 private slots:
     void updateParam(bool notifyChanged = true);
+    void cmbSearchCurrentIndexChanged(int idx);
 
 private:
     void translateUi();

@@ -96,6 +96,18 @@ struct Column
     ColumnType type = ColumnType::Str;
     SInt width = -1;
 };
+inline bool areSimilar(const Column &lhs, const Column &rhs)
+{
+    return (lhs.idx == rhs.idx) && (lhs.type == rhs.type);
+}
+inline bool areSimilar(const std::optional<Column> &lhs, const std::optional<Column> &rhs)
+{
+    if (lhs.has_value() == rhs.has_value())
+    {
+        return lhs.has_value() ? areSimilar(lhs.value(), rhs.value()) : true;
+    }
+    return false;
+}
 inline bool operator==(const Column &lhs, const Column &rhs)
 {
     return (lhs.idx == rhs.idx) && (lhs.pos == rhs.pos) && (lhs.key == rhs.key) && (lhs.name == rhs.name) &&
@@ -111,6 +123,11 @@ struct SearchParam
     std::string pattern;
     std::optional<Column> column;
 };
+inline bool areSimilar(const SearchParam &lhs, const SearchParam &rhs)
+{
+    return (lhs.type == rhs.type) && (lhs.flags == rhs.flags) && (lhs.pattern == rhs.pattern) &&
+           areSimilar(lhs.column, rhs.column);
+}
 inline bool operator==(const SearchParam &lhs, const SearchParam &rhs)
 {
     return (lhs.type == rhs.type) && (lhs.flags == rhs.flags) && (lhs.pattern == rhs.pattern) &&
