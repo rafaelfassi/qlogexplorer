@@ -288,6 +288,11 @@ bool FileConf::isSameFileAndType(const FileConf::Ptr &other) const
     return (isSameType(other) && (getFileName() == other->getFileName()));
 }
 
+bool FileConf::isDirt(const FileConf::Ptr &other) const
+{
+    return !hasEqualConf(*this, *other.get());
+}
+
 void FileConf::copyFrom(const FileConf::Ptr &other)
 {
     *this = *other.get();

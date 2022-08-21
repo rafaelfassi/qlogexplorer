@@ -164,20 +164,18 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
 void SearchParamModel::loadParams(const tp::FilterParams &params)
 {
     LOG_INF("loadParams - count: {}", params.size());
-    if (params.empty())
+    if (!params.empty())
     {
-        return;
+        const auto fromRow = rowCount();
+        const auto toRow = fromRow + params.size() - 1;
+        LOG_INF("loadParams - inserting fromRow: {}, toRow: {}", fromRow, toRow);
+        beginInsertRows(QModelIndex(), fromRow, toRow);
+        for (const auto &param : params)
+        {
+            m_data.emplace_back(param);
+        }
+        endInsertRows();
     }
-    const auto fromRow = rowCount();
-    const auto toRow = fromRow + params.size() - 1;
-    LOG_INF("loadParams - inserting fromRow: {}, toRow: {}", fromRow, toRow);
-    beginInsertRows(QModelIndex(), fromRow, toRow);
-    for (const auto &param : params)
-    {
-        m_data.emplace_back(param);
-    }
-    endInsertRows();
-
     m_ready = true;
 }
 

@@ -34,13 +34,13 @@ enum TemplTabs
 
 TemplatesConfigDlg::TemplatesConfigDlg() : QDialog(g_mainWindow)
 {
-    setWindowTitle(tr("Templates Configuration"));
-
     if (g_mainWindow == nullptr)
     {
         LOG_ERR("MainWindow is not set");
         return;
     }
+
+    setWindowTitle(tr("Templates Configuration"));
 
     createActions();
     buildLayout();
@@ -122,52 +122,7 @@ int TemplatesConfigDlg::exec()
     return QDialog::exec();
 }
 
-void TemplatesConfigDlg::updateTabs(bool currentOnly)
-{
-    g_mainWindow->updateMenus();
-
-    auto currTabIdx = g_mainWindow->getCurrentTabIdx();
-    if (currTabIdx >= 0)
-    {
-        auto currTab = g_mainWindow->getTab(currTabIdx);
-        if (currTab)
-        {
-            currTab->reconfigure();
-            g_mainWindow->confCurrentTab(currTabIdx);
-        }
-    }
-
-    if (currentOnly)
-        return;
-
-    auto temlates = Settings::getTemplates();
-    for (int tabIdx = 0; tabIdx < g_mainWindow->getTabsCount(); ++tabIdx)
-    {
-        if (tabIdx == currTabIdx)
-            continue;
-
-        auto tab = g_mainWindow->getTab(tabIdx);
-        if (!tab)
-            continue;
-
-        auto tabConf = tab->getConf();
-        if (tabConf->exists())
-        {
-            for (auto &templ : temlates)
-            {
-                if (templ->isSameType(tabConf) && !templ->isEqual(tabConf))
-                {
-                    const auto file = tabConf->getFileName();
-                    tabConf->copyFrom(templ);
-                    tabConf->setFileName(file);
-                    tab->reconfigure();
-                }
-            }
-        }
-    }
-}
-
-FileConf::Ptr TemplatesConfigDlg::getCuttentTempl() const
+FileConf::Ptr TemplatesConfigDlg::getCurrentTempl() const
 {
     const auto idx = m_cmbTemplates->currentIndex();
     if (idx >= 0 && idx < m_templates.size())
@@ -177,108 +132,175 @@ FileConf::Ptr TemplatesConfigDlg::getCuttentTempl() const
     return FileConf::make();
 }
 
-bool TemplatesConfigDlg::canSave() const
+FileConf::Ptr TemplatesConfigDlg::getPrimeTempl() const
 {
-    bool canSave(!m_deletedTemplates.empty());
+    if (!m_conf->isNull())
+    {
+        for (auto &templ : m_templates)
+        {
+            if (templ->isSameType(m_conf))
+            {
+                return templ;
+            }
+        }
+    }
+    return FileConf::make();
+}
+
+bool TemplatesConfigDlg::isPrimeDirt() const
+{
+    auto prime = getPrimeTempl();
+    if (!prime->isNull())
+    {
+        return prime->isDirt(m_conf);
+    }
+    return false;
+}
+
+bool TemplatesConfigDlg::hasTemplateChanges(bool ignorePrimeConf) const
+{
+    bool hasChanges(false);
 
     for (auto &templ : m_templates)
     {
-        if (canSave)
-            break;
-
         if (!m_conf->isNull() && templ->isSameType(m_conf))
         {
-            if (templ->exists())
+            if (!ignorePrimeConf)
             {
-                canSave = !templ->isEqual(m_conf);
-            }
-            else
-            {
-                canSave = !templ->getConfigName().empty();
+                hasChanges = templ->isDirt(m_conf);
             }
         }
         else
         {
             auto conf = Settings::findConfByTemplateFileName(templ->getConfFileName());
-            if (!conf->isNull())
+            if (conf && !conf->isNull())
             {
-                canSave = !conf->isEqual(templ);
+                hasChanges = conf->isDirt(templ);
             }
+        }
+
+        if (hasChanges)
+            break;
+    }
+
+    return hasChanges;
+}
+
+bool TemplatesConfigDlg::hasDeletedTemplate() const
+{
+    return !m_deletedTemplates.empty();
+}
+
+bool TemplatesConfigDlg::canSave() const
+{
+    if (auto prime = getPrimeTempl(); (!prime->isNull() && !prime->exists()))
+    {
+        // There is a <new> config
+
+        if (!prime->getConfigName().empty())
+        {
+            // <new> has a config name, so it can be saved
+            return true;
+        }
+
+        if (prime->isDirt(m_conf))
+        {
+            // Do not allow to save when the not named <new> is dirt
+            return false;
         }
     }
 
-    return canSave;
+    return (hasDeletedTemplate() || hasTemplateChanges(false));
 }
 
 void TemplatesConfigDlg::save()
 {
+    if (!canSave())
+        return;
+
     for (auto &templ : m_templates)
     {
         if (!m_conf->isNull() && templ->isSameType(m_conf))
         {
-            m_conf->copyFrom(templ);
-            fixColumns(m_conf);
-            if (!m_conf->exists())
+            fixColumns(templ);
+            if (!templ->exists())
             {
-                if (!m_conf->getConfigName().empty())
+                if (!templ->getConfigName().empty())
                 {
-                    Settings::saveTemplateAs(m_conf, m_conf->getConfigName().c_str());
-                    Settings::setRecentFile(m_conf);
+                    Settings::saveTemplateAs(templ, templ->getConfigName().c_str());
+                    Settings::setRecentFile(templ);
                 }
             }
-            else
+            else if (templ->isDirt(m_conf))
             {
-                Settings::saveTemplate(m_conf);
+                Settings::saveTemplate(templ);
             }
             continue;
         }
 
         auto conf = Settings::findConfByTemplateFileName(templ->getConfFileName());
-        if (!conf->isNull())
+        if (conf && !conf->isNull())
         {
-            // Has changed?
-            if (!conf->isEqual(templ))
+            if (templ->isDirt(conf))
             {
-                conf->copyFrom(templ);
-                fixColumns(conf);
-                Settings::saveTemplate(conf);
+                fixColumns(templ);
+                Settings::saveTemplate(templ);
             }
         }
     }
 
-    for (auto delTempl : m_deletedTemplates)
+    for (auto &delTempl : qAsConst(m_deletedTemplates))
     {
         Settings::deleteTemplate(delTempl);
     }
 
-    updateTabs(false);
+    g_mainWindow->updateMenus();
+    g_mainWindow->updateAllOpenedConfs();
     accept();
 }
 
 bool TemplatesConfigDlg::canApply() const
 {
-    auto conf = getCuttentTempl();
-    return (!m_conf->isNull() && conf->isSameType(m_conf) && !conf->isEqual(m_conf));
+    auto currConf = getCurrentTempl();
+    // The selected template must be the prime one
+    if (!m_conf->isNull() && !currConf->isNull() && currConf->isSameType(m_conf))
+    {
+        // Only <new> templates can be applied
+        if (currConf->exists())
+            return false;
+
+        // Must not have changes in other templates other than prime.
+        if (hasDeletedTemplate() || hasTemplateChanges(true))
+            return false;
+
+        return isPrimeDirt();
+    }
+    return false;
 }
 
 void TemplatesConfigDlg::apply()
 {
-    auto conf = getCuttentTempl();
-    if (!m_conf->isNull() && conf->isSameType(m_conf))
+    if (!canApply())
+        return;
+
+    auto currConf = getCurrentTempl();
+    if (currConf->isSameType(m_conf))
     {
-        m_conf->copyFrom(conf);
-        fixColumns(m_conf);
-        updateTabs(true);
+        fixColumns(currConf);
+        g_mainWindow->updateOpenedConf(currConf);
         accept();
     }
 }
 
 void TemplatesConfigDlg::updateStatus()
 {
-    const auto conf = getCuttentTempl();
+    const auto conf = getCurrentTempl();
     const bool isCurrentFile(!m_conf->isNull() && conf->isSameType(m_conf));
     m_actDeleteTempl->setEnabled(!isCurrentFile && conf->exists());
-    m_btnApply->setEnabled(canApply());
+    if (getPrimeTempl()->exists())
+        m_btnApply->setVisible(false);
+    else
+        m_btnApply->setEnabled(canApply());
     m_btnSave->setEnabled(canSave());
 }
 
@@ -339,7 +361,7 @@ void TemplatesConfigDlg::deleteTemplate()
 
 void TemplatesConfigDlg::createColumnsFromRegex()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -403,7 +425,7 @@ void TemplatesConfigDlg::createColumnsFromRegex()
 
 void TemplatesConfigDlg::updateTemplateMainInfo()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -457,7 +479,7 @@ void TemplatesConfigDlg::setCurrentColumn(int index)
         }
     };
 
-    const auto conf = getCuttentTempl();
+    const auto conf = getCurrentTempl();
     if (conf->isNull())
     {
         enableColumnFormFunc(false);
@@ -505,7 +527,7 @@ void TemplatesConfigDlg::setColumnType(int index)
 
 void TemplatesConfigDlg::updateTemplateColumns()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -536,7 +558,7 @@ void TemplatesConfigDlg::updateTemplateColumns()
 
 void TemplatesConfigDlg::addColumn()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -559,7 +581,7 @@ void TemplatesConfigDlg::addColumn()
 
 void TemplatesConfigDlg::rmColumn()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull() || !conf->hasDefinedColumns())
         return;
 
@@ -641,7 +663,7 @@ void TemplatesConfigDlg::setCurrentHighlighter(int index)
         }
     };
 
-    const auto conf = getCuttentTempl();
+    const auto conf = getCurrentTempl();
     if (conf->isNull())
     {
         enableHltFormFunc(false);
@@ -668,7 +690,7 @@ void TemplatesConfigDlg::setCurrentHighlighter(int index)
 
 void TemplatesConfigDlg::updateTemplateHighlighters()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -676,8 +698,6 @@ void TemplatesConfigDlg::updateTemplateHighlighters()
     if (conf->hasHighlighterParam(hltIdx))
     {
         auto &hit = conf->getHighlighterParams().at(hltIdx);
-        auto colorFg = m_actHltForeColor->data().value<QColor>();
-        auto colorBg = m_actHltBackColor->data().value<QColor>();
         hit.searchParam = m_hltSearchCtrl->getSearchParam();
         hit.color.fg = m_actHltForeColor->data().value<QColor>();
         hit.color.bg = m_actHltBackColor->data().value<QColor>();
@@ -695,7 +715,7 @@ void TemplatesConfigDlg::updateTemplateHighlighters()
 
 void TemplatesConfigDlg::addHighlighter()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -711,7 +731,7 @@ void TemplatesConfigDlg::addHighlighter()
 
 void TemplatesConfigDlg::rmHighlighter()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -726,7 +746,7 @@ void TemplatesConfigDlg::rmHighlighter()
 
 void TemplatesConfigDlg::moveHighlighterUp()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -741,7 +761,7 @@ void TemplatesConfigDlg::moveHighlighterUp()
 
 void TemplatesConfigDlg::moveHighlighterDown()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -804,7 +824,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
         }
     };
 
-    const auto conf = getCuttentTempl();
+    const auto conf = getCurrentTempl();
     if (conf->isNull())
     {
         enableFltFormFunc(false);
@@ -828,7 +848,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
 
 void TemplatesConfigDlg::updateTemplateFilter()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -850,7 +870,7 @@ void TemplatesConfigDlg::updateTemplateFilter()
 
 void TemplatesConfigDlg::addFilter(tp::FilterParam newFlt)
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -868,7 +888,7 @@ void TemplatesConfigDlg::addFilter(tp::FilterParam newFlt)
 
 void TemplatesConfigDlg::rmFilter()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -883,7 +903,7 @@ void TemplatesConfigDlg::rmFilter()
 
 void TemplatesConfigDlg::moveFilterUp()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 
@@ -898,7 +918,7 @@ void TemplatesConfigDlg::moveFilterUp()
 
 void TemplatesConfigDlg::moveFilterDown()
 {
-    auto conf = getCuttentTempl();
+    auto conf = getCurrentTempl();
     if (conf->isNull())
         return;
 

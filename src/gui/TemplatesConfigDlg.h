@@ -38,11 +38,16 @@ public:
     void open() override;
     int exec() override;
 
+private:
+    bool isPrimeDirt() const;
+    bool hasTemplateChanges(bool ignorePrimeConf) const;
+    bool hasDeletedTemplate() const;
+    bool canSave() const;
+    bool canApply() const;
+
 private slots:
     // Main
-    bool canSave() const;
     void save();
-    bool canApply() const;
     void apply();
     void updateStatus();
     void updateCmbTemplates();
@@ -74,8 +79,8 @@ private slots:
 
 private:
     void handleOpenActions();
-    void updateTabs(bool currentOnly);
-    FileConf::Ptr getCuttentTempl() const;
+    FileConf::Ptr getCurrentTempl() const;
+    FileConf::Ptr getPrimeTempl() const;
     void fillColumns(const FileConf::Ptr &conf, int selectRow = 0);
     void fillHighlighters(const FileConf::Ptr &conf, int selectRow = 0);
     void fillFilters(const FileConf::Ptr &conf, int selectRow = 0);

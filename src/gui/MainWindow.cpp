@@ -33,12 +33,14 @@
 #include <QMimeData>
 #include <QMessageBox>
 #include <QDesktopServices>
+#include <QScreen>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(APP_NAME);
     setWindowIcon(QIcon(":/images/qlogexplorer.png"));
-    QRect rec = QApplication::desktop()->screenGeometry();
+    QRect rec = QGuiApplication::primaryScreen()->geometry();
     setMinimumSize(std::min(800, rec.width()), std::min(600, rec.height()));
     createActions();
     createMenus();
@@ -46,6 +48,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     m_tabViews = new QTabWidget(this);
     m_tabViews->setTabsClosable(true);
     setCentralWidget(m_tabViews);
+
+    m_updateTimer = new QTimer(this);
+    m_updateTimer->setInterval(1000);
 
     translateUi();
 
@@ -57,7 +62,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     TemplatesConfigDlg::setMainWindow(this);
 
-    confCurrentTab(-1);
+    configAsCurrentTab(-1);
 }
 
 MainWindow::~MainWindow()
@@ -156,7 +161,8 @@ void MainWindow::createConnections()
     connect(m_actOpenWiki, &QAction::triggered, this, &MainWindow::openWiki);
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::openAbout);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
-    connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::confCurrentTab);
+    connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::configAsCurrentTab);
+    connect(m_updateTimer, &QTimer::timeout, this, &MainWindow::updateCurrentTab);
 }
 
 void MainWindow::translateUi()
@@ -205,6 +211,52 @@ void MainWindow::reconfigure()
         {
             tab->reconfigure();
         }
+    }
+}
+
+void MainWindow::updateOpenedConf(FileConf::Ptr conf)
+{
+    if (!conf || conf->isNull())
+        return;
+
+    if (!conf->exists())
+    {
+        auto currTab = getCurrentTab();
+        if (currTab)
+        {
+            auto currTabConf = currTab->getConf();
+            if (!currTabConf->exists())
+            {
+                currTabConf->copyFrom(conf);
+                currTab->reconfigure();
+            }
+        }
+        return;
+    }
+
+    for (int tabIdx = 0; tabIdx < getTabsCount(); ++tabIdx)
+    {
+        auto tab = getTab(tabIdx);
+        if (!tab)
+            continue;
+
+        auto tabConf = tab->getConf();
+        if (tabConf->exists() && conf->isSameType(tabConf) && conf->isDirt(tabConf))
+        {
+            const auto file = tabConf->getFileName();
+            tabConf->copyFrom(conf);
+            tabConf->setFileName(file);
+            tab->reconfigure();
+        }
+    }
+}
+
+void MainWindow::updateAllOpenedConfs()
+{
+    const auto templates = Settings::getTemplates();
+    for (auto &templ : templates)
+    {
+        updateOpenedConf(templ);
     }
 }
 
@@ -580,7 +632,7 @@ void MainWindow::openSettings()
     {
         retranslateUi();
         reconfigure();
-        confCurrentTab(getCurrentTabIdx());
+        configAsCurrentTab(getCurrentTabIdx());
     }
 }
 
@@ -602,16 +654,28 @@ void MainWindow::closeCurrentTab()
     closeTab(getCurrentTabIdx());
 }
 
-void MainWindow::confCurrentTab(int index)
+void MainWindow::updateCurrentTab()
 {
+    const auto idx = m_tabViews->currentIndex();
+    if (idx >= 0)
+    {
+        configAsCurrentTab(idx);
+    }
+}
+
+void MainWindow::configAsCurrentTab(int index)
+{
+    m_updateTimer->stop();
+
     const bool hasCurrentTab(index >= 0);
-    bool currHasTemplate(false);
+    bool currentHasTemplate(false);
     if (hasCurrentTab)
     {
         LogTabWidget *tab = qobject_cast<LogTabWidget *>(m_tabViews->widget(index));
         if (!tab)
         {
             LOG_ERR("No current tab for index {}", index);
+            m_updateTimer->start();
             return;
         }
 
@@ -624,14 +688,17 @@ void MainWindow::confCurrentTab(int index)
             m_actSaveConf->setVisible(true);
             m_actSaveConfAs->setText(tr("Save [%1] &As...").arg(conf->getConfigName().c_str()));
             m_actSaveConfAs->setVisible(true);
-            currHasTemplate = true;
+            currentHasTemplate = true;
+
+            auto oriConf = Settings::findConfByTemplateFileName(conf->getConfFileName());
+            m_actSaveConf->setEnabled(oriConf && conf->isDirt(oriConf));
         }
     }
 
     m_fileReopenAsMenu->setEnabled(hasCurrentTab);
     m_actCloseFile->setEnabled(hasCurrentTab);
 
-    if (!currHasTemplate)
+    if (!currentHasTemplate)
     {
         m_actSaveConf->setVisible(false);
         m_actSaveConf->setText("");
@@ -652,6 +719,8 @@ void MainWindow::confCurrentTab(int index)
     {
         tabBar->setVisible(true);
     }
+
+    m_updateTimer->start();
 }
 
 void MainWindow::goToTab(int index)
@@ -659,7 +728,7 @@ void MainWindow::goToTab(int index)
     if (index >= 0 && index < m_tabViews->count())
     {
         m_tabViews->setCurrentIndex(index);
-        confCurrentTab(index);
+        configAsCurrentTab(index);
     }
 }
 
@@ -676,6 +745,7 @@ void MainWindow::saveConf()
     if (conf->exists())
     {
         Settings::saveTemplate(conf);
+        updateOpenedConf(conf);
     }
     else
     {
@@ -704,7 +774,7 @@ void MainWindow::saveConfAs()
         const auto idx = m_tabViews->currentIndex();
         if (idx >= 0)
         {
-            confCurrentTab(idx);
+            configAsCurrentTab(idx);
         }
     }
 }

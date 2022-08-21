@@ -60,10 +60,12 @@ public:
     bool isEqual(const FileConf::Ptr &other) const;
     bool isSameType(const FileConf::Ptr &other) const;
     bool isSameFileAndType(const FileConf::Ptr &other) const;
+    bool isDirt(const FileConf::Ptr &other) const;
     void copyFrom(const FileConf::Ptr &other);
     void copyTypeFrom(const FileConf::Ptr &other);
     void copyFileAndTypeFrom(const FileConf::Ptr &other);
 
+    friend bool hasEqualConf(const FileConf &lhs, const FileConf &rhs);
     friend bool operator==(const FileConf &lhs, const FileConf &rhs);
 
 private:
@@ -78,11 +80,15 @@ private:
     tp::SInt m_noMatchColumn = 0;
 };
 
-inline bool operator==(const FileConf &lhs, const FileConf &rhs)
+inline bool hasEqualConf(const FileConf &lhs, const FileConf &rhs)
 {
     return (lhs.m_fileType == rhs.m_fileType) && (lhs.m_configName == rhs.m_configName) &&
-           (lhs.m_confFileName == rhs.m_confFileName) && (lhs.m_fileName == rhs.m_fileName) &&
-           (lhs.m_regexPattern == rhs.m_regexPattern) && (lhs.m_columns == rhs.m_columns) &&
-           (lhs.m_highlighterParams == rhs.m_highlighterParams) && (lhs.m_filterParams == rhs.m_filterParams) &&
-           (lhs.m_noMatchColumn == rhs.m_noMatchColumn);
+           (lhs.m_confFileName == rhs.m_confFileName) && (lhs.m_regexPattern == rhs.m_regexPattern) &&
+           (lhs.m_columns == rhs.m_columns) && (lhs.m_highlighterParams == rhs.m_highlighterParams) &&
+           (lhs.m_filterParams == rhs.m_filterParams) && (lhs.m_noMatchColumn == rhs.m_noMatchColumn);
+}
+
+inline bool operator==(const FileConf &lhs, const FileConf &rhs)
+{
+    return (lhs.m_fileName == rhs.m_fileName) && hasEqualConf(lhs, rhs);
 }

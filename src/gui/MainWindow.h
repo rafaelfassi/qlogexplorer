@@ -6,6 +6,7 @@
 #include <QMainWindow>
 
 class QMenu;
+class QTimer;
 class QAction;
 class QTabWidget;
 class LogTabWidget;
@@ -43,7 +44,8 @@ public slots:
     void reopenCurrentFile(tp::FileType type);
     void closeTab(int index);
     void closeCurrentTab();
-    void confCurrentTab(int index);
+    void updateCurrentTab();
+    void configAsCurrentTab(int index);
     void goToTab(int index);
     void saveConf();
     void saveConfAs();
@@ -52,6 +54,8 @@ public slots:
     void setRecentFile(const FileConf::Ptr &conf);
     void openWiki();
     void openAbout();
+    void updateOpenedConf(FileConf::Ptr conf);
+    void updateAllOpenedConfs();
 
 private slots:
     void handleOpenFilesWithTemplate();
@@ -96,6 +100,7 @@ private:
     QMenu *m_helpMenu;
     QTabWidget *m_tabViews;
     QStringList m_filesToOpen;
+    QTimer *m_updateTimer;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actRecentFiles;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actOpenWithTemplates;
     std::vector<std::pair<QAction *, FileConf::Ptr>> m_actReopenWithTemplates;
