@@ -123,6 +123,15 @@ SearchParamControl::SearchParamControl(
 {
     m_proxyModel = searchModel->newProxy(this, std::bind(&SearchParamControl::getSearchParam, this));
     m_cmbSearch = cmbSearch;
+
+    // Workaround
+    // The QComboBox placeholder is not visible when it's editable, because in this case it'll
+    // consider the placeholder of the QLineEdit instead.
+    // But when the QComboBox placeholder is empty, it'll set the current index to 0 when the
+    // current index is -1 and a new item is added.
+    // See QComboBoxPrivate::_q_rowsInserted for further info.
+    m_cmbSearch->setPlaceholderText(m_edtPattern->placeholderText());
+
     m_cmbSearch->setModel(m_proxyModel);
     m_cmbSearch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbSearch->setCurrentIndex(-1);
@@ -252,6 +261,8 @@ void SearchParamControl::translateUi()
 
     m_actNotOp->setText(tr("Not (invert the match)"));
     m_actNotOp->setIcon(Style::getIcon("not_icon.png"));
+
+    m_edtPattern->setPlaceholderText(tr("Pattern"));
 }
 
 void SearchParamControl::retranslateUi()

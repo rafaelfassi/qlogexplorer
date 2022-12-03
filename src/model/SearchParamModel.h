@@ -173,13 +173,10 @@ public:
     {
         if(isValidIdx(idx))
         {
-            const auto srcIdx = toSrcIdx(idx);
-            if (srcIdx != m_currentSrcIdx)
-            {
-                m_currentSrcIdx = srcIdx;
-                return m_model->getSearchParam(srcIdx);
-            }
+            m_currentSrcIdx = toSrcIdx(idx);
+            return m_model->getSearchParam(m_currentSrcIdx);
         }
+        m_currentSrcIdx = -1;
         return std::nullopt;
     }
 
