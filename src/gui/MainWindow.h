@@ -54,6 +54,7 @@ public slots:
     void setRecentFile(const FileConf::Ptr &conf);
     void openWiki();
     void openAbout();
+    void updateCurrentTabConf(FileConf::Ptr conf);
     void updateOpenedConf(FileConf::Ptr conf);
     void updateAllOpenedConfs();
 

@@ -130,7 +130,9 @@ SearchParamControl::SearchParamControl(
     // But when the QComboBox placeholder is empty, it'll set the current index to 0 when the
     // current index is -1 and a new item is added.
     // See QComboBoxPrivate::_q_rowsInserted for further info.
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     m_cmbSearch->setPlaceholderText(m_edtPattern->placeholderText());
+#endif
 
     m_cmbSearch->setModel(m_proxyModel);
     m_cmbSearch->setInsertPolicy(QComboBox::NoInsert);

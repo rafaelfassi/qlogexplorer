@@ -229,6 +229,7 @@ void TemplatesConfigDlg::save()
                 {
                     Settings::saveTemplateAs(templ, templ->getConfigName().c_str());
                     Settings::setRecentFile(templ);
+                    g_mainWindow->updateCurrentTabConf(templ);
                 }
             }
             else if (templ->isDirt(m_conf))
@@ -287,7 +288,7 @@ void TemplatesConfigDlg::apply()
     if (currConf->isSameType(m_conf))
     {
         fixColumns(currConf);
-        g_mainWindow->updateOpenedConf(currConf);
+        g_mainWindow->updateCurrentTabConf(currConf);
         accept();
     }
 }

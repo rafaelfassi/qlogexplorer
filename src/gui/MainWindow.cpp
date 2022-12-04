@@ -214,25 +214,27 @@ void MainWindow::reconfigure()
     }
 }
 
-void MainWindow::updateOpenedConf(FileConf::Ptr conf)
+void MainWindow::updateCurrentTabConf(FileConf::Ptr conf)
 {
     if (!conf || conf->isNull())
         return;
 
-    if (!conf->exists())
+    auto currTab = getCurrentTab();
+    if (currTab)
     {
-        auto currTab = getCurrentTab();
-        if (currTab)
+        auto currTabConf = currTab->getConf();
+        if (currTabConf)
         {
-            auto currTabConf = currTab->getConf();
-            if (!currTabConf->exists())
-            {
-                currTabConf->copyFrom(conf);
-                currTab->reconfigure();
-            }
+            currTabConf->copyFrom(conf);
+            currTab->reconfigure();
         }
-        return;
     }
+}
+
+void MainWindow::updateOpenedConf(FileConf::Ptr conf)
+{
+    if (!conf || conf->isNull())
+        return;
 
     for (int tabIdx = 0; tabIdx < getTabsCount(); ++tabIdx)
     {
