@@ -51,7 +51,7 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
     m_prlFileParsing->setFrameStyle(QFrame::StyledPanel | QFrame::Plain);
     toolbar->addWidget(m_prlFileParsing);
 
-    m_logViewWidget = new LogViewWidget(m_logModel, this);
+    m_logViewWidget = new LogViewWidget(m_logModel, m_markedTexts, this);
     m_logViewWidget->setMinimumSize(400, 200);
     m_logViewWidget->configure(conf);
 

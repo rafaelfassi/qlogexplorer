@@ -38,4 +38,5 @@ private:
     QAction *m_actTrackFile;
     QAction *m_actAutoScrolling;
     ProgressLabel *m_prlFileParsing;
+    std::vector<tp::TextSelection> m_markedTexts;
 };

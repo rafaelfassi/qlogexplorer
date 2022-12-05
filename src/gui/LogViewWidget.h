@@ -43,7 +43,7 @@ class LogViewWidget : public QWidget
     };
 
 public:
-    LogViewWidget(AbstractModel *model, QWidget *parent = nullptr);
+    LogViewWidget(AbstractModel *model, std::vector<tp::TextSelection> &markedTexts, QWidget *parent = nullptr);
     ~LogViewWidget();
 
     bool canCopy() const;
@@ -54,10 +54,12 @@ public:
     void configure(FileConf::Ptr conf);
     void reconfigure(FileConf::Ptr conf);
     void retranslateUi();
+    std::vector<tp::TextSelection> &getMarkedTexts();
 
 signals:
     void rowSelected(tp::SInt row);
     void autoScrollingChanged(bool autoScrolling);
+    void textMarkUpdated();
 
 public slots:
     void updateView();
@@ -138,6 +140,7 @@ private:
     void updateHeaderSize();
 
     AbstractModel *m_model;
+    std::vector<tp::TextSelection> &m_markedTexts;
     HeaderView *m_header = nullptr;
     LongScrollBar *m_vScrollBar = nullptr;
     LongScrollBar *m_hScrollBar = nullptr;
@@ -169,7 +172,6 @@ private:
     std::optional<std::pair<tp::SInt, int>> m_selectEnd;
     std::set<tp::SInt> m_bookMarks;
     std::vector<Highlighter> m_highlightersRows;
-    std::vector<tp::TextSelection> m_markedTexts;
     std::vector<tp::SectionColor> m_availableMarks;
     bool m_autoScrolling = false;
 };

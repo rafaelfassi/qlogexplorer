@@ -62,7 +62,7 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     hLayout->addWidget(m_prlSearching);
     hLayout->addWidget(btnAddSearchParam);
 
-    m_searchResults = new LogViewWidget(m_proxyModel, this);
+    m_searchResults = new LogViewWidget(m_proxyModel, mainLog->getMarkedTexts(), this);
 
     m_searchParamsLayout = new QVBoxLayout();
     m_searchParamsLayout->setMargin(2);
@@ -135,7 +135,7 @@ void LogSearchWidget::translateUi()
     m_actClear->setText(tr("Clear Results"));
     m_actClear->setIcon(Style::getIcon("clear_icon.png"));
 
-    m_actSyncMarks->setText(tr("Sync Bookmarks and Marks"));
+    m_actSyncMarks->setText(tr("Sync Bookmarks"));
     m_actSyncMarks->setIcon(Style::getIcon("sync_icon.png"));
 
     m_actExec->setText(tr("Search"));
@@ -164,6 +164,8 @@ void LogSearchWidget::createConnections()
     connect(m_sourceModel, &BaseLogModel::valueFound, this, &LogSearchWidget::addSearchResult);
     connect(m_sourceModel, &BaseLogModel::searchingProgressChanged, m_prlSearching, &ProgressLabel::setProgress);
     connect(m_searchResults, &LogViewWidget::rowSelected, m_mainLog, &LogViewWidget::goToRow);
+    connect(m_searchResults, &LogViewWidget::textMarkUpdated, m_mainLog, QOverload<>::of(&LogViewWidget::update));
+    connect(m_mainLog, &LogViewWidget::textMarkUpdated, m_searchResults, QOverload<>::of(&LogViewWidget::update));
 }
 
 void LogSearchWidget::addSearchParam()

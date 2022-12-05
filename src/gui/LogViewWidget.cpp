@@ -18,7 +18,10 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
-LogViewWidget::LogViewWidget(AbstractModel *model, QWidget *parent) : QWidget(parent), m_model(model)
+LogViewWidget::LogViewWidget(AbstractModel *model, std::vector<tp::TextSelection> &markedTexts, QWidget *parent)
+    : QWidget(parent),
+      m_model(model),
+      m_markedTexts(markedTexts)
 {
     updatePalette();
 
@@ -1337,6 +1340,7 @@ void LogViewWidget::addTextMark(const QString &text, const tp::SectionColor &sel
 {
     m_markedTexts.emplace_back(tp::TextCan(text), selColor);
     update();
+    emit textMarkUpdated();
 }
 
 void LogViewWidget::removeTextMarks(const tp::SectionColor &selColor)
@@ -1348,4 +1352,10 @@ void LogViewWidget::removeTextMarks(const tp::SectionColor &selColor)
             [&selColor](const tp::TextSelection &mark) { return (mark.color.bg == selColor.bg); }),
         m_markedTexts.end());
     update();
+    emit textMarkUpdated();
+}
+
+std::vector<tp::TextSelection> &LogViewWidget::getMarkedTexts()
+{
+    return m_markedTexts;
 }
