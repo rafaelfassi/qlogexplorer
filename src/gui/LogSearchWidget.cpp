@@ -253,6 +253,7 @@ void LogSearchWidget::syncMarks()
         m_mainLog->addBookmark(m_proxyModel->getRowNum(searchResultsRow));
     }
 
+    m_searchResults->clearBookmarks();
     for (const auto mainLogRow : m_mainLog->getBookmarks())
     {
         m_proxyModel->addSourceRow(mainLogRow);
