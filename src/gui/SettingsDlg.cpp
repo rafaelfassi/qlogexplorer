@@ -205,7 +205,7 @@ void SettingsDlg::buildLayout()
     m_chkHideUniqueTab = new QCheckBox(tr("Hide tabs when only one file"), grBehavior);
     vBehavior->addWidget(m_chkHideUniqueTab);
 
-    m_chkAllowMultiInst = new QCheckBox(tr("Allow more than on instance"), grBehavior);
+    m_chkAllowMultiInst = new QCheckBox(tr("Allow more than one instance"), grBehavior);
     vBehavior->addWidget(m_chkAllowMultiInst);
 
     m_chkRegexAsDefault = new QCheckBox(tr("Use regex as default search"), grBehavior);

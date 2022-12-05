@@ -236,10 +236,10 @@ void LogViewWidget::translateUi()
 
     m_actNextBookmark->setText(tr("Next Bookmark"));
 
-    m_btnExpandColumns->setToolTip("Expand All Columns");
+    m_btnExpandColumns->setToolTip(tr("Expand All Columns"));
     m_btnExpandColumns->setIcon(Style::getIcon("expand_icon.png"));
 
-    m_btnFitColumns->setToolTip("Adjust Columns to Fit");
+    m_btnFitColumns->setToolTip(tr("Adjust Columns to Fit"));
     m_btnFitColumns->setIcon(Style::getIcon("fit_icon.png"));
 }
 

@@ -182,7 +182,7 @@ void MainWindow::translateUi()
 
     m_helpMenu->setTitle(tr("&Help"));
     m_actOpenWiki->setText(tr("&Wiki"));
-    m_actAbout->setText("&About");
+    m_actAbout->setText(tr("&About"));
 }
 
 void MainWindow::retranslateUi()
