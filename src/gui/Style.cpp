@@ -360,8 +360,9 @@ double Style::getCharWidthF()
 
 tp::SInt Style::getTextWidth(const QString &text)
 {
-    QFontMetrics fm(getFont());
-    return fm.horizontalAdvance(text);
+    return getCharWidth() * text.size();
+//    QFontMetrics fm(getFont());
+//    return fm.horizontalAdvance(text);
 }
 
 double Style::getTextWidthF(const QString &text)

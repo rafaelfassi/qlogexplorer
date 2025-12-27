@@ -93,7 +93,14 @@ QVariant toVariant(const tp::Column& column, const QString& text)
     case tp::ColumnType::UInt:
         return text.toULongLong();
     case tp::ColumnType::Time:
-        return QDateTime::fromString(text, column.format.c_str());
+    {
+        if (column.format == "SECONDS")
+            return QDateTime::fromSecsSinceEpoch(text.toLongLong());
+        else if (column.format == "MILLISECONDS")
+            return QDateTime::fromMSecsSinceEpoch(text.toLongLong());
+        else
+            return QDateTime::fromString(text, column.format.c_str());
+    }
     case tp::ColumnType::Float:
         return text.toDouble();
     default:
