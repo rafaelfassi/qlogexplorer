@@ -899,7 +899,7 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
             auto &column(headerColumn.get());
             const tp::SInt textWidth = getTextWidth(rowData[column.idx], true) + Style::getTextPadding() + elideWith +
                                        Style::getColumnMargin();
-            column.width = std::max<tp::SInt>(column.width, textWidth);
+            column.width = std::max<tp::SInt>(column.width, std::min<tp::SInt>(textWidth, m_header->maximumSectionSize()));
         }
     }
 }

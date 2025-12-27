@@ -9,7 +9,7 @@
 #include <thread>
 #include <mutex>
 
-constexpr tp::UInt g_chunkSize = 1024 * 1024;
+constexpr tp::UInt g_chunkSize = (1024 * 1024) * 10;
 
 enum class WatchingResult
 {

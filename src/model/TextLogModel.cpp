@@ -101,6 +101,7 @@ tp::UInt TextLogModel::parseChunks(
     tp::UInt nextRow,
     tp::UInt fileSize)
 {
+    tp::UInt chunkSize(g_chunkSize);
     std::string buffer;
     buffer.resize(g_chunkSize);
 
@@ -116,7 +117,7 @@ tp::UInt TextLogModel::parseChunks(
     {
         tp::UInt chunkStartPos = getFilePos(is);
         lastPos = chunkStartPos;
-        const tp::UInt readBytes = std::min<tp::UInt>(g_chunkSize, fileSize - lastPos);
+        const tp::UInt readBytes = std::min<tp::UInt>(chunkSize, fileSize - lastPos);
         if (readBytes == 0)
         {
             break;
@@ -143,6 +144,15 @@ tp::UInt TextLogModel::parseChunks(
                 // break, so the extra read characters will be include into the next chunk.
                 moveFilePos(is, lastLineBreakPos);
                 lastPos = lastLineBreakPos;
+
+                // If no new row was added in the chunk, the row size is bigger than the chunk.
+                if (currentRowCount == nextFirstChunkRow)
+                {
+                    // Expand chunk size
+                    chunkSize *= 2;
+                    buffer.resize(chunkSize);
+                    continue;
+                }
             }
             else
             {

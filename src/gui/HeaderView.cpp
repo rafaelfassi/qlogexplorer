@@ -126,7 +126,7 @@ void HeaderView::updateColumns()
         }
         else if (column.width > 0)
         {
-            resizeSection(idx, column.width);
+            resizeSection(column.idx, column.width);
         }
     }
 }
