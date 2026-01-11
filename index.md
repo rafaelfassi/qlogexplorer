@@ -17,7 +17,7 @@ Advanced tool for exploring log files.
 * Predefined search parameters
 * Advanced search
 
+### Links for download
 
-## Downloads
 - [Linux Flatpak](https://flathub.org/en/apps/io.github.rafaelfassi.QLogExplorer)
 - [Windows Releases](https://github.com/rafaelfassi/qlogexplorer/releases)
