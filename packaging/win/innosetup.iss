@@ -1,7 +1,7 @@
 ; Will be replaced by the release script
 #define ProjName "qlogexplorer"
 #define AppName "QLogExplorer"
-#define AppVersion "1.1.1"
+#define AppVersion "1.1.2"
 #define AppURL "https://rafaelfassi.github.io/qlogexplorer/"
 ; Calculated and fixed values
 #define AppAssocExt ".log"

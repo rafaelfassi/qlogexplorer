@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(qlogexplorer VERSION 1.1.1 LANGUAGES CXX)
+project(qlogexplorer VERSION 1.1.2 LANGUAGES CXX)
 set(APP_NAME "QLogExplorer")
 set(PROJ_URL "https://github.com/rafaelfassi/qlogexplorer")
 set(APP_URL "https://rafaelfassi.github.io/qlogexplorer/")
