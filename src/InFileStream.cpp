@@ -74,7 +74,7 @@ class InFileStreamImp
 public:
     InFileStreamImp(const std::string &fileName)
     {
-        HANDLE handle = CreateFile(
+        HANDLE handle = CreateFileA(
             fileName.c_str(),
             GENERIC_READ,
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
