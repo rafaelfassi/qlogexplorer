@@ -65,7 +65,7 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     m_searchResults = new LogViewWidget(m_proxyModel, mainLog->getMarkedTexts(), this);
 
     m_searchParamsLayout = new QVBoxLayout();
-    m_searchParamsLayout->setMargin(2);
+    m_searchParamsLayout->setContentsMargins(2, 2, 2, 2);
     m_searchParamsLayout->setSpacing(2);
 
     QVBoxLayout *vLayout = new QVBoxLayout();

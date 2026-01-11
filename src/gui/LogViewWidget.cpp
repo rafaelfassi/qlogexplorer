@@ -58,18 +58,18 @@ LogViewWidget::LogViewWidget(AbstractModel *model, std::vector<tp::TextSelection
     m_btnFitColumns->setFixedWidth(Style::getScrollBarThickness());
 
     m_hScrollBarLayout = new QVBoxLayout();
-    m_hScrollBarLayout->setMargin(0);
+    m_hScrollBarLayout->setContentsMargins(0, 0, 0, 0);
     m_hScrollBarLayout->addWidget(m_header, 0, Qt::AlignTop);
     m_hScrollBarLayout->addWidget(m_hScrollBar, 0, Qt::AlignBottom);
 
     m_vScrollBarLayout = new QVBoxLayout();
-    m_vScrollBarLayout->setMargin(0);
+    m_vScrollBarLayout->setContentsMargins(0, 0, 0, 0);
     m_vScrollBarLayout->addWidget(m_btnExpandColumns, 0, Qt::AlignTop);
     m_vScrollBarLayout->addWidget(m_vScrollBar, 1, Qt::AlignRight);
     m_vScrollBarLayout->addWidget(m_btnFitColumns);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
-    hLayout->setMargin(0);
+    hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->setSpacing(0);
     hLayout->addLayout(m_hScrollBarLayout, 1);
     hLayout->addLayout(m_vScrollBarLayout);
@@ -137,17 +137,17 @@ LogViewWidget::LogViewWidget(AbstractModel *model, std::vector<tp::TextSelection
     addAction(m_actCopy);
 
     m_actBookmark = new QAction(this);
-    m_actBookmark->setShortcut(Qt::CTRL + Qt::Key_M);
+    m_actBookmark->setShortcut(Qt::CTRL | Qt::Key_M);
     m_actBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actBookmark);
 
     m_actPrevBookmark = new QAction(this);
-    m_actPrevBookmark->setShortcut(Qt::CTRL + Qt::Key_Up);
+    m_actPrevBookmark->setShortcut(Qt::CTRL | Qt::Key_Up);
     m_actPrevBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actPrevBookmark);
 
     m_actNextBookmark = new QAction(this);
-    m_actNextBookmark->setShortcut(Qt::CTRL + Qt::Key_Down);
+    m_actNextBookmark->setShortcut(Qt::CTRL | Qt::Key_Down);
     m_actNextBookmark->setShortcutContext(Qt::WidgetShortcut);
     addAction(m_actNextBookmark);
 
@@ -458,7 +458,7 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
             }
         }
 
-        menu.exec(event->globalPos());
+        menu.exec(event->globalPosition().toPoint());
 
         // Let the action enabled for the shortcuts
         m_actCopy->setEnabled(true);

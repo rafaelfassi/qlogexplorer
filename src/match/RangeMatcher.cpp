@@ -56,10 +56,10 @@ bool RangeMatcher::match(const std::string &text)
     if (val.isValid() && !val.isNull())
     {
         if (validFrom)
-            res &= (val >= m_from);
+            res &= (QVariant::compare(val, m_from) >= 0);
 
         if (validTo)
-            res &= (val <= m_to);
+            res &= (QVariant::compare(val, m_to) <= 0);
 
         return res;
     }

@@ -231,7 +231,7 @@ void HeaderView::mousePressEvent(QMouseEvent *e)
     if (e->buttons().testFlag(Qt::RightButton))
     {
         const auto idx = logicalIndexAt(e->pos());
-        openContextMenu(e->globalPos(), idx);
+        openContextMenu(e->globalPosition().toPoint(), idx);
         e->accept();
         return;
     }

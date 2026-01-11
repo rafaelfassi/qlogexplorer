@@ -4,6 +4,8 @@
 
   <name>QLogExplorer</name>
   <url type="homepage">https://rafaelfassi.github.io/qlogexplorer/</url>
+  <url type="bugtracker">https://github.com/rafaelfassi/qlogexplorer/issues</url>
+  <url type="vcs-browser">https://github.com/rafaelfassi/qlogexplorer</url>
   <developer_name>QLogExplorer Project</developer_name>
 
   <metadata_license>CC0-1.0</metadata_license>

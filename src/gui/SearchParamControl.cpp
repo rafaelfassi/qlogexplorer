@@ -85,7 +85,7 @@ SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPatt
     btnNotOp->setDefaultAction(m_actNotOp);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
-    hLayout->setMargin(0);
+    hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->setAlignment(Qt::AlignLeft);
     hLayout->addWidget(m_cmbColumns);
     hLayout->addWidget(btnMatchCase);

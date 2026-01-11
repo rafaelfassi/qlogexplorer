@@ -38,7 +38,7 @@ SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searc
     btnRemoveMe->setDefaultAction(m_actRemoveMe);
 
     QHBoxLayout *hLayout = new QHBoxLayout();
-    hLayout->setMargin(0);
+    hLayout->setContentsMargins(0, 0, 0, 0);
     hLayout->addWidget(m_cmbColumns);
     hLayout->addWidget(m_control);
     hLayout->addWidget(m_cmbSearch);
