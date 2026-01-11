@@ -25,7 +25,6 @@
 #include <QInputDialog>
 #include <QFileInfo>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDragLeaveEvent>
@@ -812,7 +811,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     if (!filesToOpen.empty())
     {
         setFilesToOpen(filesToOpen);
-        if (m_fileOpenAsMenu->exec(mapToGlobal(event->pos())) != nullptr)
+        if (m_fileOpenAsMenu->exec(mapToGlobal(event->position().toPoint())) != nullptr)
             event->acceptProposedAction();
         clearFilesToOpen();
     }

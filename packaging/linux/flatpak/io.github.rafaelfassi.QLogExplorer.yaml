@@ -1,6 +1,6 @@
 app-id: io.github.rafaelfassi.QLogExplorer
 runtime: org.kde.Platform
-runtime-version: '5.15-21.08'
+runtime-version: '6.8'
 sdk: org.kde.Sdk
 rename-appdata-file: qlogexplorer.appdata.xml
 rename-desktop-file: qlogexplorer.desktop
@@ -13,8 +13,10 @@ finish-args:
   # Necessary if X11 fallback takes place.
   - --socket=fallback-x11
   - --share=ipc
-  # Necessary to open the log files.
-  - --filesystem=host
+  # Necessary to open log files.
+  - --filesystem=home:ro
+  # Necessary to open system log files.
+  - --filesystem=/var/log:ro
   # Local sockets are used to detect other running instance and forward any open file request to it.
   # Qt requires Network module to use sockets. Even though an error message is print on app startup
   # when no network permission is granted, it's working properly.
@@ -22,6 +24,8 @@ finish-args:
 modules:
   - name: qlogexplorer
     buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.10
     post-install:
       - cp -r packaging/linux/xdg ${FLATPAK_DEST}/share
     sources:
