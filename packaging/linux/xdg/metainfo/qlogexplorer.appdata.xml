@@ -45,6 +45,16 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.1.0" date="2026-01-11">
+      <description>
+        <p>Update to Qt6</p>
+        <p>Fix issues with larger rows</p>
+        <p>Fix bookmark being duplicated</p>
+        <p>Fix issues with multiple search parameters</p>
+        <p>Share same marks in both main view and search view</p>
+        <p>Fix current tab not being updated after saving new template</p>
+      </description>
+    </release>
     <release version="1.0.2" date="2022-03-14">
       <description>
         <p>Minor fix in app data and pt-br shortcuts</p>
