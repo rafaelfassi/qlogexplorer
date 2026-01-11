@@ -16,3 +16,8 @@ Advanced tool for exploring log files.
 * Highlighters definition
 * Predefined search parameters
 * Advanced search
+
+
+## Downloads
+- [Linux Flatpak](https://flathub.org/en/apps/io.github.rafaelfassi.QLogExplorer)
+- [Windows Releases](https://github.com/rafaelfassi/qlogexplorer/releases)
