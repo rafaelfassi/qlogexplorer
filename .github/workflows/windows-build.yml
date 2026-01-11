@@ -1,10 +1,10 @@
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Build for Windows
 
 on:
   push:
     tags:
       - 'v*' # Auto-trigger only for new tags
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -16,11 +16,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set reusable strings
-        # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
         id: strings
         shell: bash
         run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+          echo "build-output-dir=${{ github.workspace }}\build" >> "$GITHUB_OUTPUT"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -40,3 +39,28 @@ jobs:
 
       - name: Build
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+
+      - name: Get Qt Dependency Libs
+        run: windeployqt --release --no-translations ${{ steps.strings.outputs.build-output-dir }}\Release\qlogexplorer.exe
+
+      - name: Build Installed
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        with:
+          path: packaging/win/innosetup.iss
+          options: |
+            /O+
+            /DSrcDir=${{ github.workspace }}
+            /DBuildBinDir=${{ steps.strings.outputs.build-output-dir }}\Release
+
+      - name: Upload installer as artifact
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: QLogExplorer-Installer
+          path: ${{ steps.strings.outputs.build-output-dir }}\Release\QLogExplorer-Win64-Setup.exe
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.strings.outputs.build-output-dir }}\Release\QLogExplorer-Win64-Setup.exe

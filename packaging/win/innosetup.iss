@@ -9,11 +9,11 @@
 #define AppAssocKey AppName + ".id"
 #define AppExeName ProjName + ".exe"
 #define AppAssocName AppName
-; Needs to be set manually before running innosetup
-#define SrcDir "<project-source-folder>"
-#define BuildBinDir "<build-folder>"
-#define QtDir "<qt-folder>"
 #define PlatformType "Win64"
+
+; Needs to be provided by the command line args: /DSrcDir=<src-dir> /DBuildBinDir=<build-dir>
+;#define SrcDir "<src-dir>"
+;#define BuildBinDir "<build-dir>"
 
 [Setup]
 AppId={{52CADC64-418D-43B8-8A1A-D5C47619D786}
@@ -31,7 +31,8 @@ LicenseFile={#SrcDir}\LICENSE
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputBaseFilename={#AppName}-{#AppVersion}-{#PlatformType}-Setup
+OutputDir={#BuildBinDir}
+OutputBaseFilename={#AppName}-{#PlatformType}-Setup
 SetupIconFile={#SrcDir}\packaging\win\{#ProjName}.ico
 Compression=lzma
 SolidCompression=yes
@@ -45,14 +46,14 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "{#BuildBinDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#QtDir}\bin\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#QtDir}\bin\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#QtDir}\bin\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#QtDir}\bin\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#QtDir}\plugins\platforms\qminimal.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
-Source: "{#QtDir}\plugins\platforms\qoffscreen.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
-Source: "{#QtDir}\plugins\platforms\qwebgl.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
-Source: "{#QtDir}\plugins\platforms\qwindows.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
+Source: "{#BuildBinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#BuildBinDir}\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#BuildBinDir}\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]
