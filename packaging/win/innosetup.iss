@@ -11,9 +11,9 @@
 #define AppAssocName AppName
 #define PlatformType "Win64"
 
-; Needs to be provided by the command line args: /DSrcDir=<src-dir> /DBuildBinDir=<build-dir>
+; Needs to be provided by the command line args: /DSrcDir=<src-dir> /DOutBinDir=<build-dir>
 ;#define SrcDir "<src-dir>"
-;#define BuildBinDir "<build-dir>"
+;#define OutBinDir "<build-dir>"
 
 [Setup]
 AppId={{52CADC64-418D-43B8-8A1A-D5C47619D786}
@@ -31,7 +31,7 @@ LicenseFile={#SrcDir}\LICENSE
 ; Remove the following line to run in administrative install mode (install for all users.)
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir={#BuildBinDir}
+OutputDir={#OutBinDir}
 OutputBaseFilename={#AppName}-{#PlatformType}-Setup
 SetupIconFile={#SrcDir}\packaging\win\{#ProjName}.ico
 Compression=lzma
@@ -45,15 +45,15 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "{#BuildBinDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#BuildBinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#BuildBinDir}\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "{#BuildBinDir}\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#OutBinDir}\*.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#OutBinDir}\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#OutBinDir}\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Registry]

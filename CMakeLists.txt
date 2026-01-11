@@ -30,6 +30,8 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Network REQUIRED)
 find_package(Threads REQUIRED)
 
+include(InstallRequiredSystemLibraries)
+
 set(MAIN_SOURCES
     qlogexplorer.qrc
     src/main.cpp

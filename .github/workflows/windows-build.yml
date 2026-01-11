@@ -19,7 +19,10 @@ jobs:
         id: strings
         shell: bash
         run: |
-          echo "build-output-dir=${{ github.workspace }}\build" >> "$GITHUB_OUTPUT"
+          echo "build-type=Release" >> "$GITHUB_OUTPUT"
+          echo "build-dir=${{ github.workspace }}\build" >> "$GITHUB_OUTPUT"
+          echo "out-dir=${{ github.workspace }}\build\output" >> "$GITHUB_OUTPUT"
+          echo "bin-dir=${{ github.workspace }}\build\output\bin" >> "$GITHUB_OUTPUT"
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
@@ -29,38 +32,54 @@ jobs:
           target: 'desktop'
           arch: 'win64_msvc2022_64'
 
-      - name: Configure CMake
+      - name: CMake Configure
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          cmake -B ${{ steps.strings.outputs.build-dir }}
           -DCMAKE_CXX_COMPILER=cl
           -DCMAKE_C_COMPILER=cl
-          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_BUILD_TYPE=${{ steps.strings.outputs.build-type }}
           -S ${{ github.workspace }}
 
-      - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+      - name: CMake Build
+        run: >
+          cmake --build ${{ steps.strings.outputs.build-dir }}
+          --config ${{ steps.strings.outputs.build-type }}
+
+      - name: CMake Install
+        run: >
+          cmake --install ${{ steps.strings.outputs.build-dir }}
+          --config ${{ steps.strings.outputs.build-type }}
+          --prefix ${{ steps.strings.outputs.out-dir }}
 
       - name: Get Qt Dependency Libs
-        run: windeployqt --release --no-translations ${{ steps.strings.outputs.build-output-dir }}\Release\qlogexplorer.exe
+        run: windeployqt --release --no-translations ${{ steps.strings.outputs.bin-dir }}\qlogexplorer.exe
 
-      - name: Build Installed
+      - name: Create Zip archive
+        run: >
+          Compress-Archive
+          -Path ${{ steps.strings.outputs.bin-dir }}\*
+          -DestinationPath ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip
+
+      - name: Build Installer Application
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
         with:
           path: packaging/win/innosetup.iss
           options: |
             /O+
             /DSrcDir=${{ github.workspace }}
-            /DBuildBinDir=${{ steps.strings.outputs.build-output-dir }}\Release
+            /DOutBinDir=${{ steps.strings.outputs.bin-dir }}
 
-      - name: Upload installer as artifact
+      - name: Upload Artifact
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: QLogExplorer-Installer
-          path: ${{ steps.strings.outputs.build-output-dir }}\Release\QLogExplorer-Win64-Setup.exe
+          name: QLogExplorer-Bundle
+          path: ${{ steps.strings.outputs.bin-dir }}\*
 
       - name: Publish GitHub Release
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ steps.strings.outputs.build-output-dir }}\Release\QLogExplorer-Win64-Setup.exe
+          files: |
+            ${{ steps.strings.outputs.bin-dir }}\QLogExplorer-Win64-Setup.exe
+            ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip
