@@ -1,12 +1,11 @@
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
 name: Build for Windows
 
-#on:
-#  push:
-#    tags:
-#      - 'v*' # Auto-trigger only for new tags
-
-on: workflow_dispatch
+on:
+  push:
+    tags:
+      - 'v*' # Auto-trigger only for new tags
+  workflow_dispatch:
 
 jobs:
   build-windows:
