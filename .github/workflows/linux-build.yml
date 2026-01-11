@@ -1,4 +1,4 @@
-name: Build Linux
+name: Build for Linux
 
 on:
   pull_request:
@@ -54,4 +54,4 @@ jobs:
         -S ${{ github.workspace }}
 
     - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
