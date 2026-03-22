@@ -25,6 +25,7 @@ public:
     void configure();
     void reconfigure();
     void retranslateUi();
+    void readyForSearch();
 
 private:
     void createActions();
@@ -63,4 +64,5 @@ private:
     ProgressLabel *m_prlSearching;
     SearchParamModel *m_searchParamModel;
     QList<SearchParamWidget *> m_searchParamWidgets;
+    bool m_hasDefaultParams = false;
 };

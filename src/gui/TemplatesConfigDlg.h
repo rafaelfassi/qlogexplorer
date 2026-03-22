@@ -126,6 +126,7 @@ private:
     QLabel *m_labRegex;
     QLineEdit *m_edtRegex;
     QToolButton *m_btnRunRegex;
+    QCheckBox *m_chkUseOrOperator;
     QTabWidget *m_tabWidgets;
     // Columns tab
     QWidget *m_tabColumns;

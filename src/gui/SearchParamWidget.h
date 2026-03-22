@@ -23,7 +23,7 @@ public:
     void retranslateUi();
     bool getIsEnabled() const;
     tp::SearchParam getSearchParam() const;
-    void setSearchParam(const tp::SearchParam &searchParam);
+    void applyFilterParam(const tp::FilterParam &filterParam);
 
 signals:
     void searchRequested();

@@ -91,17 +91,22 @@ void LogSearchWidget::configure()
     m_searchResults->configure(m_conf);
     m_searchParamModel->loadParams(m_conf->getFilterParams());
 
-    for (int i = 0; i < m_searchParamModel->rowCount(); ++i)
+    if (m_conf->getUseOrAsDefaultOperator())
     {
-        const auto &filterParam = m_searchParamModel->getRowData(i);
+        m_actOrOperator->setChecked(true);
+    }
+
+    for (const auto &filterParam : m_conf->getFilterParams())
+    {
         if (filterParam.applyOnLoad)
         {
             addSearchParam();
-            m_searchParamWidgets.back()->setSearchParam(filterParam.searchParam);
+            m_searchParamWidgets.back()->applyFilterParam(filterParam);
         }
     }
 
-    if (m_searchParamWidgets.isEmpty())
+    m_hasDefaultParams = !m_searchParamWidgets.isEmpty();
+    if (!m_hasDefaultParams)
     {
         addSearchParam();
     }
@@ -165,6 +170,14 @@ void LogSearchWidget::retranslateUi()
         paramWidget->retranslateUi();
     }
     m_searchResults->retranslateUi();
+}
+
+void LogSearchWidget::readyForSearch()
+{
+    if (m_hasDefaultParams)
+    {
+        m_actExec->trigger();
+    }
 }
 
 void LogSearchWidget::createConnections()

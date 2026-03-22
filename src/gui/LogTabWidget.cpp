@@ -77,6 +77,7 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
 
     createConnections();
     m_logModel->start();
+    m_logSearchWidget->readyForSearch();
 }
 
 LogTabWidget::~LogTabWidget()

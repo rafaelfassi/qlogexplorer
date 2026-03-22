@@ -375,21 +375,7 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     tp::SearchParam fixedParam(param);
     fixParam(m_conf, fixedParam);
 
-    int idx = -1;
-    if (m_cmbSearch != nullptr)
-    {
-        idx = m_cmbSearch->findData(fixedParam.pattern.c_str(), Qt::EditRole);
-    }
-
-    if (idx != -1)
-    {
-        m_cmbSearch->setCurrentIndex(idx);
-    }
-    else
-    {
-        m_edtPattern->setText(fixedParam.pattern.c_str());
-    }
-
+    m_edtPattern->setText(fixedParam.pattern.c_str());
     m_actRange->setChecked(fixedParam.type == tp::SearchType::Range);
     m_actRegex->setChecked(fixedParam.type == tp::SearchType::Regex);
     m_actMatchCase->setChecked(fixedParam.flags.has(tp::SearchFlag::MatchCase));
@@ -406,6 +392,20 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     }
     m_cmbColumns->setCurrentIndex(cmbIndex);
     updateParam(notifyChanged);
+}
+
+void SearchParamControl::setFilterParam(const tp::FilterParam &param, bool notifyChanged)
+{
+    if (m_cmbSearch != nullptr)
+    {
+        int idx = m_cmbSearch->findData(param.name.c_str(), Qt::DisplayRole);
+        if (idx != -1)
+        {
+            m_cmbSearch->setCurrentIndex(idx);
+        }
+    }
+
+    setSearchParam(param.searchParam, notifyChanged);
 }
 
 void SearchParamControl::fixParam(const FileConf::Ptr &conf, tp::SearchParam &param)

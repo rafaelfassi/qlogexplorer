@@ -106,7 +106,7 @@ tp::SearchParam SearchParamWidget::getSearchParam() const
     return m_control->getSearchParam();
 }
 
-void SearchParamWidget::setSearchParam(const tp::SearchParam &searchParam)
+void SearchParamWidget::applyFilterParam(const tp::FilterParam &filterParam)
 {
-    m_control->setSearchParam(searchParam, false);
+    m_control->setFilterParam(filterParam, false);
 }

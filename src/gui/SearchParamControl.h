@@ -29,6 +29,7 @@ public:
     void setFileConf(FileConf::Ptr conf);
     tp::SearchParam getSearchParam() const;
     void setSearchParam(const tp::SearchParam &param, bool notifyChanged = false);
+    void setFilterParam(const tp::FilterParam &param, bool notifyChanged = false);
     static void fixParam(const FileConf::Ptr &conf, tp::SearchParam &param);
     void reconfigure();
     void retranslateUi();
