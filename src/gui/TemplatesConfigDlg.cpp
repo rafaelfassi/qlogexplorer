@@ -817,6 +817,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
         m_cmbFltColumn->setEnabled(enable);
         m_edtFltPattern->setEnabled(enable);
         m_fltSearchCtrl->setEnabled(enable);
+        m_chkApplyonLoad->setEnabled(enable);
 
         if (!enable)
         {
@@ -837,6 +838,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
         const auto &flt = conf->getFilterParams().at(index);
         m_edtFltName->setText(flt.name.c_str());
         m_fltSearchCtrl->setSearchParam(flt.searchParam);
+        m_chkApplyonLoad->setChecked(flt.applyOnLoad);
         enableFltFormFunc(true);
     }
     else
@@ -859,6 +861,7 @@ void TemplatesConfigDlg::updateTemplateFilter()
         auto &flt = conf->getFilterParams().at(fltIdx);
         flt.name = utl::toStr(m_edtFltName->text());
         flt.searchParam = m_fltSearchCtrl->getSearchParam();
+        flt.applyOnLoad = m_chkApplyonLoad->isChecked();
 
         auto item = m_lstFilters->item(fltIdx);
         if (item != nullptr)
@@ -1009,6 +1012,7 @@ void TemplatesConfigDlg::createConnections()
         &TemplatesConfigDlg::setCurrentFilter);
     connect(m_edtFltName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateFilter);
     connect(m_fltSearchCtrl, &SearchParamControl::paramChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
+    connect(m_chkApplyonLoad, &QCheckBox::stateChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
     connect(m_actAddFilter, &QAction::triggered, this, [this]() { addFilter(); });
     connect(m_actRmFilter, &QAction::triggered, this, &TemplatesConfigDlg::rmFilter);
     connect(m_actMoveFilterUp, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterUp);
@@ -1283,6 +1287,9 @@ void TemplatesConfigDlg::buildLayout()
 
     m_fltSearchCtrl = new SearchParamControl(m_cmbFltColumn, m_edtFltPattern, m_tabFilters);
     frmFilter->addRow(tr("Options"), m_fltSearchCtrl);
+
+    m_chkApplyonLoad = new QCheckBox(tr("Apply on load"), m_tabFilters);
+    frmFilter->addRow(m_chkApplyonLoad);
 
     hFiltersTab->addLayout(frmFilter);
     // Filters edit form -------------------------------------------- (End)

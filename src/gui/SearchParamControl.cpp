@@ -59,7 +59,8 @@ private:
 SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPattern, QWidget *parent)
     : QWidget(parent),
       m_cmbColumns(cmbColumns),
-      m_edtPattern(edtPattern)
+      m_edtPattern(edtPattern),
+      m_cmbSearch(nullptr)
 {
     Q_ASSERT_X(cmbColumns != nullptr, "SearchParamControl", "cmbColumns is null");
     Q_ASSERT_X(edtPattern != nullptr, "SearchParamControl", "edtPattern is null");
@@ -124,16 +125,7 @@ SearchParamControl::SearchParamControl(
     m_proxyModel = searchModel->newProxy(this, std::bind(&SearchParamControl::getSearchParam, this));
     m_cmbSearch = cmbSearch;
 
-    // Workaround
-    // The QComboBox placeholder is not visible when it's editable, because in this case it'll
-    // consider the placeholder of the QLineEdit instead.
-    // But when the QComboBox placeholder is empty, it'll set the current index to 0 when the
-    // current index is -1 and a new item is added.
-    // See QComboBoxPrivate::_q_rowsInserted for further info.
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     m_cmbSearch->setPlaceholderText(m_edtPattern->placeholderText());
-#endif
-
     m_cmbSearch->setModel(m_proxyModel);
     m_cmbSearch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbSearch->setCurrentIndex(-1);
@@ -383,7 +375,21 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     tp::SearchParam fixedParam(param);
     fixParam(m_conf, fixedParam);
 
-    m_edtPattern->setText(fixedParam.pattern.c_str());
+    int idx = -1;
+    if (m_cmbSearch != nullptr)
+    {
+        idx = m_cmbSearch->findData(fixedParam.pattern.c_str(), Qt::EditRole);
+    }
+
+    if (idx != -1)
+    {
+        m_cmbSearch->setCurrentIndex(idx);
+    }
+    else
+    {
+        m_edtPattern->setText(fixedParam.pattern.c_str());
+    }
+
     m_actRange->setChecked(fixedParam.type == tp::SearchType::Range);
     m_actRegex->setChecked(fixedParam.type == tp::SearchType::Regex);
     m_actMatchCase->setChecked(fixedParam.flags.has(tp::SearchFlag::MatchCase));

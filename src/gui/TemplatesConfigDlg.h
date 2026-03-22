@@ -150,6 +150,7 @@ private:
     QComboBox *m_cmbFltColumn;
     QLineEdit *m_edtFltPattern;
     SearchParamControl *m_fltSearchCtrl;
+    QCheckBox *m_chkApplyonLoad;
     // Dialog buttons
     QPushButton *m_btnApply;
     QPushButton *m_btnSave;

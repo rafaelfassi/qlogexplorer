@@ -183,6 +183,7 @@ struct FilterParam
 {
     SearchParam searchParam;
     std::string name;
+    bool applyOnLoad = false;
 };
 inline bool operator==(const FilterParam &lhs, const FilterParam &rhs)
 {

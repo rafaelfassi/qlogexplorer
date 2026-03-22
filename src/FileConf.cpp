@@ -117,6 +117,7 @@ void FileConf::fromJson(const rapidjson::Document &jDoc)
             fParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(flt, "options").value_or(tp::SearchFlags());
             fParam.searchParam.pattern = utl::GetValueOpt<std::string>(flt, "pattern").value_or(std::string());
             fParam.name = utl::GetValueOpt<std::string>(flt, "name").value_or(fParam.searchParam.pattern);
+            fParam.applyOnLoad = utl::GetValueOpt<bool>(flt, "applyOnLoad").value_or(false);
             m_filterParams.emplace_back(std::move(fParam));
         }
     }
@@ -176,6 +177,7 @@ rapidjson::Document FileConf::toJson() const
             jFlt.AddMember("pattern", flt.searchParam.pattern, alloc);
             if (flt.searchParam.column.has_value())
                 jFlt.AddMember("column", flt.searchParam.column.value().idx, alloc);
+            jFlt.AddMember("applyOnLoad", flt.applyOnLoad, alloc);
             jFilters.GetArray().PushBack(jFlt, alloc);
         }
         jDoc.AddMember("filters", jFilters, alloc);
