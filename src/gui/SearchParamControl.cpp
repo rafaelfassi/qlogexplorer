@@ -177,7 +177,12 @@ void SearchParamControl::apply()
     {
         if (!m_cmbSearch->currentText().isEmpty() && m_proxyModel->isReady())
         {
-            if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
+            if (int idx = m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::DisplayRole); idx != -1)
+            {
+                // The text is the name of a pre-defined filter
+                m_cmbSearch->setCurrentIndex(idx);
+            }
+            else if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
             {
                 // If the pattern dont exists, needs to be added
                 m_cmbSearch->addItem(m_cmbSearch->currentText());
