@@ -339,6 +339,7 @@ void TemplatesConfigDlg::setCurrentTemplate(int index)
     const auto &conf = m_templates.at(index);
     m_labFileType->setText(tp::toStr(conf->getFileType()).c_str());
     m_edtConfName->setText(conf->getConfigName().c_str());
+    m_chkUseOrOperator->setChecked(conf->getUseOrAsDefaultOperator());
     m_hltSearchCtrl->setFileConf(conf);
     m_fltSearchCtrl->setFileConf(conf);
     configureRegexMode(conf);
@@ -431,6 +432,7 @@ void TemplatesConfigDlg::updateTemplateMainInfo()
         return;
 
     conf->setConfigName(utl::toStr(m_edtConfName->text()));
+    conf->setUseOrAsDefaultOperator(m_chkUseOrOperator->isChecked());
     conf->setRegexPattern(utl::toStr(m_edtRegex->text()));
     updateStatus();
 }
@@ -817,6 +819,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
         m_cmbFltColumn->setEnabled(enable);
         m_edtFltPattern->setEnabled(enable);
         m_fltSearchCtrl->setEnabled(enable);
+        m_chkApplyonLoad->setEnabled(enable);
 
         if (!enable)
         {
@@ -837,6 +840,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
         const auto &flt = conf->getFilterParams().at(index);
         m_edtFltName->setText(flt.name.c_str());
         m_fltSearchCtrl->setSearchParam(flt.searchParam);
+        m_chkApplyonLoad->setChecked(flt.applyOnLoad);
         enableFltFormFunc(true);
     }
     else
@@ -859,6 +863,7 @@ void TemplatesConfigDlg::updateTemplateFilter()
         auto &flt = conf->getFilterParams().at(fltIdx);
         flt.name = utl::toStr(m_edtFltName->text());
         flt.searchParam = m_fltSearchCtrl->getSearchParam();
+        flt.applyOnLoad = m_chkApplyonLoad->isChecked();
 
         auto item = m_lstFilters->item(fltIdx);
         if (item != nullptr)
@@ -966,6 +971,7 @@ void TemplatesConfigDlg::createConnections()
     connect(m_actDeleteTempl, &QAction::triggered, this, &TemplatesConfigDlg::deleteTemplate);
     connect(m_actRunRegex, &QAction::triggered, this, &TemplatesConfigDlg::createColumnsFromRegex);
     connect(m_edtConfName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
+    connect(m_chkUseOrOperator, &QCheckBox::stateChanged, this, &TemplatesConfigDlg::updateTemplateMainInfo);
     connect(m_edtRegex, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
 
     // Columns
@@ -1009,6 +1015,7 @@ void TemplatesConfigDlg::createConnections()
         &TemplatesConfigDlg::setCurrentFilter);
     connect(m_edtFltName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateFilter);
     connect(m_fltSearchCtrl, &SearchParamControl::paramChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
+    connect(m_chkApplyonLoad, &QCheckBox::stateChanged, this, &TemplatesConfigDlg::updateTemplateFilter);
     connect(m_actAddFilter, &QAction::triggered, this, [this]() { addFilter(); });
     connect(m_actRmFilter, &QAction::triggered, this, &TemplatesConfigDlg::rmFilter);
     connect(m_actMoveFilterUp, &QAction::triggered, this, &TemplatesConfigDlg::moveFilterUp);
@@ -1097,6 +1104,10 @@ void TemplatesConfigDlg::buildLayout()
     m_edtConfName = new QLineEdit(m_frameTempl);
     m_edtConfName->setPlaceholderText(tr("Template name"));
     m_frmTemplMain->addRow(tr("Name"), m_edtConfName);
+
+    // Default search operator
+    m_chkUseOrOperator = new QCheckBox(tr("Use OR as default operator to combine searching parameters"), m_frameTempl);
+    m_frmTemplMain->addRow(m_chkUseOrOperator);
 
     // Regular expression
     // Will be added or removed according to the type of the file.
@@ -1283,6 +1294,9 @@ void TemplatesConfigDlg::buildLayout()
 
     m_fltSearchCtrl = new SearchParamControl(m_cmbFltColumn, m_edtFltPattern, m_tabFilters);
     frmFilter->addRow(tr("Options"), m_fltSearchCtrl);
+
+    m_chkApplyonLoad = new QCheckBox(tr("Apply on load"), m_tabFilters);
+    frmFilter->addRow(m_chkApplyonLoad);
 
     hFiltersTab->addLayout(frmFilter);
     // Filters edit form -------------------------------------------- (End)

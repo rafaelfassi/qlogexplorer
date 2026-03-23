@@ -14,7 +14,8 @@
 #include <QComboBox>
 #include <QStringListModel>
 
-SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searchModel, QWidget *parent) : QWidget(parent)
+SearchParamWidget::SearchParamWidget(FileConf::Ptr conf, SearchParamModel *searchModel, QWidget *parent)
+    : QWidget(parent)
 {
     createActions();
 
@@ -103,4 +104,9 @@ bool SearchParamWidget::getIsEnabled() const
 tp::SearchParam SearchParamWidget::getSearchParam() const
 {
     return m_control->getSearchParam();
+}
+
+void SearchParamWidget::applyFilterParam(const tp::FilterParam &filterParam)
+{
+    m_control->setFilterParam(filterParam, false);
 }

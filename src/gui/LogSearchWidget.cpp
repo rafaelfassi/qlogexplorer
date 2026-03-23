@@ -80,8 +80,6 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     m_searchParamModel = new SearchParamModel(this);
 
     createConnections();
-
-    addSearchParam();
 }
 
 LogSearchWidget::~LogSearchWidget()
@@ -92,6 +90,26 @@ void LogSearchWidget::configure()
 {
     m_searchResults->configure(m_conf);
     m_searchParamModel->loadParams(m_conf->getFilterParams());
+
+    if (m_conf->getUseOrAsDefaultOperator())
+    {
+        m_actOrOperator->setChecked(true);
+    }
+
+    for (const auto &filterParam : m_conf->getFilterParams())
+    {
+        if (filterParam.applyOnLoad)
+        {
+            addSearchParam();
+            m_searchParamWidgets.back()->applyFilterParam(filterParam);
+        }
+    }
+
+    m_hasDefaultParams = !m_searchParamWidgets.isEmpty();
+    if (!m_hasDefaultParams)
+    {
+        addSearchParam();
+    }
 }
 
 void LogSearchWidget::reconfigure()
@@ -152,6 +170,14 @@ void LogSearchWidget::retranslateUi()
         paramWidget->retranslateUi();
     }
     m_searchResults->retranslateUi();
+}
+
+void LogSearchWidget::readyForSearch()
+{
+    if (m_hasDefaultParams)
+    {
+        m_actExec->trigger();
+    }
 }
 
 void LogSearchWidget::createConnections()

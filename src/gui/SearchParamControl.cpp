@@ -59,7 +59,8 @@ private:
 SearchParamControl::SearchParamControl(QComboBox *cmbColumns, QLineEdit *edtPattern, QWidget *parent)
     : QWidget(parent),
       m_cmbColumns(cmbColumns),
-      m_edtPattern(edtPattern)
+      m_edtPattern(edtPattern),
+      m_cmbSearch(nullptr)
 {
     Q_ASSERT_X(cmbColumns != nullptr, "SearchParamControl", "cmbColumns is null");
     Q_ASSERT_X(edtPattern != nullptr, "SearchParamControl", "edtPattern is null");
@@ -124,16 +125,7 @@ SearchParamControl::SearchParamControl(
     m_proxyModel = searchModel->newProxy(this, std::bind(&SearchParamControl::getSearchParam, this));
     m_cmbSearch = cmbSearch;
 
-    // Workaround
-    // The QComboBox placeholder is not visible when it's editable, because in this case it'll
-    // consider the placeholder of the QLineEdit instead.
-    // But when the QComboBox placeholder is empty, it'll set the current index to 0 when the
-    // current index is -1 and a new item is added.
-    // See QComboBoxPrivate::_q_rowsInserted for further info.
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     m_cmbSearch->setPlaceholderText(m_edtPattern->placeholderText());
-#endif
-
     m_cmbSearch->setModel(m_proxyModel);
     m_cmbSearch->setInsertPolicy(QComboBox::NoInsert);
     m_cmbSearch->setCurrentIndex(-1);
@@ -185,7 +177,12 @@ void SearchParamControl::apply()
     {
         if (!m_cmbSearch->currentText().isEmpty() && m_proxyModel->isReady())
         {
-            if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
+            if (int idx = m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::DisplayRole); idx != -1)
+            {
+                // The text is the name of a pre-defined filter
+                m_cmbSearch->setCurrentIndex(idx);
+            }
+            else if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
             {
                 // If the pattern dont exists, needs to be added
                 m_cmbSearch->addItem(m_cmbSearch->currentText());
@@ -400,6 +397,20 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     }
     m_cmbColumns->setCurrentIndex(cmbIndex);
     updateParam(notifyChanged);
+}
+
+void SearchParamControl::setFilterParam(const tp::FilterParam &param, bool notifyChanged)
+{
+    if (m_cmbSearch != nullptr)
+    {
+        int idx = m_cmbSearch->findData(param.name.c_str(), Qt::DisplayRole);
+        if (idx != -1)
+        {
+            m_cmbSearch->setCurrentIndex(idx);
+        }
+    }
+
+    setSearchParam(param.searchParam, notifyChanged);
 }
 
 void SearchParamControl::fixParam(const FileConf::Ptr &conf, tp::SearchParam &param)

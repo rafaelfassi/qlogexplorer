@@ -126,6 +126,7 @@ private:
     QLabel *m_labRegex;
     QLineEdit *m_edtRegex;
     QToolButton *m_btnRunRegex;
+    QCheckBox *m_chkUseOrOperator;
     QTabWidget *m_tabWidgets;
     // Columns tab
     QWidget *m_tabColumns;
@@ -150,6 +151,7 @@ private:
     QComboBox *m_cmbFltColumn;
     QLineEdit *m_edtFltPattern;
     SearchParamControl *m_fltSearchCtrl;
+    QCheckBox *m_chkApplyonLoad;
     // Dialog buttons
     QPushButton *m_btnApply;
     QPushButton *m_btnSave;
