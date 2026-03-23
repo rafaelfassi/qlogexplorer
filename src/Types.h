@@ -187,7 +187,7 @@ struct FilterParam
 };
 inline bool operator==(const FilterParam &lhs, const FilterParam &rhs)
 {
-    return (lhs.searchParam == rhs.searchParam) && (lhs.name == rhs.name);
+    return (lhs.searchParam == rhs.searchParam) && (lhs.name == rhs.name) && (lhs.applyOnLoad == rhs.applyOnLoad);
 }
 using FilterParams = std::vector<FilterParam>;
 
