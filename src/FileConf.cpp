@@ -75,7 +75,6 @@ void FileConf::fromJson(const rapidjson::Document &jDoc)
     m_fileType = utl::GetValueOpt<tp::FileType>(jDoc, "fileType").value_or(tp::FileType::Text);
     m_regexPattern = utl::GetValueOpt<std::string>(jDoc, "regexPattern").value_or(std::string());
     m_noMatchColumn = utl::GetValueOpt<tp::SInt>(jDoc, "noMatchColumn").value_or(0);
-    m_useOrAsDefault = utl::GetValueOpt<bool>(jDoc, "useOrAsDefault").value_or(false);
 
     if (const auto &colsIt = jDoc.FindMember("columns"); colsIt != jDoc.MemberEnd())
     {
@@ -133,7 +132,6 @@ rapidjson::Document FileConf::toJson() const
     jDoc.AddMember("fileType", tp::toStr(m_fileType), alloc);
     jDoc.AddMember("regexPattern", m_regexPattern, alloc);
     jDoc.AddMember("noMatchColumn", m_noMatchColumn, alloc);
-    jDoc.AddMember("useOrAsDefault", m_useOrAsDefault, alloc);
 
     {
         rapidjson::Value jCols(rapidjson::kArrayType);

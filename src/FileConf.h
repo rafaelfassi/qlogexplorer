@@ -37,8 +37,6 @@ public:
     bool exists() const { return !m_confFileName.empty(); }
     void setConfigName(const std::string &configName) { m_configName = configName; }
     std::string getTemplateNameOrType() const;
-    void setUseOrAsDefaultOperator(bool useOrAsDefault) { m_useOrAsDefault = useOrAsDefault; }
-    bool getUseOrAsDefaultOperator() { return m_useOrAsDefault; }
 
     tp::Columns &getColumns() { return m_columns; }
     void clearColumns() { m_columns.clear(); }
@@ -80,7 +78,6 @@ private:
     tp::HighlighterParams m_highlighterParams;
     tp::FilterParams m_filterParams;
     tp::SInt m_noMatchColumn = 0;
-    bool m_useOrAsDefault = false;
 };
 
 inline bool hasEqualConf(const FileConf &lhs, const FileConf &rhs)
@@ -88,8 +85,7 @@ inline bool hasEqualConf(const FileConf &lhs, const FileConf &rhs)
     return (lhs.m_fileType == rhs.m_fileType) && (lhs.m_configName == rhs.m_configName) &&
            (lhs.m_confFileName == rhs.m_confFileName) && (lhs.m_regexPattern == rhs.m_regexPattern) &&
            (lhs.m_columns == rhs.m_columns) && (lhs.m_highlighterParams == rhs.m_highlighterParams) &&
-           (lhs.m_filterParams == rhs.m_filterParams) && (lhs.m_noMatchColumn == rhs.m_noMatchColumn) &&
-           (lhs.m_useOrAsDefault == rhs.m_useOrAsDefault);
+           (lhs.m_filterParams == rhs.m_filterParams) && (lhs.m_noMatchColumn == rhs.m_noMatchColumn);
 }
 
 inline bool operator==(const FileConf &lhs, const FileConf &rhs)

@@ -33,6 +33,7 @@ private:
     QCheckBox *m_chkHideUniqueTab;
     QCheckBox *m_chkAllowMultiInst;
     QCheckBox *m_chkRegexAsDefault;
+    QCheckBox *m_chkOrOpAsDefault;
     QLineEdit *m_edtSettingsPath;
     QLineEdit *m_edtTemplatesPath;
     QDialogButtonBox *m_buttonBox;

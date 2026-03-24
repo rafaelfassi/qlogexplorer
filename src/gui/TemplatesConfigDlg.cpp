@@ -339,7 +339,6 @@ void TemplatesConfigDlg::setCurrentTemplate(int index)
     const auto &conf = m_templates.at(index);
     m_labFileType->setText(tp::toStr(conf->getFileType()).c_str());
     m_edtConfName->setText(conf->getConfigName().c_str());
-    m_chkUseOrOperator->setChecked(conf->getUseOrAsDefaultOperator());
     m_hltSearchCtrl->setFileConf(conf);
     m_fltSearchCtrl->setFileConf(conf);
     configureRegexMode(conf);
@@ -432,7 +431,6 @@ void TemplatesConfigDlg::updateTemplateMainInfo()
         return;
 
     conf->setConfigName(utl::toStr(m_edtConfName->text()));
-    conf->setUseOrAsDefaultOperator(m_chkUseOrOperator->isChecked());
     conf->setRegexPattern(utl::toStr(m_edtRegex->text()));
     updateStatus();
 }
@@ -971,7 +969,6 @@ void TemplatesConfigDlg::createConnections()
     connect(m_actDeleteTempl, &QAction::triggered, this, &TemplatesConfigDlg::deleteTemplate);
     connect(m_actRunRegex, &QAction::triggered, this, &TemplatesConfigDlg::createColumnsFromRegex);
     connect(m_edtConfName, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
-    connect(m_chkUseOrOperator, &QCheckBox::stateChanged, this, &TemplatesConfigDlg::updateTemplateMainInfo);
     connect(m_edtRegex, &QLineEdit::editingFinished, this, &TemplatesConfigDlg::updateTemplateMainInfo);
 
     // Columns
@@ -1104,10 +1101,6 @@ void TemplatesConfigDlg::buildLayout()
     m_edtConfName = new QLineEdit(m_frameTempl);
     m_edtConfName->setPlaceholderText(tr("Template name"));
     m_frmTemplMain->addRow(tr("Name"), m_edtConfName);
-
-    // Default search operator
-    m_chkUseOrOperator = new QCheckBox(tr("Use OR as default operator to combine searching parameters"), m_frameTempl);
-    m_frmTemplMain->addRow(m_chkUseOrOperator);
 
     // Regular expression
     // Will be added or removed according to the type of the file.
