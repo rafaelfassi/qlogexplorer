@@ -175,46 +175,68 @@ void SearchParamControl::apply()
 
     if (m_cmbSearch != nullptr && m_proxyModel != nullptr)
     {
-        if (!m_cmbSearch->currentText().isEmpty() && m_proxyModel->isReady())
+        auto currText = m_cmbSearch->currentText();
+        bool useCurrentIndexParam = false;
+        if (!currText.isEmpty() && m_proxyModel->isReady())
         {
-            if (int idx = m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::DisplayRole); idx != -1)
+            int idx = m_cmbSearch->findData(currText, ParamModelRoles::PredefinedParam);
+            if (idx == -1)
             {
-                // The text is the name of a pre-defined filter
-                m_cmbSearch->setCurrentIndex(idx);
-            }
-            else if (m_cmbSearch->findData(m_cmbSearch->currentText(), Qt::EditRole) == -1)
-            {
-                // If the pattern dont exists, needs to be added
-                m_cmbSearch->addItem(m_cmbSearch->currentText());
-                m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
-            }
-            else if (const auto &searchParam = m_proxyModel->getCurrentItemParam(); searchParam.has_value())
-            {
-                const auto &currSearchParam = getSearchParam();
-                if (!tp::areSimilar(searchParam.value(), currSearchParam))
+                // Text is not a pre-defined param name
+                // Lets try to serach by pattern
+                idx = m_cmbSearch->findData(currText, ParamModelRoles::PatternOnly);
+                if (idx == -1)
                 {
-                    // The search params are not the same and needs to be updated
-                    const auto idx =
-                        m_cmbSearch->findData(m_cmbSearch->currentText(), ParamModelRoles::NotPredefinedParam);
-                    if (idx == -1)
+                    // If the pattern dont exists, needs to be added
+                    m_cmbSearch->addItem(currText);
+                    m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
+                }
+                else if (auto param = m_proxyModel->getSearchParam(idx); param.has_value())
+                {
+                    // Existent and not pre-defined param
+                    const auto &currSearchParam = getSearchParam();
+                    if (!tp::areSimilar(param.value(), currSearchParam))
                     {
-                        // There are only the predefined parameter
-                        // Cannot update it, so adding a not predefined one
-                        m_cmbSearch->addItem(m_cmbSearch->currentText());
-                        m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
+                        // The search param options are not the same and needs to be updated
+                        const auto idxNp = m_cmbSearch->findData(currText, ParamModelRoles::NotPredefinedParam);
+                        if (idxNp == -1)
+                        {
+                            // There are only the predefined parameter
+                            // Cannot update it, so adding a not predefined one
+                            m_cmbSearch->addItem(currText);
+                            m_cmbSearch->setCurrentIndex(m_cmbSearch->count() - 1);
+                        }
+                        else
+                        {
+                            // Updates the search param
+                            m_proxyModel->setSearchParam(idxNp, currSearchParam);
+                            if (idxNp != m_cmbSearch->currentIndex())
+                            {
+                                // A predefined parameter is selected, but there is a not predefined one
+                                // with the same pattern.
+                                // Selects the not predefined one.
+                                m_cmbSearch->setCurrentIndex(idxNp);
+                            }
+                        }
                     }
                     else
                     {
-                        // Updates the search param
-                        m_proxyModel->setSearchParam(idx, currSearchParam);
-                        if (idx != m_cmbSearch->currentIndex())
-                        {
-                            // A predefined parameter is selected, but there is a not predefined one with the same
-                            // pattern.
-                            // Selects the not predefined one.
-                            m_cmbSearch->setCurrentIndex(idx);
-                        }
+                        useCurrentIndexParam = true;
                     }
+                }
+            }
+            else
+            {
+                // The text is the name of a pre-defined param
+                useCurrentIndexParam = true;
+            }
+
+            if (useCurrentIndexParam)
+            {
+                m_cmbSearch->setCurrentIndex(idx);
+                if (auto param = m_proxyModel->getCurrentItemParam(); param.has_value())
+                {
+                    m_param = param.value();
                 }
             }
         }
