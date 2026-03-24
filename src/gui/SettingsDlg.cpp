@@ -57,6 +57,8 @@ void SettingsDlg::load()
 
     m_chkRegexAsDefault->setChecked(Settings::getDefaultSearchType() == tp::SearchType::Regex);
 
+    m_chkOrOpAsDefault->setChecked(Settings::getUseOrAsDefaultOperator());
+
     m_edtSettingsPath->setText(Settings::getSettingsDir().absolutePath());
     m_edtTemplatesPath->setText(Settings::gettemplatesDir().absolutePath());
 }
@@ -131,6 +133,12 @@ void SettingsDlg::save()
     if (Settings::getDefaultSearchType() != searchType)
     {
         Settings::setDefaultSearchType(searchType);
+    }
+
+    const bool orOpAsDefault = m_chkOrOpAsDefault->isChecked();
+    if (Settings::getUseOrAsDefaultOperator() != orOpAsDefault)
+    {
+        Settings::setUseOrAsDefaultOperator(orOpAsDefault);
     }
 
     QDialog::accept();
@@ -210,6 +218,9 @@ void SettingsDlg::buildLayout()
 
     m_chkRegexAsDefault = new QCheckBox(tr("Use regex as default search"), grBehavior);
     vBehavior->addWidget(m_chkRegexAsDefault);
+
+    m_chkOrOpAsDefault = new QCheckBox(tr("Use 'OR' as default search operator"), grBehavior);
+    vBehavior->addWidget(m_chkOrOpAsDefault);
 
     vLayoutMain->addWidget(grBehavior);
     // Behavior ------------------------------------------------------------------------- (End)

@@ -10,6 +10,8 @@
 class SearchParamProxyModel;
 
 enum ParamModelRoles {
+    PredefinedParam = Qt::DisplayRole,
+    PatternOnly = Qt::EditRole,
     NotPredefinedParam = Qt::UserRole + 1,
     DisplayAndEditRoles = Qt::UserRole + 2
 };
@@ -183,6 +185,15 @@ public:
     std::optional<tp::SearchParam> getCurrentItemParam()
     {
         return m_model->getSearchParam(m_currentSrcIdx);
+    }
+
+    std::optional<tp::SearchParam> getSearchParam(int idx)
+    {
+        if (isValidIdx(idx))
+        {
+            return m_model->getSearchParam(toSrcIdx(idx));
+        }
+        return {};
     }
 
     void setSearchParam(int idx, tp::SearchParam param)

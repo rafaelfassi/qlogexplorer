@@ -11,6 +11,7 @@
 #include "LongScrollBar.h"
 #include "ProgressLabel.h"
 #include "Style.h"
+#include "Settings.h"
 #include <QTableView>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -91,7 +92,7 @@ void LogSearchWidget::configure()
     m_searchResults->configure(m_conf);
     m_searchParamModel->loadParams(m_conf->getFilterParams());
 
-    if (m_conf->getUseOrAsDefaultOperator())
+    if (Settings::getUseOrAsDefaultOperator())
     {
         m_actOrOperator->setChecked(true);
     }

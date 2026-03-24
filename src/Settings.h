@@ -47,6 +47,9 @@ public:
     static void setDefaultSearchType(tp::SearchType searchType);
     static tp::SearchType getDefaultSearchType();
 
+    static void setUseOrAsDefaultOperator(bool useOr);
+    static bool getUseOrAsDefaultOperator();
+
 private:
     Settings() = default;
     static Settings &inst();
@@ -55,6 +58,7 @@ private:
     void loadSingleInstance();
     void loadHideUniqueTab();
     void loadDefaultSearchType();
+    void loadUseOrAsDefaultOperator();
 
     QFont m_font;
     QDir m_settingsDir;
@@ -64,6 +68,7 @@ private:
     QString m_language;
     bool m_singleInstance;
     bool m_hideUniqueTab;
+    bool m_useOsAsDefOp;
     tp::SearchType m_searchType;
     std::vector<FileConf::Ptr> m_templates;
 };

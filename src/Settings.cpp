@@ -58,6 +58,7 @@ void Settings::initSettings()
     s.loadSingleInstance();
     s.loadHideUniqueTab();
     s.loadDefaultSearchType();
+    s.loadUseOrAsDefaultOperator();
 
     loadTemplates();
 }
@@ -386,4 +387,20 @@ void Settings::setDefaultSearchType(tp::SearchType searchType)
 tp::SearchType Settings::getDefaultSearchType()
 {
     return inst().m_searchType;
+}
+
+void Settings::loadUseOrAsDefaultOperator()
+{
+    m_useOsAsDefOp = inst().m_settings->value("useOrAsDefaultOperator", false).toBool();
+}
+
+void Settings::setUseOrAsDefaultOperator(bool useOr)
+{
+    inst().m_settings->setValue("useOrAsDefaultOperator", useOr);
+    inst().loadUseOrAsDefaultOperator();
+}
+
+bool Settings::getUseOrAsDefaultOperator()
+{
+    return inst().m_useOsAsDefOp;
 }
