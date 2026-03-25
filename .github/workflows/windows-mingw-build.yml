@@ -1,0 +1,87 @@
+name: Build for Windows MinGW
+
+on:
+  push:
+    tags:
+      - 'v*' # Auto-trigger only for new tags
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-type=Release" >> "$GITHUB_OUTPUT"
+          echo "build-dir=${{ github.workspace }}\build" >> "$GITHUB_OUTPUT"
+          echo "out-dir=${{ github.workspace }}\build\output" >> "$GITHUB_OUTPUT"
+          echo "bin-dir=${{ github.workspace }}\build\output\bin" >> "$GITHUB_OUTPUT"
+
+      - name: Install Qt
+        id: install-qt-mingw
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          tools: 'tools_mingw1310'
+
+      - name: CMake Configure
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-dir }}
+          -G "MinGW Makefiles"
+          -DCMAKE_BUILD_TYPE=${{ steps.strings.outputs.build-type }}
+          -S ${{ github.workspace }}
+
+      - name: CMake Build
+        run: >
+          cmake --build ${{ steps.strings.outputs.build-dir }}
+          --config ${{ steps.strings.outputs.build-type }}
+
+      - name: CMake Install
+        run: >
+          cmake --install ${{ steps.strings.outputs.build-dir }}
+          --config ${{ steps.strings.outputs.build-type }}
+          --prefix ${{ steps.strings.outputs.out-dir }}
+
+      - name: Get Qt Dependency Libs
+        run: windeployqt --release --no-translations ${{ steps.strings.outputs.bin-dir }}\qlogexplorer.exe
+
+      - name: Create Zip archive
+        run: >
+          Compress-Archive
+          -Path ${{ steps.strings.outputs.bin-dir }}\*
+          -DestinationPath ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip
+
+      - name: Build Installer Application
+        id: build-installer-mingw
+        uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
+        with:
+          path: packaging/win/innosetup.iss
+          options: |
+            /O+
+            /DSrcDir=${{ github.workspace }}
+            /DOutBinDir=${{ steps.strings.outputs.bin-dir }}
+
+      - name: Upload Artifact
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: QLogExplorer-Bundle
+          path: ${{ steps.strings.outputs.bin-dir }}\*
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.strings.outputs.bin-dir }}\QLogExplorer-Win64-Setup.exe
+            ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip

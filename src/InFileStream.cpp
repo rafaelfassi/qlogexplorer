@@ -16,7 +16,7 @@ class InFileStreamImp : public std::istream
 public:
     InFileStreamImp(const std::string &fileName)
     {
-        m_handle = CreateFile(
+        m_handle = CreateFileA(
             fileName.c_str(),
             GENERIC_READ,
             FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,

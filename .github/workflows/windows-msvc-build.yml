@@ -1,4 +1,4 @@
-name: Build for Windows
+name: Build for Windows MSVC
 
 on:
   push:
@@ -25,7 +25,8 @@ jobs:
           echo "bin-dir=${{ github.workspace }}\build\output\bin" >> "$GITHUB_OUTPUT"
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        id: install-qt-msvc
+        uses: jurplel/install-qt-action@v4
         with:
           version: '6.8.3'
           host: 'windows'
@@ -54,13 +55,8 @@ jobs:
       - name: Get Qt Dependency Libs
         run: windeployqt --release --no-translations ${{ steps.strings.outputs.bin-dir }}\qlogexplorer.exe
 
-      - name: Create Zip archive
-        run: >
-          Compress-Archive
-          -Path ${{ steps.strings.outputs.bin-dir }}\*
-          -DestinationPath ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip
-
       - name: Build Installer Application
+        id: build-installer-msvc
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.7
         with:
           path: packaging/win/innosetup.iss
@@ -70,16 +66,7 @@ jobs:
             /DOutBinDir=${{ steps.strings.outputs.bin-dir }}
 
       - name: Upload Artifact
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: QLogExplorer-Bundle
+          name: QLogExplorer-Msvc-Bundle
           path: ${{ steps.strings.outputs.bin-dir }}\*
-
-      - name: Publish GitHub Release
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ steps.strings.outputs.bin-dir }}\QLogExplorer-Win64-Setup.exe
-            ${{ steps.strings.outputs.out-dir }}\QLogExplorer-Win64-Portable.zip
