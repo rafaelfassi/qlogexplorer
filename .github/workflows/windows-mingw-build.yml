@@ -75,7 +75,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: QLogExplorer-Bundle
+          name: QLogExplorer-MinGW-Bundle
           path: ${{ steps.strings.outputs.bin-dir }}\*
 
       - name: Publish GitHub Release
