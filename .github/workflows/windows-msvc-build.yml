@@ -1,9 +1,6 @@
 name: Build for Windows MSVC
 
 on:
-  push:
-    tags:
-      - 'v*' # Auto-trigger only for new tags
   pull_request:
   workflow_dispatch:
 
