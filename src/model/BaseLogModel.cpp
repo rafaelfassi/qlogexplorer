@@ -493,16 +493,15 @@ bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
     const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
     if ((chunk != m_chunks.end()) && chunk->countainRow(row))
     {
-        ChunkRows tmpChunkRows(*chunk);
-        loadChunkRows(m_ifs->getStream(), tmpChunkRows);
-        if (tmpChunkRows.rowCount() != chunk->getRowCount())
+        chunkRows.reset(*chunk);
+        loadChunkRows(m_ifs->getStream(), chunkRows);
+        if (chunkRows.rowCount() != chunk->getRowCount())
         {
             LOG_ERR(
                 "The cached chunk rows {} does not match the chunk info {}",
-                tmpChunkRows.rowCount(),
+                chunkRows.rowCount(),
                 chunk->getRowCount());
         }
-        chunkRows = std::move(tmpChunkRows);
         return true;
     }
     return false;

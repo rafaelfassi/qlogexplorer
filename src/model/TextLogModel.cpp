@@ -181,10 +181,27 @@ void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
 
     chunkRows.reserve(lastRow - curentRow + 1);
 
-    std::string line;
-    while ((curentRow <= lastRow) && std::getline(is, line))
+    const auto chunkSize = chunkRows.getChunk()->getSize();
+    std::string buffer;
+    buffer.resize(chunkSize);
+    readFile(is, buffer, chunkSize);
+
+    char *begin = buffer.data();
+    std::size_t iniPos = 0;
+    for (size_t i = 0; i < chunkSize; ++i)
     {
-        chunkRows.add(curentRow, line);
+        if (buffer[i] == '\n')
+        {
+            chunkRows.add(curentRow, std::string(begin, i - iniPos));
+            ++curentRow;
+            iniPos = i + 1;
+            begin = buffer.data() + iniPos;
+        }
+    }
+
+    if (curentRow <= lastRow)
+    {
+        chunkRows.add(curentRow, std::string(begin));
         ++curentRow;
     }
 }

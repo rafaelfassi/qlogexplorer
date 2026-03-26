@@ -53,6 +53,11 @@ public:
     ChunkRows() = default;
     void add(tp::UInt row, const std::string &content) { m_rows.emplace_back(row, content); }
     void reserve(tp::UInt size) { m_rows.reserve(size); }
+    void reset(const Chunk &chunk)
+    {
+        m_chunk = &chunk;
+        m_rows.clear();
+    }
     const std::string &get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
