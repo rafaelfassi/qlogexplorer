@@ -7,6 +7,11 @@
 #include "SubStringMatcher.h"
 #include "RangeMatcher.h"
 
+static bool hasRegexPattern(const tp::SearchParam &param)
+{
+    return (param.pattern.find_first_of(".*+?^$|()[]{}\\") != std::string::npos);
+}
+
 void Matcher::setParam(const tp::SearchParam &param)
 {
     m_matchers.clear();
@@ -35,7 +40,10 @@ void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
     switch (param.type)
     {
     case tp::SearchType::Regex:
-        matchers.emplace_back(std::make_unique<RegexMatcher>(param));
+        if (hasRegexPattern(param))
+            matchers.emplace_back(std::make_unique<RegexMatcher>(param));
+        else
+            matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
         break;
     case tp::SearchType::SubString:
         matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
