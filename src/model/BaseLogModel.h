@@ -47,18 +47,19 @@ private:
 class ChunkRows
 {
 public:
-    using ChunkRowsData = std::pair<tp::UInt, std::string>;
+    using ChunkRowsData = std::pair<tp::UInt, std::string_view>;
 
-    ChunkRows(const Chunk &chunk) : m_chunk(&chunk) {}
+    ChunkRows(const Chunk &chunk) { reset(chunk); }
     ChunkRows() = default;
-    void add(tp::UInt row, const std::string &content) { m_rows.emplace_back(row, content); }
-    void reserve(tp::UInt size) { m_rows.reserve(size); }
+    void add(tp::UInt row, const std::string_view &content) { m_rows.emplace_back(row, content); }
     void reset(const Chunk &chunk)
     {
         m_chunk = &chunk;
         m_rows.clear();
+        m_buffer.clear();
+        m_rows.reserve(chunk.getSize());
     }
-    const std::string &get(tp::UInt row) const
+    const std::string_view &get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         if ((it != m_rows.end()) && (row == it->first))
@@ -73,12 +74,14 @@ public:
     tp::UInt rowCount() const { return m_rows.size(); }
     const Chunk *getChunk() { return m_chunk; }
     const std::vector<ChunkRowsData> &data() { return m_rows; }
+    std::string &getBuffer() { return m_buffer; }
 
     static bool compareRows(const ChunkRowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
 
 private:
     const Chunk *m_chunk = nullptr;
     std::vector<ChunkRowsData> m_rows;
+    std::string m_buffer;
 };
 
 class BaseLogModel : public AbstractModel
@@ -116,7 +119,7 @@ public slots:
 
 protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
-    virtual bool parseRow(const std::string &rawText, tp::RowData &rowData) const = 0;
+    virtual bool parseRow(const std::string_view &rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,

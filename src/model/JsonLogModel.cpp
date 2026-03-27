@@ -6,7 +6,7 @@
 
 constexpr tp::UInt g_maxChunksPerParse(50);
 
-std::string toString(const rapidjson::Value &json)
+static std::string toString(const rapidjson::Value &json)
 {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -68,10 +68,10 @@ bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
     return !conf->getColumns().empty();
 }
 
-bool JsonLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const
+bool JsonLogModel::parseRow(const std::string_view &rawText, tp::RowData &rowData) const
 {
     rapidjson::Document d;
-    d.Parse<rapidjson::kParseStopWhenDoneFlag>(rawText.c_str());
+    d.Parse<rapidjson::kParseStopWhenDoneFlag>(rawText.data(), rawText.size());
     for (const auto &col : getColumns())
     {
         std::string colText;
@@ -174,8 +174,10 @@ void JsonLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
 
     const auto lastRow = chunkRows.getChunk()->getLastRow();
     auto curentRow = chunkRows.getChunk()->getFistRow();
+    const auto chunkSize = chunkRows.getChunk()->getSize();
 
-    chunkRows.reserve(lastRow - curentRow + 1);
+    std::string &buffer = chunkRows.getBuffer();
+    buffer.reserve(chunkSize);
 
     rapidjson::IStreamWrapper isw(is);
 
@@ -185,7 +187,9 @@ void JsonLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
         d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
         if (!d.HasParseError())
         {
-            chunkRows.add(curentRow, toString(d));
+            size_t iniIdex = buffer.size();
+            buffer.append(toString(d));
+            chunkRows.add(curentRow, std::string_view(buffer.c_str() + iniIdex, buffer.size() - iniIdex));
             ++curentRow;
         }
     }

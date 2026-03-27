@@ -33,12 +33,16 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
             LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), utl::toStr(m_rx.errorString()));
             m_rx.setPattern(QString());
         }
+        else
+        {
+            m_rx.optimize();
+        }
     }
 
     return !conf->getColumns().empty();
 }
 
-bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const
+bool TextLogModel::parseRow(const std::string_view &rawText, tp::RowData &rowData) const
 {
     if (m_rx.pattern().isEmpty())
     {
@@ -46,7 +50,8 @@ bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) co
     }
     else
     {
-        QRegularExpressionMatch match = m_rx.match(rawText.c_str());
+        QUtf8StringView utf8View(rawText.data(), rawText.size());
+        QRegularExpressionMatch match = m_rx.match(QString::fromUtf8(utf8View));
         if (match.hasMatch())
         {
             std::string value;
@@ -178,11 +183,8 @@ void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
 
     const auto lastRow = chunkRows.getChunk()->getLastRow();
     auto curentRow = chunkRows.getChunk()->getFistRow();
-
-    chunkRows.reserve(lastRow - curentRow + 1);
-
     const auto chunkSize = chunkRows.getChunk()->getSize();
-    std::string buffer;
+    std::string &buffer = chunkRows.getBuffer();
     buffer.resize(chunkSize);
     readFile(is, buffer, chunkSize);
 
@@ -192,7 +194,7 @@ void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
     {
         if (buffer[i] == '\n')
         {
-            chunkRows.add(curentRow, std::string(begin, i - iniPos));
+            chunkRows.add(curentRow, std::string_view(begin, i - iniPos));
             ++curentRow;
             iniPos = i + 1;
             begin = buffer.data() + iniPos;
