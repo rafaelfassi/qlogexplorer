@@ -47,3 +47,8 @@ bool SubStringMatcher::match(std::string_view text)
         return it != text.end();
     }
 }
+
+bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+{
+    return match(rawText);
+}

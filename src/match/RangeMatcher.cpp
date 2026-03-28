@@ -67,3 +67,8 @@ bool RangeMatcher::match(std::string_view text)
 
     return false;
 }
+
+bool RangeMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+{
+    return true;
+}

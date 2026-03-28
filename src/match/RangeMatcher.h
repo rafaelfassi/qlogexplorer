@@ -10,6 +10,7 @@ class RangeMatcher : public BaseMatcher
 public:
     RangeMatcher(const tp::SearchParam &param);
     bool match(std::string_view text) override;
+    bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
     QVariant m_from;

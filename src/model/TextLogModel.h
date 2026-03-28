@@ -22,8 +22,9 @@ protected:
         tp::UInt fromPos,
         tp::UInt nextRow,
         tp::UInt fileSize) override;
-    virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const override;
+    virtual void loadChunkRows(ChunkRows &chunkRows) const override;
 
 private:
     QRegularExpression m_rx;
+    tp::FileType m_fileType;
 };

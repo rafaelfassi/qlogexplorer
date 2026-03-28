@@ -177,16 +177,13 @@ tp::UInt TextLogModel::parseChunks(
     return lastPos;
 }
 
-void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
+void TextLogModel::loadChunkRows(ChunkRows &chunkRows) const
 {
-    moveFilePos(is, chunkRows.getChunk()->getStartPos());
-
     const auto lastRow = chunkRows.getChunk()->getLastRow();
     auto curentRow = chunkRows.getChunk()->getFistRow();
     const auto chunkSize = chunkRows.getChunk()->getSize();
-    std::string &buffer = chunkRows.getBuffer();
-    buffer.resize(chunkSize);
-    readFile(is, buffer, chunkSize);
+    std::string &buffer = chunkRows.data();
+    chunkRows.reserveRows();
 
     char *begin = buffer.data();
     std::size_t iniPos = 0;
