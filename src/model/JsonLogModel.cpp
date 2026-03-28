@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "JsonLogModel.h"
+#include "sstream"
 
 constexpr tp::UInt g_maxChunksPerParse(50);
 

@@ -6,11 +6,10 @@
 
 RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param), m_rx(param.pattern.c_str(), getOpts())
 {
-    if (param.pattern.empty())
-        return;
-
-    // When parsing raw text the anchors need to be removed
-    if ((param.pattern.front() == '^') || (param.pattern.back() == '$'))
+    // When parsing raw text the anchors need to be removed, because it runs on full block(many rows at one) and full
+    // row(text is not split into columns)
+    const bool hasAnchor = !param.pattern.empty() && ((param.pattern.front() == '^') || (param.pattern.back() == '$'));
+    if (hasAnchor)
     {
         QString rawPattern(param.pattern.c_str());
         if (rawPattern.startsWith('^'))
