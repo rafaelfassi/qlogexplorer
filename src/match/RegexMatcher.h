@@ -15,4 +15,5 @@ public:
 
 private:
     const QRegularExpression m_rx;
+    std::optional<QRegularExpression> m_rawRx;
 };

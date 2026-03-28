@@ -44,6 +44,11 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
 
 bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
 {
+    // If the file uses "\r\n" as ending line, there will be "\r" at the end of each line
+    // because the lines are split by "\n" only.
+    if (rawText.back() == '\r')
+        rawText.remove_suffix(1);
+
     if (m_rx.pattern().isEmpty())
     {
         rowData.emplace_back(rawText);

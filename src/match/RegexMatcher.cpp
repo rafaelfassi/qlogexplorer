@@ -6,6 +6,19 @@
 
 RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param), m_rx(param.pattern.c_str(), getOpts())
 {
+    if (param.pattern.empty())
+        return;
+
+    // When parsing raw text the anchors need to be removed
+    if ((param.pattern.front() == '^') || (param.pattern.back() == '$'))
+    {
+        QString rawPattern(param.pattern.c_str());
+        if (rawPattern.startsWith('^'))
+            rawPattern.remove(0, 1);
+        if (rawPattern.endsWith('$') && !rawPattern.endsWith("\\$"))
+            rawPattern.chop(1);
+        m_rawRx = QRegularExpression(rawPattern, getOpts());
+    }
 }
 
 QRegularExpression::PatternOptions RegexMatcher::getOpts()
@@ -25,5 +38,8 @@ bool RegexMatcher::match(std::string_view text)
 
 bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
-    return true;
+    if (m_rawRx.has_value())
+        return m_rawRx->match(QString::fromUtf8(rawText.data(), rawText.size())).hasMatch();
+    else
+        return match(rawText);
 }
