@@ -121,21 +121,33 @@ void BaseLogModel::search()
                 }
             }
 
-            for (const auto &[currRow, rawText] : chunkRows.data())
+            // Only parse chunk rows if the chunk raw data has a match (fast check)
+            if (m_matcher.match(true, chunkRows.getBuffer()))
             {
-                parseRow(rawText, rowData);
-                if (m_matcher.matchInRow(rowData))
+                for (const auto &[currRow, rawText] : chunkRows.data())
                 {
-                    rowsPtr->push_back(currRow);
-                }
+                    // Only parse the row if the raw text of the row as a match (fast check)
+                    if (m_matcher.match(true, rawText))
+                    {
+                        // Now we parse the row and do the
+                        parseRow(rawText, rowData);
+                        if (m_matcher.matchInRow(rowData))
+                        {
+                            rowsPtr->push_back(currRow);
+                        }
+                        rowData.clear();
+                    }
+                    row = currRow + 1;
 
-                rowData.clear();
-                row = currRow + 1;
-
-                if (!m_searching.load(std::memory_order_relaxed))
-                {
-                    break;
+                    if (!m_searching.load(std::memory_order_relaxed))
+                    {
+                        break;
+                    }
                 }
+            }
+            else
+            {
+                row = chunkRows.getChunk()->getLastRow() + 1;
             }
 
             if (timer.hasExpired(1000))
@@ -145,8 +157,8 @@ void BaseLogModel::search()
                 {
                     emit valueFound(rowsPtr);
                     rowsPtr = std::make_shared<tp::SIntList>();
-                    searchTime += timer.restart();
                 }
+                searchTime += timer.restart();
             }
         }
 
@@ -159,7 +171,7 @@ void BaseLogModel::search()
 
         if (row > startingRow)
         {
-            LOG_INF("Searching finished after {} seconds", searchTime / 1000);
+            LOG_INF("Searching finished after {} ms", searchTime);
         }
 
         if (m_searching.load())

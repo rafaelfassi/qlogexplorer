@@ -25,9 +25,9 @@ void Matcher::setParams(const tp::SearchParams &params, bool orOp)
     m_orOp = orOp;
 }
 
-bool Matcher::match(const std::string &text) const
+bool Matcher::match(bool ignoreNot, std::string_view text) const
 {
-    return match(m_matchers, m_orOp, text);
+    return match(m_matchers, m_orOp, ignoreNot, text);
 }
 
 bool Matcher::matchInRow(const tp::RowData &rowData) const
@@ -39,20 +39,20 @@ void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
 {
     switch (param.type)
     {
-    case tp::SearchType::Regex:
-        if (hasRegexPattern(param))
-            matchers.emplace_back(std::make_unique<RegexMatcher>(param));
-        else
+        case tp::SearchType::Regex:
+            if (hasRegexPattern(param))
+                matchers.emplace_back(std::make_unique<RegexMatcher>(param));
+            else
+                matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
+            break;
+        case tp::SearchType::SubString:
             matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
-        break;
-    case tp::SearchType::SubString:
-        matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
-        break;
-    case tp::SearchType::Range:
-        matchers.emplace_back(std::make_unique<RangeMatcher>(param));
-        break;
-    default:
-        LOG_ERR("invalid SearchType {}", tp::toSInt(param.type));
+            break;
+        case tp::SearchType::Range:
+            matchers.emplace_back(std::make_unique<RangeMatcher>(param));
+            break;
+        default:
+            LOG_ERR("invalid SearchType {}", tp::toSInt(param.type));
     };
 }
 
@@ -65,20 +65,25 @@ void Matcher::makeMatchers(const tp::SearchParams &params, Matchers &matchers)
     }
 }
 
-bool Matcher::match(const Matchers &matchers, bool orOp, const std::string &text)
+bool Matcher::match(const Matchers &matchers, bool orOp, bool ignoreNot, std::string_view text)
 {
     std::uint32_t cnt(0);
 
     for (const auto &matcher : matchers)
     {
-        bool matched(false);
-        if (matcher->match(text))
+        bool matched;
+        const bool notOp = matcher->notOp();
+        if (notOp && ignoreNot)
         {
             matched = true;
-            break;
         }
-        if (matcher->notOp())
-            matched = !matched;
+        else
+        {
+            matched = matcher->match(text);
+            if (notOp)
+                matched = !matched;
+        }
+
         if (matched)
         {
             if ((++cnt == matchers.size()) || orOp)

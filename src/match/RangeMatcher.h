@@ -9,7 +9,7 @@ class RangeMatcher : public BaseMatcher
 {
 public:
     RangeMatcher(const tp::SearchParam &param);
-    bool match(const std::string &text) override;
+    bool match(std::string_view text) override;
 
 private:
     QVariant m_from;

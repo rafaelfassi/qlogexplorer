@@ -18,7 +18,7 @@ QRegularExpression::PatternOptions RegexMatcher::getOpts()
     return opts;
 }
 
-bool RegexMatcher::match(const std::string &text)
+bool RegexMatcher::match(std::string_view text)
 {
-    return m_rx.match(text.c_str()).hasMatch();
+    return m_rx.match(QString::fromUtf8(text.data(), text.size())).hasMatch();
 }

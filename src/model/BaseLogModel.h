@@ -51,7 +51,7 @@ public:
 
     ChunkRows(const Chunk &chunk) { reset(chunk); }
     ChunkRows() = default;
-    void add(tp::UInt row, const std::string_view &content) { m_rows.emplace_back(row, content); }
+    void add(tp::UInt row, std::string_view content) { m_rows.emplace_back(row, content); }
     void reset(const Chunk &chunk)
     {
         m_chunk = &chunk;
@@ -59,7 +59,7 @@ public:
         m_buffer.clear();
         m_rows.reserve(chunk.getSize());
     }
-    const std::string_view &get(tp::UInt row) const
+    std::string_view get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         if ((it != m_rows.end()) && (row == it->first))
@@ -119,7 +119,7 @@ public slots:
 
 protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
-    virtual bool parseRow(const std::string_view &rawText, tp::RowData &rowData) const = 0;
+    virtual bool parseRow(std::string_view rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,

@@ -30,7 +30,7 @@ SubStringMatcher::SubStringMatcher(const tp::SearchParam &param)
 {
 }
 
-bool SubStringMatcher::match(const std::string &text)
+bool SubStringMatcher::match(std::string_view text)
 {
     if (matchCase())
     {

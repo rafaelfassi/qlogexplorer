@@ -42,7 +42,7 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
     return !conf->getColumns().empty();
 }
 
-bool TextLogModel::parseRow(const std::string_view &rawText, tp::RowData &rowData) const
+bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
 {
     if (m_rx.pattern().isEmpty())
     {
@@ -203,7 +203,7 @@ void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
 
     if (curentRow <= lastRow)
     {
-        chunkRows.add(curentRow, std::string(begin));
+        chunkRows.add(curentRow, std::string_view(begin));
         ++curentRow;
     }
 }

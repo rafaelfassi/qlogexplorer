@@ -40,7 +40,7 @@ RangeMatcher::RangeMatcher(const tp::SearchParam &param) : BaseMatcher(param)
     }
 }
 
-bool RangeMatcher::match(const std::string &text)
+bool RangeMatcher::match(std::string_view text)
 {
     if (text.empty())
         return false;
@@ -52,7 +52,8 @@ bool RangeMatcher::match(const std::string &text)
     if (!res)
         return false;
 
-    const auto val(utl::toVariant(m_param.column.value(), text.c_str()));
+    QString qStr = QString::fromUtf8(text.data(), text.size());
+    const auto val(utl::toVariant(m_param.column.value(), qStr));
     if (val.isValid() && !val.isNull())
     {
         if (validFrom)
