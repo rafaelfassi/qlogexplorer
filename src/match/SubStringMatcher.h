@@ -9,7 +9,8 @@ class SubStringMatcher : public BaseMatcher
 {
 public:
     SubStringMatcher(const tp::SearchParam &param);
-    bool match(const std::string &text) override;
+    bool match(std::string_view text) override;
+    bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
     const std::string m_textToSearch;

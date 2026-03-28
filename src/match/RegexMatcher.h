@@ -10,8 +10,10 @@ class RegexMatcher : public BaseMatcher
 public:
     RegexMatcher(const tp::SearchParam &param);
     QRegularExpression::PatternOptions getOpts();
-    bool match(const std::string &text) override;
+    bool match(std::string_view text) override;
+    bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
     const QRegularExpression m_rx;
+    std::optional<QRegularExpression> m_rawRx;
 };

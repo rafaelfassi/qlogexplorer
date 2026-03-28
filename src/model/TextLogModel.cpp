@@ -33,20 +33,30 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
             LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), utl::toStr(m_rx.errorString()));
             m_rx.setPattern(QString());
         }
+        else
+        {
+            m_rx.optimize();
+        }
     }
 
     return !conf->getColumns().empty();
 }
 
-bool TextLogModel::parseRow(const std::string &rawText, tp::RowData &rowData) const
+bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
 {
+    // If the file uses "\r\n" as ending line, there will be "\r" at the end of each line
+    // because the lines are split by "\n" only.
+    if (rawText.back() == '\r')
+        rawText.remove_suffix(1);
+
     if (m_rx.pattern().isEmpty())
     {
         rowData.emplace_back(rawText);
     }
     else
     {
-        QRegularExpressionMatch match = m_rx.match(rawText.c_str());
+        QUtf8StringView utf8View(rawText.data(), rawText.size());
+        QRegularExpressionMatch match = m_rx.match(QString::fromUtf8(utf8View));
         if (match.hasMatch())
         {
             std::string value;
@@ -172,19 +182,30 @@ tp::UInt TextLogModel::parseChunks(
     return lastPos;
 }
 
-void TextLogModel::loadChunkRows(std::istream &is, ChunkRows &chunkRows) const
+void TextLogModel::loadChunkRows(ChunkRows &chunkRows) const
 {
-    moveFilePos(is, chunkRows.getChunk()->getStartPos());
-
     const auto lastRow = chunkRows.getChunk()->getLastRow();
     auto curentRow = chunkRows.getChunk()->getFistRow();
+    const auto chunkSize = chunkRows.getChunk()->getSize();
+    std::string &buffer = chunkRows.data();
+    chunkRows.reserveRows();
 
-    chunkRows.reserve(lastRow - curentRow + 1);
-
-    std::string line;
-    while ((curentRow <= lastRow) && std::getline(is, line))
+    char *begin = buffer.data();
+    std::size_t iniPos = 0;
+    for (size_t i = 0; i < chunkSize; ++i)
     {
-        chunkRows.add(curentRow, line);
+        if (buffer[i] == '\n')
+        {
+            chunkRows.add(curentRow, std::string_view(begin, i - iniPos));
+            ++curentRow;
+            iniPos = i + 1;
+            begin = buffer.data() + iniPos;
+        }
+    }
+
+    if (curentRow <= lastRow)
+    {
+        chunkRows.add(curentRow, std::string_view(begin));
         ++curentRow;
     }
 }

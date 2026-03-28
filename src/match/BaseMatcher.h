@@ -8,7 +8,8 @@ class BaseMatcher
 public:
     BaseMatcher(const tp::SearchParam &param) : m_param(param) {}
     virtual ~BaseMatcher() {}
-    virtual bool match(const std::string &text) = 0;
+    virtual bool match(std::string_view text) = 0;
+    virtual bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) = 0;
     bool isRegex() const { return (m_param.type == tp::SearchType::Regex); }
     bool matchCase() const { return m_param.flags.has(tp::SearchFlag::MatchCase); }
     bool notOp() const { return m_param.flags.has(tp::SearchFlag::NotOperator); }

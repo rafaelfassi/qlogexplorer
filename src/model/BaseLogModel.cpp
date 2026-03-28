@@ -8,6 +8,7 @@ BaseLogModel::BaseLogModel(FileConf::Ptr conf, QObject *parent)
     : AbstractModel(parent),
       m_conf(conf),
       m_fileName(conf->getFileName()),
+      m_fileType(conf->getFileType()),
       m_ifs(InFileStream::make(m_fileName))
 {
 }
@@ -115,27 +116,40 @@ void BaseLogModel::search()
         {
             {
                 const std::lock_guard<std::mutex> lock(m_ifsMutex);
-                if (!loadChunkRowsByRow(row, chunkRows))
+                if (!loadChunkDataByRow(row, chunkRows))
                 {
                     break;
                 }
             }
 
-            for (const auto &[currRow, rawText] : chunkRows.data())
+            // Only load the chunk rows if it passes the quick raw data match for block
+            if (m_matcher.quickRawMatch(m_fileType, true, chunkRows.data()))
             {
-                parseRow(rawText, rowData);
-                if (m_matcher.matchInRow(rowData))
+                loadChunkRows(chunkRows);
+                for (const auto &[currRow, rawText] : chunkRows.rows())
                 {
-                    rowsPtr->push_back(currRow);
-                }
+                    // Only parse the row if it passes the quick raw data match for row
+                    if (m_matcher.quickRawMatch(m_fileType, false, rawText))
+                    {
+                        // Now we parse the row and do the
+                        parseRow(rawText, rowData);
+                        if (m_matcher.matchInRow(rowData))
+                        {
+                            rowsPtr->push_back(currRow);
+                        }
+                        rowData.clear();
+                    }
+                    row = currRow + 1;
 
-                rowData.clear();
-                row = currRow + 1;
-
-                if (!m_searching.load(std::memory_order_relaxed))
-                {
-                    break;
+                    if (!m_searching.load(std::memory_order_relaxed))
+                    {
+                        break;
+                    }
                 }
+            }
+            else
+            {
+                row = chunkRows.getChunk()->getLastRow() + 1;
             }
 
             if (timer.hasExpired(1000))
@@ -145,8 +159,8 @@ void BaseLogModel::search()
                 {
                     emit valueFound(rowsPtr);
                     rowsPtr = std::make_shared<tp::SIntList>();
-                    searchTime += timer.restart();
                 }
+                searchTime += timer.restart();
             }
         }
 
@@ -159,7 +173,7 @@ void BaseLogModel::search()
 
         if (row > startingRow)
         {
-            LOG_INF("Searching finished after {} seconds", searchTime / 1000);
+            LOG_INF("Searching finished after {} ms", searchTime);
         }
 
         if (m_searching.load())
@@ -488,21 +502,35 @@ void BaseLogModel::loadChunks()
     LOG_INF("{} chunks parsed in {} seconds", chunkCount, timer.elapsed() / 1000);
 }
 
-bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
+bool BaseLogModel::loadChunkDataByRow(tp::UInt row, ChunkRows &chunkRows) const
 {
     const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
     if ((chunk != m_chunks.end()) && chunk->countainRow(row))
     {
-        ChunkRows tmpChunkRows(*chunk);
-        loadChunkRows(m_ifs->getStream(), tmpChunkRows);
-        if (tmpChunkRows.rowCount() != chunk->getRowCount())
+        const auto chunkSize = chunk->getSize();
+        std::string &chunkData = chunkRows.data();
+
+        chunkRows.reset(*chunk);
+        moveFilePos(m_ifs->getStream(), chunk->getStartPos());
+        chunkData.resize(chunkSize);
+        m_ifs->getStream().read(chunkData.data(), chunkSize);
+        return true;
+    }
+    return false;
+}
+
+bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
+{
+    if (loadChunkDataByRow(row, chunkRows))
+    {
+        loadChunkRows(chunkRows);
+        if (chunkRows.rowCount() != chunkRows.getChunk()->getRowCount())
         {
             LOG_ERR(
                 "The cached chunk rows {} does not match the chunk info {}",
-                tmpChunkRows.rowCount(),
-                chunk->getRowCount());
+                chunkRows.rowCount(),
+                chunkRows.getChunk()->getRowCount());
         }
-        chunkRows = std::move(tmpChunkRows);
         return true;
     }
     return false;

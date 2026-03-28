@@ -6,6 +6,18 @@
 
 RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param), m_rx(param.pattern.c_str(), getOpts())
 {
+    // When parsing raw text the anchors need to be removed, because it runs on full block(many rows at one) and full
+    // row(text is not split into columns)
+    const bool hasAnchor = !param.pattern.empty() && ((param.pattern.front() == '^') || (param.pattern.back() == '$'));
+    if (hasAnchor)
+    {
+        QString rawPattern(param.pattern.c_str());
+        if (rawPattern.startsWith('^'))
+            rawPattern.remove(0, 1);
+        if (rawPattern.endsWith('$') && !rawPattern.endsWith("\\$"))
+            rawPattern.chop(1);
+        m_rawRx = QRegularExpression(rawPattern, getOpts());
+    }
 }
 
 QRegularExpression::PatternOptions RegexMatcher::getOpts()
@@ -18,7 +30,15 @@ QRegularExpression::PatternOptions RegexMatcher::getOpts()
     return opts;
 }
 
-bool RegexMatcher::match(const std::string &text)
+bool RegexMatcher::match(std::string_view text)
 {
-    return m_rx.match(text.c_str()).hasMatch();
+    return m_rx.match(QString::fromUtf8(text.data(), text.size())).hasMatch();
+}
+
+bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+{
+    if (m_rawRx.has_value())
+        return m_rawRx->match(QString::fromUtf8(rawText.data(), rawText.size())).hasMatch();
+    else
+        return match(rawText);
 }

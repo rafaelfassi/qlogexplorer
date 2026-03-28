@@ -47,13 +47,22 @@ private:
 class ChunkRows
 {
 public:
-    using ChunkRowsData = std::pair<tp::UInt, std::string>;
+    using ChunkRowsData = std::pair<tp::UInt, std::string_view>;
 
-    ChunkRows(const Chunk &chunk) : m_chunk(&chunk) {}
+    ChunkRows(const Chunk &chunk) { reset(chunk); }
     ChunkRows() = default;
-    void add(tp::UInt row, const std::string &content) { m_rows.emplace_back(row, content); }
-    void reserve(tp::UInt size) { m_rows.reserve(size); }
-    const std::string &get(tp::UInt row) const
+
+    void reset(const Chunk &chunk)
+    {
+        m_chunk = &chunk;
+        m_rows.clear();
+        m_data.clear();
+    }
+
+    void reserveRows() { m_rows.reserve(m_chunk->getRowCount()); }
+
+    void add(tp::UInt row, std::string_view content) { m_rows.emplace_back(row, content); }
+    std::string_view get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         if ((it != m_rows.end()) && (row == it->first))
@@ -67,13 +76,15 @@ public:
     }
     tp::UInt rowCount() const { return m_rows.size(); }
     const Chunk *getChunk() { return m_chunk; }
-    const std::vector<ChunkRowsData> &data() { return m_rows; }
+    const std::vector<ChunkRowsData> &rows() { return m_rows; }
+    std::string &data() { return m_data; }
 
     static bool compareRows(const ChunkRowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
 
 private:
     const Chunk *m_chunk = nullptr;
     std::vector<ChunkRowsData> m_rows;
+    std::string m_data;
 };
 
 class BaseLogModel : public AbstractModel
@@ -111,14 +122,14 @@ public slots:
 
 protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
-    virtual bool parseRow(const std::string &rawText, tp::RowData &rowData) const = 0;
+    virtual bool parseRow(std::string_view rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,
         tp::UInt fromPos,
         tp::UInt nextRow,
         tp::UInt fileSize) = 0;
-    virtual void loadChunkRows(std::istream &is, ChunkRows &chunkRows) const = 0;
+    virtual void loadChunkRows(ChunkRows &chunkRows) const = 0;
 
     // Helping funtions to operate over istream.
     static tp::SInt getFileSize(std::istream &is);
@@ -130,6 +141,7 @@ protected:
 private:
     void clear();
     void loadChunks();
+    bool loadChunkDataByRow(tp::UInt row, ChunkRows &chunkRows) const;
     bool loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const;
     void keepWatching();
     WatchingResult watchFile();
@@ -137,6 +149,7 @@ private:
     void tryConfigure();
     FileConf::Ptr m_conf;
     std::string m_fileName;
+    tp::FileType m_fileType;
     mutable InFileStream::Ptr m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;

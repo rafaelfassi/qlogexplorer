@@ -60,15 +60,10 @@ std::vector<std::string> split(const std::string &str, const std::string &delim)
 
 std::string toUpper(const std::string &text)
 {
-    // Way more farter, but works only for ascii characters.
-    // std::string res(text);
-    // for (auto it = res.begin(); it != res.end(); ++it)
-    //     if (*it >= 'a' && *it <= 'z')
-    //         *it &= ~0x20;
-    // return res;
-
     std::string res(text);
-    std::transform(text.begin(), text.end(), res.begin(), [](int c) { return std::toupper(c); });
+    for (auto it = res.begin(); it != res.end(); ++it)
+        if (*it >= 'a' && *it <= 'z')
+            *it &= ~0x20;
     return res;
 }
 
@@ -83,28 +78,27 @@ QString elideLeft(const std::string &str, tp::UInt maxSize)
     return res;
 }
 
-QVariant toVariant(const tp::Column& column, const QString& text)
+QVariant toVariant(const tp::Column &column, const QString &text)
 {
-    QVariant v;
     switch (column.type)
     {
-    case tp::ColumnType::Int:
-        v = text.toLongLong();
-    case tp::ColumnType::UInt:
-        return text.toULongLong();
-    case tp::ColumnType::Time:
-    {
-        if (column.format == "SECONDS")
-            return QDateTime::fromSecsSinceEpoch(text.toLongLong());
-        else if (column.format == "MILLISECONDS")
-            return QDateTime::fromMSecsSinceEpoch(text.toLongLong());
-        else
-            return QDateTime::fromString(text, column.format.c_str());
-    }
-    case tp::ColumnType::Float:
-        return text.toDouble();
-    default:
-        return text;
+        case tp::ColumnType::Int:
+            return text.toLongLong();
+        case tp::ColumnType::UInt:
+            return text.toULongLong();
+        case tp::ColumnType::Time:
+        {
+            if (column.format == "SECONDS")
+                return QDateTime::fromSecsSinceEpoch(text.toLongLong());
+            else if (column.format == "MILLISECONDS")
+                return QDateTime::fromMSecsSinceEpoch(text.toLongLong());
+            else
+                return QDateTime::fromString(text, column.format.c_str());
+        }
+        case tp::ColumnType::Float:
+            return text.toDouble();
+        default:
+            return text;
     }
 }
 
