@@ -80,11 +80,10 @@ QString elideLeft(const std::string &str, tp::UInt maxSize)
 
 QVariant toVariant(const tp::Column &column, const QString &text)
 {
-    QVariant v;
     switch (column.type)
     {
         case tp::ColumnType::Int:
-            v = text.toLongLong();
+            return text.toLongLong();
         case tp::ColumnType::UInt:
             return text.toULongLong();
         case tp::ColumnType::Time:
