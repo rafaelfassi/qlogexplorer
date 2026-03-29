@@ -14,6 +14,10 @@ public:
     bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
+    void initRawMatch(tp::FileType fileType, bool isBlock);
+
     Regex::Uptr m_rx;
     Regex::Uptr m_rawRx;
+    bool m_rawMatchnitiated = false;
+    bool m_canUseRawMatch = true;
 };
