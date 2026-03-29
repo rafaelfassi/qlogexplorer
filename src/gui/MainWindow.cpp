@@ -70,11 +70,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::createActions()
 {
-    m_actOpenFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
-    m_actOpenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
+    m_actOpenFileAsText = new QAction(utl::toQStr(tp::toStr(tp::FileType::Text)), this);
+    m_actOpenFileAsJson = new QAction(utl::toQStr(tp::toStr(tp::FileType::Json)), this);
 
-    m_actReopenFileAsText = new QAction(tp::toStr(tp::FileType::Text).c_str(), this);
-    m_actReopenFileAsJson = new QAction(tp::toStr(tp::FileType::Json).c_str(), this);
+    m_actReopenFileAsText = new QAction(utl::toQStr(tp::toStr(tp::FileType::Text)), this);
+    m_actReopenFileAsJson = new QAction(utl::toQStr(tp::toStr(tp::FileType::Json)), this);
 
     m_actCloseFile = new QAction(this);
     m_actCloseFile->setShortcut(QKeySequence::Close);
@@ -335,7 +335,7 @@ void MainWindow::updateTemplates()
     const auto &templates = Settings::getTemplates();
     for (auto conf : templates)
     {
-        const QString name(conf->getConfigName().c_str());
+        const QString name = utl::toQStr(conf->getConfigName());
 
         {
             QAction *actOpen = new QAction(name, this);
@@ -481,7 +481,7 @@ void MainWindow::updateRecentFiles()
     const auto &recentFiles = Settings::getRecentFiles();
     for (const auto &conf : recentFiles)
     {
-        const QString typeStr = conf->getTemplateNameOrType().c_str();
+        const QString typeStr = utl::toQStr(conf->getTemplateNameOrType());
         const auto dispName = tr("%1 As [%2]").arg(utl::elideLeft(conf->getFileName(), 60), typeStr);
         auto act = new QAction(dispName, this);
         act->setData(idx++);
@@ -532,7 +532,7 @@ void MainWindow::openFile(FileConf::Ptr conf, int idx)
         return;
     }
 
-    QFileInfo fileInfo(conf->getFileName().c_str());
+    QFileInfo fileInfo(utl::toQStr(conf->getFileName()));
     if (!fileInfo.exists() || !fileInfo.isFile())
     {
         LOG_ERR("File '{}' does not exist", conf->getFileName());
@@ -686,9 +686,9 @@ void MainWindow::configAsCurrentTab(int index)
         auto conf = tab->getConf();
         if (conf->exists())
         {
-            m_actSaveConf->setText(tr("&Save [%1]").arg(conf->getConfigName().c_str()));
+            m_actSaveConf->setText(tr("&Save [%1]").arg(utl::toQStr(conf->getConfigName())));
             m_actSaveConf->setVisible(true);
-            m_actSaveConfAs->setText(tr("Save [%1] &As...").arg(conf->getConfigName().c_str()));
+            m_actSaveConfAs->setText(tr("Save [%1] &As...").arg(utl::toQStr(conf->getConfigName())));
             m_actSaveConfAs->setVisible(true);
             currentHasTemplate = true;
 

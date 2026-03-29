@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
                       << "type",
         QCoreApplication::translate("main", "Opens as <FileTypeOrTemplateName>"),
         "FileTypeOrTemplateName",
-        tp::toStr(tp::FileType::Text).c_str());
+        utl::toQStr(tp::toStr(tp::FileType::Text)));
     parser.addHelpOption();
     parser.addOption(typeOption);
     parser.process(app);

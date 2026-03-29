@@ -284,7 +284,7 @@ void HeaderView::openContextMenu(QPoint pos, int idx)
         {
             if (isSectionHidden(i))
             {
-                auto act = showMenu->addAction(m_headerModel->m_columns.at(i).get().name.c_str());
+                auto act = showMenu->addAction(utl::toQStr(m_headerModel->m_columns.at(i).get().name));
                 act->setProperty("show", true);
                 act->setProperty("column", i);
                 connect(act, &QAction::triggered, this, &HeaderView::handleContextMenuAction);

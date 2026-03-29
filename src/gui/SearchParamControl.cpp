@@ -324,7 +324,7 @@ void SearchParamControl::updateColumns(bool tryKeepSel)
     {
         for (const auto &column : m_conf->getColumns())
         {
-            m_cmbColumns->addItem(column.name.c_str());
+            m_cmbColumns->addItem(utl::toQStr(column.name));
         }
     }
 
@@ -402,7 +402,7 @@ void SearchParamControl::setSearchParam(const tp::SearchParam &param, bool notif
     tp::SearchParam fixedParam(param);
     fixParam(m_conf, fixedParam);
 
-    m_edtPattern->setText(fixedParam.pattern.c_str());
+    m_edtPattern->setText(utl::toQStr(fixedParam.pattern));
     m_actRange->setChecked(fixedParam.type == tp::SearchType::Range);
     m_actRegex->setChecked(fixedParam.type == tp::SearchType::Regex);
     m_actMatchCase->setChecked(fixedParam.flags.has(tp::SearchFlag::MatchCase));
@@ -425,7 +425,7 @@ void SearchParamControl::setFilterParam(const tp::FilterParam &param, bool notif
 {
     if (m_cmbSearch != nullptr)
     {
-        int idx = m_cmbSearch->findData(param.name.c_str(), Qt::DisplayRole);
+        int idx = m_cmbSearch->findData(utl::toQStr(param.name), Qt::DisplayRole);
         if (idx != -1)
         {
             m_cmbSearch->setCurrentIndex(idx);

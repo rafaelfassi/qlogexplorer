@@ -52,14 +52,14 @@ public:
     bool matchRowData(const QString &value, const tp::FilterParam &param, int role) const;
     bool isValidIdx(int idx) const;
     QString getItemPattern(int idx) const;
-    int findByItemName(const QString &name);
+    int findByItemName(const std::string &name);
 
     QString getParamName(const tp::FilterParam& param, int role) const
     {
         if ((role == Qt::DisplayRole) && !param.name.empty())
-            return param.name.c_str();
+            return utl::toQStr(param.name);
         else
-            return param.searchParam.pattern.c_str();
+            return utl::toQStr(param.searchParam.pattern);
     }
 
     SearchParamProxyModel* newProxy(QObject* owner, const std::function<tp::SearchParam(void)>& getParamFunc);

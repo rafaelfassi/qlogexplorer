@@ -77,7 +77,7 @@ bool JsonLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) cons
     {
         std::string colText;
 
-        const auto &i = d.FindMember(col.key.c_str());
+        const auto &i = d.FindMember(col.key);
         if (i != d.MemberEnd())
         {
             switch (i->value.GetType())

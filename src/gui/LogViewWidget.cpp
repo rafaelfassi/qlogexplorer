@@ -601,7 +601,7 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                 painter.drawText(
                     vrData.numberRect,
                     Qt::AlignTop | Qt::AlignRight,
-                    std::to_string(vrData.number + 1).c_str());
+                    utl::toQStr(std::to_string(vrData.number + 1)));
             }
 
             QColor rowTextColor(Style::getTextAreaColor().fg);
@@ -721,7 +721,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             vcData.can.rect = rect;
             if (idx < rowData.size())
             {
-                const QString &colText(rowData[idx].c_str());
+                const QString colText = utl::toQStr(rowData[idx]);
                 vcData.can.text = getElidedText(colText, colWidth - Style::getColumnMargin(), true);
                 if (selectText.has_value() && rect.contains(selectText.value()))
                 {

@@ -323,7 +323,7 @@ WatchingResult BaseLogModel::watchFile()
     while (m_watching.load())
     {
         bool mustLoadChunks(false);
-        if (!QFile::exists(m_fileName.c_str()))
+        if (!QFile::exists(utl::toQStr(m_fileName)))
         {
             LOG_WAR("File '{}' does not exist", m_fileName);
             return WatchingResult::FileNotFound;
@@ -431,12 +431,6 @@ bool BaseLogModel::moveFilePos(std::istream &is, tp::UInt pos)
     }
     is.seekg(pos, std::ios::beg);
     return is.good();
-}
-
-tp::SInt BaseLogModel::readFile(std::istream &is, std::string &buffer, tp::UInt bytes)
-{
-    is.read(buffer.data(), bytes);
-    return is.gcount();
 }
 
 void BaseLogModel::loadChunks()

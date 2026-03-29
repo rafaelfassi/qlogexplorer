@@ -136,7 +136,6 @@ protected:
     static tp::SInt getFilePos(std::istream &is);
     static bool isEndOfFile(std::istream &is);
     static bool moveFilePos(std::istream &is, tp::UInt pos);
-    static tp::SInt readFile(std::istream &is, std::string &buffer, tp::UInt bytes);
 
 private:
     void clear();

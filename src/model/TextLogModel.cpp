@@ -68,7 +68,7 @@ bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) cons
                         }
                         else
                         {
-                            value = match->getCaptured(col.key.c_str());
+                            value = match->getCaptured(col.key);
                         }
                     }
                     else
@@ -128,7 +128,7 @@ tp::UInt TextLogModel::parseChunks(
             break;
         }
 
-        readFile(is, buffer, readBytes);
+        is.read(buffer.data(), readBytes);
 
         for (tp::UInt i = 0; i < readBytes; ++i)
         {

@@ -137,7 +137,7 @@ std::vector<FileConf::Ptr> Settings::getRecentFiles()
         const auto &fileName = recentFileParts[1];
         const auto &templFileName = recentFileParts[2];
 
-        if (!QFile::exists(fileName.c_str()))
+        if (!QFile::exists(utl::toQStr(fileName)))
         {
             // File was deleted.
             LOG_WAR("File '{}' not found", fileName);
@@ -171,7 +171,7 @@ void Settings::setRecentFile(const FileConf::Ptr &conf)
         const auto &fileType = tp::toStr<tp::FileType>(c->getFileType());
         const auto &fileName = c->getFileName();
         const auto &templateFileName = c->getConfFileName();
-        return utl::join({fileType, fileName, templateFileName}, "|").c_str();
+        return utl::toQStr(utl::join({fileType, fileName, templateFileName}, "|"));
     };
 
     QStringList files;
@@ -296,7 +296,7 @@ void Settings::deleteTemplate(FileConf::Ptr conf)
     if (!conf->exists())
         return;
 
-    if (QFile::remove(conf->getConfFileName().c_str()))
+    if (QFile::remove(utl::toQStr(conf->getConfFileName())))
     {
         auto &confTemplates(inst().m_templates);
         confTemplates.erase(
@@ -373,13 +373,13 @@ bool Settings::getHideUniqueTab()
 void Settings::loadDefaultSearchType()
 {
     const auto searchTypeStr =
-        inst().m_settings->value("defaultSearchType", tp::toStr(tp::SearchType::Regex).c_str()).toString();
+        inst().m_settings->value("defaultSearchType", utl::toQStr(tp::toStr(tp::SearchType::Regex))).toString();
     m_searchType = tp::fromStr<tp::SearchType>(utl::toStr(searchTypeStr));
 }
 
 void Settings::setDefaultSearchType(tp::SearchType searchType)
 {
-    const QString searchTypeStr(tp::toStr<tp::SearchType>(searchType).c_str());
+    const QString searchTypeStr(utl::toQStr(tp::toStr<tp::SearchType>(searchType)));
     inst().m_settings->setValue("defaultSearchType", searchTypeStr);
     inst().loadDefaultSearchType();
 }
