@@ -57,6 +57,7 @@ __Minimum requirements__
 * C++ 17
 * CMake 3.10
 * Qt 6.4
+* RE2
 
 If not using Qt creator, make sure the Qt dir is in the PATH.  
 To build the project via command line:

@@ -165,6 +165,7 @@ void BaseLogModel::search()
         }
 
         searchingProgressChanged(100);
+        searchTime += timer.elapsed();
 
         if (!rowsPtr->empty())
         {

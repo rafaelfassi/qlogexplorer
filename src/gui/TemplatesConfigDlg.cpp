@@ -377,25 +377,28 @@ void TemplatesConfigDlg::createColumnsFromRegex()
             return;
     }
 
-    QRegularExpression rx(m_edtRegex->text());
-    if (!rx.isValid())
+    auto rx = RegexBuilder::build(m_edtRegex->text().toStdString());
+    if (rx->hasError())
     {
-        QMessageBox::critical(this, tr("Error"), tr("The regular expression is not valid.\n%1").arg(rx.errorString()));
+        QMessageBox::critical(
+            this,
+            tr("Error"),
+            tr("The regular expression is not valid.\n%1").arg(utl::toQStr(rx->getError())));
         return;
     }
 
     conf->fillFkColumnKeys();
     conf->clearColumns();
 
-    const auto groupsCount = rx.captureCount();
-    const auto namedGroups = rx.namedCaptureGroups();
+    const auto groupsCount = rx->getCaptureCount();
+    const auto namedGroups = rx->getNamedCaptureGroups();
     for (auto g = 1; g <= groupsCount; ++g)
     {
         tp::Column cl(g - 1);
 
         if (g < namedGroups.size())
         {
-            cl.name = namedGroups.at(g).toStdString();
+            cl.name = namedGroups.at(g);
         }
 
         if (cl.name.empty())

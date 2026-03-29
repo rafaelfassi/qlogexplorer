@@ -33,7 +33,7 @@ QVariant priv::HeaderModel::headerData(int section, Qt::Orientation orientation,
     switch (role)
     {
         case Qt::DisplayRole:
-            return QString::fromStdString(m_columns.at(section).get().name);
+            return utl::toQStr(m_columns.at(section).get().name);
         case Qt::TextAlignmentRole:
             return Qt::AlignLeft;
         case Qt::FontRole:

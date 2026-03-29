@@ -3,42 +3,69 @@
 
 #include "pch.h"
 #include "RegexMatcher.h"
+#include <QMessageBox>
 
-RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param), m_rx(param.pattern.c_str(), getOpts())
+RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param)
 {
-    // When parsing raw text the anchors need to be removed, because it runs on full block(many rows at one) and full
+    if (param.pattern.empty())
+        return;
+
+    const auto &pattern = param.pattern;
+    const auto opts = getOpts();
+    m_rx = RegexBuilder::build(pattern, opts);
+    if (m_rx->hasError())
+    {
+        QMessageBox::critical(
+            nullptr,
+            QObject::tr("Error"),
+            QObject::tr("The regular expression is not valid:\n%1").arg(utl::toQStr(m_rx->getError())));
+        m_rx.reset();
+        return;
+    }
+
+    // When parsing raw text the anchors need to be removed, because it runs on full block(many rows) and full
     // row(text is not split into columns)
-    const bool hasAnchor = !param.pattern.empty() && ((param.pattern.front() == '^') || (param.pattern.back() == '$'));
+    const bool hasAnchor = ((pattern.front() == '^') || ((pattern.back() == '$') && !utl::endsWith(pattern, "\\$")));
     if (hasAnchor)
     {
-        QString rawPattern(param.pattern.c_str());
-        if (rawPattern.startsWith('^'))
-            rawPattern.remove(0, 1);
-        if (rawPattern.endsWith('$') && !rawPattern.endsWith("\\$"))
-            rawPattern.chop(1);
-        m_rawRx = QRegularExpression(rawPattern, getOpts());
+        std::string_view rawPattern(pattern);
+        if (rawPattern.front() == '^')
+            rawPattern.remove_prefix(1);
+        if (rawPattern.back() == '$')
+            rawPattern.remove_suffix(1);
+        m_rawRx = RegexBuilder::build(rawPattern, opts);
+        if (m_rawRx->hasError())
+        {
+            LOG_ERR("Invalid raw regex: {}", m_rawRx->getError());
+            m_rawRx.reset();
+        }
     }
 }
 
-QRegularExpression::PatternOptions RegexMatcher::getOpts()
+RegexFlags RegexMatcher::getOpts()
 {
-    QRegularExpression::PatternOptions opts = QRegularExpression::DontCaptureOption;
-    if (!matchCase())
+    RegexFlags opts = RegexOption::DontCapture;
+    if (matchCase())
     {
-        opts |= QRegularExpression::CaseInsensitiveOption;
+        opts.set(RegexOption::CaseSensitive);
     }
     return opts;
 }
 
 bool RegexMatcher::match(std::string_view text)
 {
-    return m_rx.match(QString::fromUtf8(text.data(), text.size())).hasMatch();
+    if (m_rx)
+        return m_rx->hasMatch(text);
+    else
+        return false;
 }
 
 bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
-    if (m_rawRx.has_value())
-        return m_rawRx->match(QString::fromUtf8(rawText.data(), rawText.size())).hasMatch();
+    if (m_rawRx)
+        return m_rawRx->hasMatch(rawText);
+    else if (m_rx)
+        return m_rx->hasMatch(rawText);
     else
-        return match(rawText);
+        return false;
 }

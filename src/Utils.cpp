@@ -78,6 +78,30 @@ QString elideLeft(const std::string &str, tp::UInt maxSize)
     return res;
 }
 
+bool startsWith(std::string_view str, std::string_view prefix)
+{
+    return (str.size() >= prefix.size()) && (str.compare(0, prefix.size(), prefix) == 0);
+}
+
+bool endsWith(std::string_view str, std::string_view suffix)
+{
+    if (str.length() >= suffix.length())
+    {
+        return (0 == str.compare(str.length() - suffix.length(), suffix.length(), suffix));
+    }
+    return false;
+}
+
+void replaceAll(std::string &data, const std::string &toSearch, const std::string &replaceWith)
+{
+    size_t pos = data.find(toSearch);
+    while (pos != std::string::npos)
+    {
+        data.replace(pos, toSearch.length(), replaceWith);
+        pos = data.find(toSearch, pos + replaceWith.length());
+    }
+}
+
 QVariant toVariant(const tp::Column &column, const QString &text)
 {
     switch (column.type)

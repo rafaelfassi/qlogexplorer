@@ -429,6 +429,7 @@ void MainWindow::openAbout()
                     <li><a href="https://www.qt.io">Qt</a></li>
                     <li><a href="https://github.com/fmtlib/fmt">fmt</a></li>
                     <li><a href="https://rapidjson.org">RapidJSON</a></li>
+                    <li><a href="https://github.com/google/re2">RE2</a></li>
                 </ul>
             </p>
         )__").arg(tr("Credits")));

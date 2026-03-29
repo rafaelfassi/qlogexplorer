@@ -30,6 +30,11 @@ std::string toStr(const QString &str);
 
 std::string toStr(const QColor &color);
 
+inline QString toQStr(std::string_view str)
+{
+    return QString::fromUtf8(str.data(), str.size());
+}
+
 std::string join(const std::vector<std::string> &strList, const std::string &delim);
 
 std::vector<std::string> split(const std::string &str, const std::string &delim);
@@ -37,6 +42,12 @@ std::vector<std::string> split(const std::string &str, const std::string &delim)
 std::string toUpper(const std::string &text);
 
 QString elideLeft(const std::string &str, tp::UInt maxSize);
+
+bool startsWith(std::string_view str, std::string_view prefix);
+
+bool endsWith(std::string_view str, std::string_view suffix);
+
+void replaceAll(std::string &data, const std::string &toSearch, const std::string &replaceWith);
 
 QVariant toVariant(const tp::Column &column, const QString &text);
 

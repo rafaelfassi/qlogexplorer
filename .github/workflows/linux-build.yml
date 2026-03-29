@@ -37,6 +37,9 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+    - name: Install RE2
+      run: sudo apt-get update && sudo apt-get install -y libre2-dev
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:

@@ -25,6 +25,6 @@ protected:
     virtual void loadChunkRows(ChunkRows &chunkRows) const override;
 
 private:
-    QRegularExpression m_rx;
+    Regex::Uptr m_rx;
     tp::FileType m_fileType;
 };

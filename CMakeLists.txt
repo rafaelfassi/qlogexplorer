@@ -32,6 +32,17 @@ find_package(Threads REQUIRED)
 
 include(InstallRequiredSystemLibraries)
 
+if(WIN32)
+    # vcpkg provides re2::re2 (CONFIG mode)
+    find_package(re2 CONFIG REQUIRED)
+    set(RE2_TARGET re2::re2)
+else()
+    # Linux uses pkg-config (libre2-dev)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(RE2 REQUIRED IMPORTED_TARGET re2)
+    set(RE2_TARGET PkgConfig::RE2)
+endif()
+
 set(MAIN_SOURCES
     qlogexplorer.qrc
     src/main.cpp
@@ -45,6 +56,13 @@ set(MAIN_SOURCES
     src/Settings.cpp
     src/InFileStream.h
     src/InFileStream.cpp
+    src/regex/Regex.h
+    src/regex/QtRegex.h
+    src/regex/QtRegex.cpp
+    src/regex/Re2Regex.h
+    src/regex/Re2Regex.cpp
+    src/regex/RegexBuilder.h
+    src/regex/RegexBuilder.cpp
 )
 
 if(WIN32)
@@ -141,6 +159,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt${QT_VERSION_MAJOR}::Network
     QtSolutions::SingleApplication
     Threads::Threads
+    ${RE2_TARGET}
 )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
