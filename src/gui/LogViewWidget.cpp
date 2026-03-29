@@ -748,7 +748,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             const tp::SInt colWidth = getTextWidth(colText) + Style::getColumnMargin();
             rect.setWidth(colWidth);
             rect.setLeft(rect.left() + Style::getTextPadding());
-            vcData.can.text = QString::fromStdString(colText);
+            vcData.can.text = utl::toQStr(colText);
             vcData.can.rect = rect;
             if (selectText.has_value() && rect.contains(selectText.value()))
             {
@@ -818,7 +818,7 @@ tp::SInt LogViewWidget::getRowByScreenPos(int yPos) const
 
 tp::SInt LogViewWidget::getTextWidth(const std::string &text, bool simplified)
 {
-    const QString qStr(QString::fromStdString(text));
+    const QString qStr(utl::toQStr(text));
     return Style::getTextWidth(simplified ? qStr.simplified() : qStr);
 }
 

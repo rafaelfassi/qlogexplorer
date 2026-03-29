@@ -45,3 +45,4 @@
 #include "Types.h"
 #include "Utils.h"
 #include "FileConf.h"
+#include "regex/RegexBuilder.h"

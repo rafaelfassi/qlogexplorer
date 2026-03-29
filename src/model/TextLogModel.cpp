@@ -23,19 +23,15 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
         {
             conf->addColumn(tp::Column(0));
         }
-        m_rx.setPattern(QString());
+        m_rx.reset();
     }
     else
     {
-        m_rx.setPattern(conf->getRegexPattern().c_str());
-        if (!m_rx.isValid())
+        m_rx = RegexBuilder::build(conf->getRegexPattern());
+        if (m_rx->hasError())
         {
-            LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), utl::toStr(m_rx.errorString()));
-            m_rx.setPattern(QString());
-        }
-        else
-        {
-            m_rx.optimize();
+            LOG_ERR("Invalid regex pattern: '{}': {}", conf->getRegexPattern(), m_rx->getError());
+            m_rx.reset();
         }
     }
 
@@ -49,15 +45,14 @@ bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) cons
     if (rawText.back() == '\r')
         rawText.remove_suffix(1);
 
-    if (m_rx.pattern().isEmpty())
+    if (!m_rx)
     {
         rowData.emplace_back(rawText);
     }
     else
     {
-        QUtf8StringView utf8View(rawText.data(), rawText.size());
-        QRegularExpressionMatch match = m_rx.match(QString::fromUtf8(utf8View));
-        if (match.hasMatch())
+        auto match = m_rx->match(rawText);
+        if (match->hasMatch())
         {
             std::string value;
 
@@ -69,11 +64,11 @@ bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) cons
                     {
                         if (QChar::isDigit(col.key.front()))
                         {
-                            value = match.captured(std::stoi(col.key)).toStdString();
+                            value = match->getCaptured(std::stoi(col.key));
                         }
                         else
                         {
-                            value = match.captured(col.key.c_str()).toStdString();
+                            value = match->getCaptured(col.key.c_str());
                         }
                     }
                     else

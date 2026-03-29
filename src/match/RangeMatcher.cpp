@@ -52,8 +52,7 @@ bool RangeMatcher::match(std::string_view text)
     if (!res)
         return false;
 
-    QString qStr = QString::fromUtf8(text.data(), text.size());
-    const auto val(utl::toVariant(m_param.column.value(), qStr));
+    const auto val(utl::toVariant(m_param.column.value(), utl::toQStr(text)));
     if (val.isValid() && !val.isNull())
     {
         if (validFrom)
