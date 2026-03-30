@@ -67,7 +67,41 @@ bool startsWith(std::string_view str, std::string_view prefix);
 
 bool endsWith(std::string_view str, std::string_view suffix);
 
-bool contains(std::string_view str, std::string_view sub, bool icase = false);
+inline bool contains(std::string_view str, std::string_view sub)
+{
+    return (str.find(sub) != std::string::npos);
+}
+
+inline bool containsICase(std::string_view text, std::string_view sub)
+{
+    // std::search with predicate to compare insensitive case is too slow.
+    // In the same test (10GB of text data) std::search took ~12s this took ~4s.
+    // Can't tell this will perform in the same way for every compiler and CPU,
+    // because the performance rely on compiler optimizations and branch prediction.
+    if (sub.empty() || (text.size() < sub.size()))
+        return false;
+
+    bool found;
+    const size_t cnt = text.size() - sub.size() + 1;
+    for (size_t i = 0; i < cnt; ++i)
+    {
+        if (compareCaseInsensitive(text[i], sub[0]))
+        {
+            found = true;
+            for (size_t j = 1; j < sub.size(); ++j)
+            {
+                if (!compareCaseInsensitive(text[i + j], sub[j]))
+                {
+                    found = false;
+                    break;
+                }
+            }
+            if (found)
+                return true;
+        }
+    }
+    return false;
+}
 
 void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith);
 

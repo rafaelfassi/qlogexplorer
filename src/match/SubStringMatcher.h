@@ -15,7 +15,7 @@ public:
 private:
     void initRawMatch(tp::FileType fileType, bool isBlock);
 
-    const std::string m_textToSearch;
+private:
     bool m_rawMatchnitiated = false;
     bool m_canUseRawMatch = true;
 };

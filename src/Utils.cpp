@@ -92,18 +92,6 @@ bool endsWith(std::string_view str, std::string_view suffix)
     return false;
 }
 
-bool contains(std::string_view str, std::string_view sub, bool icase)
-{
-    if (!icase)
-    {
-        return (str.find(sub) != std::string::npos);
-    }
-    else
-    {
-        return std::search(str.begin(), str.end(), sub.begin(), sub.end(), compareCaseInsensitive) != str.end();
-    }
-}
-
 void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith)
 {
     size_t pos = str.find(toSearch);

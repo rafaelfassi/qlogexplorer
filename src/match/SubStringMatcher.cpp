@@ -4,14 +4,7 @@
 #include "pch.h"
 #include "SubStringMatcher.h"
 
-static inline bool compareCharWithUpperChar(char c, char u)
-{
-    return (u == utl::utab[static_cast<unsigned char>(c)]);
-}
-
-SubStringMatcher::SubStringMatcher(const tp::SearchParam &param)
-    : BaseMatcher(param),
-      m_textToSearch(matchCase() ? m_param.pattern : utl::toUpper(m_param.pattern))
+SubStringMatcher::SubStringMatcher(const tp::SearchParam &param) : BaseMatcher(param)
 {
 }
 
@@ -19,17 +12,11 @@ bool SubStringMatcher::match(std::string_view text)
 {
     if (matchCase())
     {
-        return (text.find(m_textToSearch) != std::string::npos);
+        return utl::contains(text, m_param.pattern);
     }
     else
     {
-        const auto it = std::search(
-            text.begin(),
-            text.end(),
-            m_textToSearch.begin(),
-            m_textToSearch.end(),
-            compareCharWithUpperChar);
-        return it != text.end();
+        return utl::containsICase(text, m_param.pattern);
     }
 }
 
