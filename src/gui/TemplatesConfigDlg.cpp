@@ -227,7 +227,7 @@ void TemplatesConfigDlg::save()
             {
                 if (!templ->getConfigName().empty())
                 {
-                    Settings::saveTemplateAs(templ, templ->getConfigName().c_str());
+                    Settings::saveTemplateAs(templ, utl::toQStr(templ->getConfigName()));
                     Settings::setRecentFile(templ);
                     g_mainWindow->updateCurrentTabConf(templ);
                 }
@@ -317,7 +317,7 @@ void TemplatesConfigDlg::updateCmbTemplates()
             if (!m_conf->isNull() && templ->isSameType(m_conf))
                 name = "* ";
             if (templ->exists())
-                name.append(templ->getConfigName().c_str());
+                name.append(utl::toQStr(templ->getConfigName()));
             else
                 name.append("<new>");
             m_cmbTemplates->addItem(name);
@@ -337,8 +337,8 @@ void TemplatesConfigDlg::setCurrentTemplate(int index)
     m_frameTempl->setVisible(true);
 
     const auto &conf = m_templates.at(index);
-    m_labFileType->setText(tp::toStr(conf->getFileType()).c_str());
-    m_edtConfName->setText(conf->getConfigName().c_str());
+    m_labFileType->setText(utl::toQStr(tp::toStr(conf->getFileType())));
+    m_edtConfName->setText(utl::toQStr(conf->getConfigName()));
     m_hltSearchCtrl->setFileConf(conf);
     m_fltSearchCtrl->setFileConf(conf);
     configureRegexMode(conf);
@@ -445,7 +445,7 @@ void TemplatesConfigDlg::fillColumns(const FileConf::Ptr &conf, int selectRow)
     {
         for (const auto &col : conf->getColumns())
         {
-            m_lstColumns->addItem(col.name.c_str());
+            m_lstColumns->addItem(utl::toQStr(col.name));
         }
         if (selectRow >= m_lstColumns->count())
             selectRow = 0;
@@ -493,14 +493,14 @@ void TemplatesConfigDlg::setCurrentColumn(int index)
     if (conf->hasDefinedColumn(index))
     {
         const auto &col = conf->getColumns().at(index);
-        m_edtColName->setText(col.name.c_str());
-        m_edtColKey->setText(col.key.c_str());
+        m_edtColName->setText(utl::toQStr(col.name));
+        m_edtColKey->setText(utl::toQStr(col.key));
         const auto cmbColTypeIdx = m_cmbColType->findData(tp::toInt(col.type));
         if (cmbColTypeIdx != -1)
         {
             m_cmbColType->setCurrentIndex(cmbColTypeIdx);
         }
-        m_edtColFormat->setText(col.format.c_str());
+        m_edtColFormat->setText(utl::toQStr(col.format));
         m_chkNoMatchCol->setChecked(index == conf->getNoMatchColumn());
         enableColumnFormFunc(true);
         setColumnType(m_cmbColType->currentIndex());
@@ -617,7 +617,7 @@ void TemplatesConfigDlg::fillHighlighters(const FileConf::Ptr &conf, int selectR
     {
         for (const auto &hlt : conf->getHighlighterParams())
         {
-            m_lstHighlighters->addItem(hlt.searchParam.pattern.c_str());
+            m_lstHighlighters->addItem(utl::toQStr(hlt.searchParam.pattern));
             auto item = m_lstHighlighters->item(m_lstHighlighters->count() - 1);
             item->setForeground(hlt.color.fg);
             item->setBackground(hlt.color.bg);
@@ -709,7 +709,7 @@ void TemplatesConfigDlg::updateTemplateHighlighters()
         auto item = m_lstHighlighters->item(hltIdx);
         if (item != nullptr)
         {
-            item->setText(hit.searchParam.pattern.c_str());
+            item->setText(utl::toQStr(hit.searchParam.pattern));
             item->setForeground(hit.color.fg);
             item->setBackground(hit.color.bg);
         }
@@ -800,7 +800,7 @@ void TemplatesConfigDlg::fillFilters(const FileConf::Ptr &conf, int selectRow)
     {
         for (const auto &flt : conf->getFilterParams())
         {
-            m_lstFilters->addItem(flt.name.c_str());
+            m_lstFilters->addItem(utl::toQStr(flt.name));
         }
         setCurrentFilter(selectRow);
         m_lstFilters->setCurrentRow(selectRow);
@@ -839,7 +839,7 @@ void TemplatesConfigDlg::setCurrentFilter(int index)
     if (conf->hasFilterParam(index))
     {
         const auto &flt = conf->getFilterParams().at(index);
-        m_edtFltName->setText(flt.name.c_str());
+        m_edtFltName->setText(utl::toQStr(flt.name));
         m_fltSearchCtrl->setSearchParam(flt.searchParam);
         m_chkApplyonLoad->setChecked(flt.applyOnLoad);
         enableFltFormFunc(true);
@@ -869,7 +869,7 @@ void TemplatesConfigDlg::updateTemplateFilter()
         auto item = m_lstFilters->item(fltIdx);
         if (item != nullptr)
         {
-            item->setText(flt.name.c_str());
+            item->setText(utl::toQStr(flt.name));
         }
     }
     updateStatus();
@@ -1042,7 +1042,7 @@ void TemplatesConfigDlg::configureRegexMode(const FileConf::Ptr &conf)
         }
         m_labColKey->setText(tr("Group"));
         m_edtColKey->setPlaceholderText(tr("Regex capturing group"));
-        m_edtRegex->setText(conf->getRegexPattern().c_str());
+        m_edtRegex->setText(utl::toQStr(conf->getRegexPattern()));
     }
     else
     {

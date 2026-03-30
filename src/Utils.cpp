@@ -69,7 +69,7 @@ std::string toUpper(const std::string &text)
 
 QString elideLeft(const std::string &str, tp::UInt maxSize)
 {
-    QString res(str.c_str());
+    QString res(utl::toQStr(str));
     if ((res.size() > maxSize) && (maxSize > 3))
     {
         res = res.mid(res.size() - maxSize + 3);
@@ -92,13 +92,13 @@ bool endsWith(std::string_view str, std::string_view suffix)
     return false;
 }
 
-void replaceAll(std::string &data, const std::string &toSearch, const std::string &replaceWith)
+void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith)
 {
-    size_t pos = data.find(toSearch);
+    size_t pos = str.find(toSearch);
     while (pos != std::string::npos)
     {
-        data.replace(pos, toSearch.length(), replaceWith);
-        pos = data.find(toSearch, pos + replaceWith.length());
+        str.replace(pos, toSearch.length(), replaceWith);
+        pos = str.find(toSearch, pos + replaceWith.length());
     }
 }
 
@@ -117,7 +117,7 @@ QVariant toVariant(const tp::Column &column, const QString &text)
             else if (column.format == "MILLISECONDS")
                 return QDateTime::fromMSecsSinceEpoch(text.toLongLong());
             else
-                return QDateTime::fromString(text, column.format.c_str());
+                return QDateTime::fromString(text, utl::toQStr(column.format));
         }
         case tp::ColumnType::Float:
             return text.toDouble();

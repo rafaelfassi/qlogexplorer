@@ -13,5 +13,9 @@ public:
     bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
-    const std::string m_textToSearch;
+    void initRawMatch(tp::FileType fileType, bool isBlock);
+
+private:
+    bool m_rawMatchnitiated = false;
+    bool m_canUseRawMatch = true;
 };

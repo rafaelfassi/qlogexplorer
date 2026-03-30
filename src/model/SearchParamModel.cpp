@@ -184,7 +184,7 @@ void SearchParamModel::updateParams(const tp::FilterParams &params)
     LOG_INF("Updating parameters...");
     for (const auto &param : params)
     {
-        const auto idx = findByItemName(param.name.c_str());
+        const auto idx = findByItemName(param.name);
         if (idx == -1)
         {
             LOG_INF("updateParams - insert - name {}, pattern {}", param.name, param.searchParam.pattern);
@@ -252,13 +252,13 @@ QString SearchParamModel::getItemPattern(int idx) const
     return QString();
 }
 
-int SearchParamModel::findByItemName(const QString &name)
+int SearchParamModel::findByItemName(const std::string &name)
 {
-    if (!name.isEmpty())
+    if (!name.empty())
     {
         for (int row = 0; row < rowCount(); ++row)
         {
-            if (m_data.at(row).name.c_str() == name)
+            if (m_data.at(row).name == name)
                 return row;
         }
     }

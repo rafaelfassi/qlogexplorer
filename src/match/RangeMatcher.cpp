@@ -18,7 +18,7 @@ RangeMatcher::RangeMatcher(const tp::SearchParam &param) : BaseMatcher(param)
         return;
     }
 
-    auto m = rxRangeSppliter.match(param.pattern.c_str());
+    auto m = rxRangeSppliter.match(utl::toQStr(param.pattern));
     if (m.hasMatch())
     {
         const auto from = m.captured(1);
@@ -36,7 +36,7 @@ RangeMatcher::RangeMatcher(const tp::SearchParam &param) : BaseMatcher(param)
     }
     else
     {
-        m_from = utl::toVariant(param.column.value(), param.pattern.c_str());
+        m_from = utl::toVariant(param.column.value(), utl::toQStr(param.pattern));
     }
 }
 

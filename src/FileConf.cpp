@@ -101,8 +101,8 @@ void FileConf::fromJson(const rapidjson::Document &jDoc)
             hParam.searchParam.type = utl::GetValueOpt<tp::SearchType>(hlt, "type").value_or(tp::SearchType::SubString);
             hParam.searchParam.flags = utl::GetValueOpt<tp::SearchFlags>(hlt, "options").value_or(tp::SearchFlags());
             hParam.searchParam.pattern = utl::GetValueOpt<std::string>(hlt, "pattern").value_or(std::string());
-            hParam.color.bg = utl::GetValueOpt<std::string>(hlt, "backColor").value_or("White").c_str();
-            hParam.color.fg = utl::GetValueOpt<std::string>(hlt, "textColor").value_or("Black").c_str();
+            hParam.color.bg = utl::GetValueOpt<QString>(hlt, "backColor").value_or("White");
+            hParam.color.fg = utl::GetValueOpt<QString>(hlt, "textColor").value_or("Black");
             m_highlighterParams.emplace_back(std::move(hParam));
         }
     }

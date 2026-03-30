@@ -131,8 +131,8 @@ void LogTabWidget::reconfigure()
 
 void LogTabWidget::updateConfName()
 {
-    const QString typeStr = m_conf->getTemplateNameOrType().c_str();
-    m_prlFileParsing->setText(QString("%1 [%2]").arg(m_conf->getFileName().c_str()).arg(typeStr));
+    const QString typeStr = utl::toQStr(m_conf->getTemplateNameOrType());
+    m_prlFileParsing->setText(QString("%1 [%2]").arg(utl::toQStr(m_conf->getFileName())).arg(typeStr));
 }
 
 FileConf::Ptr LogTabWidget::getConf()

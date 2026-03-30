@@ -118,7 +118,7 @@ void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
             const auto cl = utl::GetValueOpt<std::string>(jsonObj, key + groupStr);
             if (cl.has_value())
             {
-                m_palette.setColor(groupEnum, role, cl.value().c_str());
+                m_palette.setColor(groupEnum, role, utl::toQStr(cl.value()));
             }
         }
     };
@@ -128,13 +128,13 @@ void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
         const auto fg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Fg", key));
         if (fg.has_value())
         {
-            colorSec.fg = fg.value().c_str();
+            colorSec.fg = utl::toQStr(fg.value());
         }
 
         const auto bg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Bg", key));
         if (bg.has_value())
         {
-            colorSec.bg = bg.value().c_str();
+            colorSec.bg = utl::toQStr(bg.value());
         }
     };
 
@@ -150,19 +150,19 @@ void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
     const auto qtStyle = utl::GetValueOpt<std::string>(jsonObj, "qtStyle");
     if (qtStyle.has_value())
     {
-        m_qtStyle = qtStyle.value().c_str();
+        m_qtStyle = utl::toQStr(qtStyle.value());
     }
 
     const auto qtStyleSheet = utl::GetValueOpt<std::string>(jsonObj, "qtStyleSheet");
     if (qtStyleSheet.has_value())
     {
-        m_qtStyleSheet = qtStyleSheet.value().c_str();
+        m_qtStyleSheet = utl::toQStr(qtStyleSheet.value());
     }
 
     const auto imgDirStr = utl::GetValueOpt<std::string>(jsonObj, "imgDir");
     if (imgDirStr.has_value())
     {
-        QDir imgDir(imgDirStr.value().c_str());
+        QDir imgDir(utl::toQStr(imgDirStr.value()));
         if (imgDir.exists())
         {
             m_imgDir = imgDir;
