@@ -15,7 +15,6 @@ public:
 
 protected:
     bool configure(FileConf::Ptr conf, std::istream &is) override;
-    bool parseRow(std::string_view rawText, tp::RowData &rowData) const override;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,
@@ -23,4 +22,5 @@ protected:
         tp::UInt nextRow,
         tp::UInt fileSize) override;
     virtual void loadChunkRows(ChunkRows &chunkRows) const override;
+    bool parseRow(std::string_view rawText, tp::RowData &rowData) const override;
 };

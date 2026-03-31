@@ -66,31 +66,72 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
     if (!m_rx || m_param.pattern.empty())
         return;
 
-    std::string_view pattern(m_param.pattern);
+    std::string rawPattern(m_param.pattern);
 
     if (fileType == tp::FileType::Json)
     {
-        // For raw json it's not safe to apply raw filter when the pattern has characters that json can escape.
-        // E.g.: The char (") can be found in the raw json as (\") or (\u0022)
-        // Trying to modify the regex pattern to handle escape cases would be fragile and only increases the
-        // complexity.
-        if (pattern.find_first_of("\"\n\t\r") != std::string_view::npos || utl::contains(pattern, "\\\\"))
-        {
-            m_canUseRawMatch = false;
-            return;
-        }
+        // For raw json it's required to apply some tweaks in the regex pattern to match the ways json can
+        // escape some characters.
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\\\\",
+            utl::getRxReplacementForRawJson('\\'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "/",
+            utl::getRxReplacementForRawJson('/'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\"",
+            utl::getRxReplacementForRawJson('\"'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\\t",
+            utl::getRxReplacementForRawJson('\t'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\\r",
+            utl::getRxReplacementForRawJson('\r'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\\n",
+            utl::getRxReplacementForRawJson('\n'),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+
+        utl::replaceStrIf(
+            rawPattern,
+            "\\s",
+            utl::getRxReplacementForRawJson(' '),
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
     }
 
     // When parsing raw text the anchors need to be removed, because it runs on full block(many rows) and full
     // row(text is not split into columns)
-    const bool hasAnchor = ((pattern.front() == '^') || ((pattern.back() == '$') && !utl::endsWith(pattern, "\\$")));
-    if (hasAnchor)
+    if ((rawPattern.front() == '^') || ((rawPattern.back() == '$') && !utl::endsWith(rawPattern, "\\$")))
     {
-        if (pattern.front() == '^')
-            pattern.remove_prefix(1);
-        if (pattern.back() == '$')
-            pattern.remove_suffix(1);
-        m_rawRx = RegexBuilder::build(pattern, getOpts());
+        std::string_view sv = rawPattern;
+        if (sv.front() == '^')
+            sv.remove_prefix(1);
+        if (sv.back() == '$')
+            sv.remove_suffix(1);
+        rawPattern = std::string(sv);
+    }
+
+    if (rawPattern != m_param.pattern)
+    {
+        // Must be case insensitive due to the hex for the unicode.
+        m_rawRx = RegexBuilder::build(rawPattern, RegexOption::DontCapture);
         if (m_rawRx->hasError())
         {
             LOG_ERR("Invalid raw regex: {}", m_rawRx->getError());

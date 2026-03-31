@@ -102,6 +102,82 @@ void replaceAll(std::string &str, const std::string &toSearch, const std::string
     }
 }
 
+void replaceStrIf(
+    std::string &str,
+    const std::string &toSearch,
+    std::string_view replacement,
+    std::function<bool(std::string_view, std::size_t)> pred)
+{
+    std::size_t pos = str.find(toSearch);
+    while (pos != std::string::npos)
+    {
+        if (pred(str, pos))
+        {
+            str.replace(pos, toSearch.length(), replacement);
+            pos = str.find(toSearch, pos + replacement.length());
+        }
+        else
+        {
+            pos = str.find(toSearch, pos + 1);
+        }
+    }
+}
+
+void simplify(std::string &str)
+{
+    if ((str.find("  ") == std::string::npos) && (str.find_first_of("\t\n\r") == std::string::npos))
+        return;
+
+    std::string sStr;
+    sStr.reserve(str.size());
+    bool inSpace = false;
+    for (auto ch : str)
+    {
+        switch (ch)
+        {
+            case ' ':
+            case '\t':
+            case '\n':
+                if (inSpace)
+                    break;
+                sStr += ' ';
+                inSpace = true;
+                break;
+            case '\r':
+                break;
+            default:
+                sStr += ch;
+                if (inSpace)
+                    inSpace = false;
+                break;
+        }
+    }
+    str = std::move(sStr);
+}
+
+std::string_view getRxReplacementForRawJson(char c)
+{
+    switch (c)
+    {
+        case '/':
+            return R"_(((/)|(\\u002F)))_";
+        case '\\':
+            return R"_(((\\\\)|(\\u005C)))_";
+        case '\"':
+            return R"_(((\\")|(\\u0022)))_";
+        case '\t':
+            return R"_(((\\t)|(\\u0009)))_";
+        case '\r':
+            return R"_(((\\r)|(\\u000D)))_";
+        case '\n':
+            return R"_(((\\n)|(\\u000A)))_";
+        case ' ':
+            return R"_(((\s)|(\\t)|(\\u0009)|(\\n)|(\\u000A)|(\\r)|(\\u000D)))_";
+        default:
+            return "";
+    }
+}
+
 QVariant toVariant(const tp::Column &column, const QString &text)
 {
     switch (column.type)

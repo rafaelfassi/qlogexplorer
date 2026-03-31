@@ -32,19 +32,67 @@ bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::s
         return true;
     }
 
-    return match(rawText);
+    if (m_rawRx)
+        return m_rawRx->hasMatch(rawText);
+    else
+        return match(rawText);
 }
 
 void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 {
     m_rawMatchnitiated = true;
-    if (fileType == tp::FileType::Json)
+
+    if (fileType == tp::FileType::Json && (m_param.pattern.find_first_of("\"/\\") != std::string_view::npos))
     {
-        // See reason is explained in initRawMatch() of RegexMatcher
-        if (m_param.pattern.find_first_of("\"\n\t\r\\") != std::string_view::npos)
+        // For raw json it's necessary to use regex to match the ways json can escape some characters.
+
+        std::string rawPattern;
+        rawPattern.reserve(2 * m_param.pattern.size());
+
+        for (auto ch : m_param.pattern)
         {
-            m_canUseRawMatch = false;
-            return;
+            switch (ch)
+            {
+                case ' ':
+                    rawPattern += utl::getRxReplacementForRawJson(ch);
+                    rawPattern += '+';
+                    break;
+                case '\"':
+                case '/':
+                case '\\':
+                    rawPattern += utl::getRxReplacementForRawJson(ch);
+                    break;
+                case '*':
+                case '.':
+                case '?':
+                case '^':
+                case '$':
+                case '|':
+                case '(':
+                case ')':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                    rawPattern += "\\";
+                    rawPattern += ch;
+                    break;
+                default:
+                    rawPattern += ch;
+                    break;
+            }
+        }
+
+        if (rawPattern != m_param.pattern)
+        {
+            // Must be case insensitive due to the hex for the unicode.
+            m_rawRx = RegexBuilder::build(rawPattern, RegexOption::DontCapture);
+            if (m_rawRx->hasError())
+            {
+                LOG_ERR("Invalid raw regex for raw substring: {}", m_rawRx->getError());
+                m_rawRx.reset();
+                m_canUseRawMatch = false;
+            }
         }
     }
 }

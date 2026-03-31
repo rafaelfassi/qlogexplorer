@@ -69,45 +69,6 @@ bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
     return !conf->getColumns().empty();
 }
 
-bool JsonLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
-{
-    rapidjson::Document d;
-    d.Parse<rapidjson::kParseStopWhenDoneFlag>(rawText.data(), rawText.size());
-    for (const auto &col : getColumns())
-    {
-        std::string colText;
-
-        const auto &i = d.FindMember(col.key);
-        if (i != d.MemberEnd())
-        {
-            switch (i->value.GetType())
-            {
-                case rapidjson::kFalseType:
-                    colText = "TRUE";
-                    break;
-                case rapidjson::kTrueType:
-                    colText = "FALSE";
-                    break;
-                case rapidjson::kStringType:
-                    colText = i->value.GetString();
-                    break;
-                case rapidjson::kNumberType:
-                    if (i->value.IsInt64())
-                        colText = std::to_string(i->value.GetInt64());
-                    else if (i->value.IsUint64())
-                        colText = std::to_string(i->value.GetUint64());
-                    else
-                        colText = std::to_string(i->value.GetDouble());
-                    break;
-                default:
-                    break;
-            }
-        }
-        rowData.emplace_back(std::move(colText));
-    }
-    return true;
-}
-
 tp::UInt JsonLogModel::parseChunks(
     std::istream &is,
     std::vector<Chunk> &chunks,
@@ -196,4 +157,45 @@ void JsonLogModel::loadChunkRows(ChunkRows &chunkRows) const
             ++curentRow;
         }
     }
+}
+
+bool JsonLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
+{
+    rapidjson::Document d;
+    d.Parse<rapidjson::kParseStopWhenDoneFlag>(rawText.data(), rawText.size());
+    for (const auto &col : getColumns())
+    {
+        std::string colText;
+
+        const auto &i = d.FindMember(col.key);
+        if (i != d.MemberEnd())
+        {
+            switch (i->value.GetType())
+            {
+                case rapidjson::kFalseType:
+                    colText = "TRUE";
+                    break;
+                case rapidjson::kTrueType:
+                    colText = "FALSE";
+                    break;
+                case rapidjson::kStringType:
+                    colText = i->value.GetString();
+                    break;
+                case rapidjson::kNumberType:
+                    if (i->value.IsInt64())
+                        colText = std::to_string(i->value.GetInt64());
+                    else if (i->value.IsUint64())
+                        colText = std::to_string(i->value.GetUint64());
+                    else
+                        colText = std::to_string(i->value.GetDouble());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        utl::simplify(colText);
+        rowData.emplace_back(std::move(colText));
+    }
+    return true;
 }

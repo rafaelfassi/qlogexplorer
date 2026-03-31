@@ -37,6 +37,7 @@ private:
 enum class LogLevel
 {
     None,
+    Debug,
     Info,
     Warning,
     Error
