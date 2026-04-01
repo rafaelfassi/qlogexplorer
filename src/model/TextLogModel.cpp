@@ -38,67 +38,6 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
     return !conf->getColumns().empty();
 }
 
-bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
-{
-    // If the file uses "\r\n" as ending line, there will be "\r" at the end of each line
-    // because the lines are split by "\n" only.
-    if (rawText.back() == '\r')
-        rawText.remove_suffix(1);
-
-    if (!m_rx)
-    {
-        rowData.emplace_back(rawText);
-    }
-    else
-    {
-        auto match = m_rx->match(rawText);
-        if (match->hasMatch())
-        {
-            std::string value;
-
-            for (const auto &col : getColumns())
-            {
-                try
-                {
-                    if (!col.key.empty())
-                    {
-                        if (QChar::isDigit(col.key.front()))
-                        {
-                            value = match->getCaptured(std::stoi(col.key));
-                        }
-                        else
-                        {
-                            value = match->getCaptured(col.key);
-                        }
-                    }
-                    else
-                    {
-                        value.clear();
-                    }
-
-                    rowData.push_back(value);
-                }
-                catch (const std::exception &e)
-                {
-                    LOG_ERR("Invalid regex group: {}", col.key);
-                    rowData.push_back(std::string());
-                }
-            }
-        }
-        else
-        {
-            rowData.resize(columnCount());
-            const auto noMatchCol = getNoMatchColumn();
-            if (noMatchCol < rowData.size())
-            {
-                rowData[noMatchCol] = rawText;
-            }
-        }
-    }
-
-    return true;
-}
-
 tp::UInt TextLogModel::parseChunks(
     std::istream &is,
     std::vector<Chunk> &chunks,
@@ -203,4 +142,65 @@ void TextLogModel::loadChunkRows(ChunkRows &chunkRows) const
         chunkRows.add(curentRow, std::string_view(begin));
         ++curentRow;
     }
+}
+
+bool TextLogModel::parseRow(std::string_view rawText, tp::RowData &rowData) const
+{
+    // If the file uses "\r\n" as ending line, there will be "\r" at the end of each line
+    // because the lines are split by "\n" only.
+    if (rawText.back() == '\r')
+        rawText.remove_suffix(1);
+
+    if (!m_rx)
+    {
+        rowData.emplace_back(rawText);
+    }
+    else
+    {
+        auto match = m_rx->match(rawText);
+        if (match->hasMatch())
+        {
+            std::string value;
+
+            for (const auto &col : getColumns())
+            {
+                try
+                {
+                    if (!col.key.empty())
+                    {
+                        if (QChar::isDigit(col.key.front()))
+                        {
+                            value = match->getCaptured(std::stoi(col.key));
+                        }
+                        else
+                        {
+                            value = match->getCaptured(col.key);
+                        }
+                    }
+                    else
+                    {
+                        value.clear();
+                    }
+
+                    rowData.push_back(std::move(value));
+                }
+                catch (const std::exception &e)
+                {
+                    LOG_ERR("Invalid regex group: {}", col.key);
+                    rowData.push_back(std::string());
+                }
+            }
+        }
+        else
+        {
+            rowData.resize(columnCount());
+            const auto noMatchCol = getNoMatchColumn();
+            if (noMatchCol < rowData.size())
+            {
+                rowData[noMatchCol] = rawText;
+            }
+        }
+    }
+
+    return true;
 }

@@ -162,6 +162,7 @@ void MainWindow::createConnections()
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::configAsCurrentTab);
     connect(m_updateTimer, &QTimer::timeout, this, &MainWindow::updateCurrentTab);
+    connect(Notifier::instance(), &Notifier::raiseNotification, this, &MainWindow::nofifyUser);
 }
 
 void MainWindow::translateUi()
@@ -815,5 +816,23 @@ void MainWindow::dropEvent(QDropEvent *event)
         if (m_fileOpenAsMenu->exec(mapToGlobal(event->position().toPoint())) != nullptr)
             event->acceptProposedAction();
         clearFilesToOpen();
+    }
+}
+
+void MainWindow::nofifyUser(const QString &message, NotificationType type)
+{
+    switch (type)
+    {
+        case NotificationType::INFO:
+            QMessageBox::information(this, QObject::tr("Information"), message);
+            break;
+        case NotificationType::WARNING:
+            QMessageBox::warning(this, QObject::tr("Warning"), message);
+            break;
+        case NotificationType::ERROR:
+            QMessageBox::critical(this, QObject::tr("Error"), message);
+            break;
+        default:
+            break;
     }
 }

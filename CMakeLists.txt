@@ -56,6 +56,7 @@ set(MAIN_SOURCES
     src/Settings.cpp
     src/InFileStream.h
     src/InFileStream.cpp
+    src/Notifier.h
     src/regex/Regex.h
     src/regex/QtRegex.h
     src/regex/QtRegex.cpp

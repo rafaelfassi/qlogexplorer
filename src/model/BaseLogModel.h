@@ -122,7 +122,6 @@ public slots:
 
 protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
-    virtual bool parseRow(std::string_view rawText, tp::RowData &rowData) const = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
         std::vector<Chunk> &chunks,
@@ -130,6 +129,7 @@ protected:
         tp::UInt nextRow,
         tp::UInt fileSize) = 0;
     virtual void loadChunkRows(ChunkRows &chunkRows) const = 0;
+    virtual bool parseRow(std::string_view rawText, tp::RowData &rowData) const = 0;
 
     // Helping funtions to operate over istream.
     static tp::SInt getFileSize(std::istream &is);

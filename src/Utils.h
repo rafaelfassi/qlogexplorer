@@ -10,6 +10,7 @@
 #define PARALLEL_SORT(it_first, it_last) std::sort(it_first, it_last);
 #endif
 
+#define LOG_DBG(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Debug, fmt::format(__VA_ARGS__))
 #define LOG_INF(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Info, fmt::format(__VA_ARGS__))
 #define LOG_WAR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Warning, fmt::format(__VA_ARGS__))
 #define LOG_ERR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Error, fmt::format(__VA_ARGS__))
@@ -104,6 +105,16 @@ inline bool containsICase(std::string_view text, std::string_view sub)
 }
 
 void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith);
+
+void replaceStrIf(
+    std::string &str,
+    const std::string &toSearch,
+    std::string_view replacement,
+    std::function<bool(std::string_view, std::size_t)> pred);
+
+void simplify(std::string &str);
+
+std::string_view getRxReplacementForRawJson(char c);
 
 QVariant toVariant(const tp::Column &column, const QString &text);
 

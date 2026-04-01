@@ -18,4 +18,5 @@ private:
 private:
     bool m_rawMatchnitiated = false;
     bool m_canUseRawMatch = true;
+    Regex::Uptr m_rawRx;
 };

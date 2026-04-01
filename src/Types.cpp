@@ -68,6 +68,7 @@ void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const 
 }
 
 static const std::vector<std::pair<LogLevel, std::string>> g_logLevelMap = {
+    {LogLevel::Debug, "DEBUG"},
     {LogLevel::Info, "INFO"},
     {LogLevel::Warning, "WARN"},
     {LogLevel::Error, "ERROR"}};
