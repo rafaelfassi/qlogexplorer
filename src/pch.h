@@ -45,4 +45,5 @@
 #include "Types.h"
 #include "Utils.h"
 #include "FileConf.h"
+#include "Notifier.h"
 #include "regex/RegexBuilder.h"

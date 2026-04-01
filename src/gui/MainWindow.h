@@ -62,6 +62,7 @@ private slots:
     void handleOpenFilesWithTemplate();
     void handleReopenWithTemplate();
     void handleOpenRecentFile();
+    void nofifyUser(const QString &message, NotificationType type);
 
 protected:
     void dragEnterEvent(QDragEnterEvent *event) override;

@@ -13,9 +13,7 @@ RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param)
     m_rx = RegexBuilder::build(param.pattern, getOpts());
     if (m_rx->hasError())
     {
-        QMessageBox::critical(
-            nullptr,
-            QObject::tr("Error"),
+        Notifier::notifyError(
             QObject::tr("The regular expression is not valid:\n%1").arg(utl::toQStr(m_rx->getError())));
         m_rx.reset();
     }

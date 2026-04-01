@@ -42,7 +42,7 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 {
     m_rawMatchnitiated = true;
 
-    if (fileType == tp::FileType::Json && (m_param.pattern.find_first_of("\"/\\") != std::string_view::npos))
+    if (fileType == tp::FileType::Json && (m_param.pattern.find_first_of(" \"/\\") != std::string_view::npos))
     {
         // For raw json it's necessary to use regex to match the ways json can escape some characters.
 
