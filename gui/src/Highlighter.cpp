@@ -1,0 +1,17 @@
+// Copyright (C) 2022 Rafael Fassi Lobao
+// This file is part of qlogexplorer project licensed under GPL-3.0
+
+#include "Highlighter.h"
+#include "match/Matcher.h"
+
+Highlighter::Highlighter(const tp::HighlighterParam &param)
+    : m_param(param),
+      m_selColor(utl::toQStr(param.color.fgColorName), utl::toQStr(param.color.bgColorName))
+{
+    m_matcher.setParam(m_param.searchParam);
+}
+
+bool Highlighter::matchInRow(const tp::RowData &rowData) const
+{
+    return m_matcher.matchInRow(rowData);
+}
