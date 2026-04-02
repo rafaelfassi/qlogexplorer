@@ -8,6 +8,7 @@ if(WIN32)
     list(APPEND MAIN_SOURCES ${CMAKE_SOURCE_DIR}/packaging/win/qlogexplorer.rc)
 endif(WIN32)
 
+# The main application uses the root project name
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES})
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/3rdparty/qtsingleapplication qtsingleapplication_build)
@@ -19,8 +20,8 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        core_lib
-        gui_lib
+        qlogexplorer_core
+        qlogexplorer_gui
         qtsingleapplication
 )
 

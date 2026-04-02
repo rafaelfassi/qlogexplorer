@@ -14,7 +14,7 @@ else()
     set(RE2_TARGET PkgConfig::RE2)
 endif()
 
-add_library(core_lib STATIC
+add_library(${PROJECT_NAME} STATIC
     # Base
     # headers
     include/Types.h
@@ -68,7 +68,7 @@ add_library(core_lib STATIC
     src/match/Matcher.cpp
 )
 
-target_include_directories(core_lib
+target_include_directories(${PROJECT_NAME}
     PRIVATE
         src
     PUBLIC
@@ -76,7 +76,7 @@ target_include_directories(core_lib
         ${CMAKE_SOURCE_DIR}/3rdparty
 )
 
-target_link_libraries(core_lib
+target_link_libraries(${PROJECT_NAME}
     PRIVATE
         ${RE2_TARGET}
     PUBLIC
@@ -91,8 +91,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
     elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
         # GCC 9 supports parallel algorithms, but it requires libtbb.
         # FIXME: It should be applied for Clang as well, looking at libstdc++ version.
-        target_link_libraries(core_lib PRIVATE -ltbb)
+        target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
     endif()
 endif()
 
-target_precompile_headers(core_lib PRIVATE ${CMAKE_SOURCE_DIR}/common/pch.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/common/pch.h)

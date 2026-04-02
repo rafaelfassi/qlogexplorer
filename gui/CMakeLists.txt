@@ -3,7 +3,7 @@ project(qlogexplorer_gui LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(gui_lib STATIC
+add_library(${PROJECT_NAME} STATIC
     # headers
     include/GuiTypes.h
     include/GuiUtils.h
@@ -38,18 +38,18 @@ add_library(gui_lib STATIC
     src/SettingsDlg.cpp
 )
 
-target_include_directories(gui_lib
+target_include_directories(${PROJECT_NAME}
     PRIVATE
         src
     PUBLIC
         include
 )
 
-target_link_libraries(gui_lib
+target_link_libraries(${PROJECT_NAME}
     PUBLIC
-        core_lib
+        qlogexplorer_core
         Qt${QT_VERSION_MAJOR}::Widgets
         Qt${QT_VERSION_MAJOR}::Network
 )
 
-target_precompile_headers(gui_lib PRIVATE ${CMAKE_SOURCE_DIR}/common/pch.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/common/pch.h)
