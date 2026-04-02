@@ -58,3 +58,7 @@ jobs:
 
     - name: Build
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
+
+    - name: Run Tests
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}/tests
+      run: ctest --output-on-failure
