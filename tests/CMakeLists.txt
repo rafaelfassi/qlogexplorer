@@ -6,6 +6,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(tests_common.cmake)
 
 add_executable(${PROJECT_NAME}
+    qlogexplorer_test.qrc
+    main.cpp
+    TestUtils.h
+    TestUtils.cpp
+
+    # Tests
+    Test_JsonLogModel.cpp
+    Test_RegexMatcher.cpp
     Test_SubStringMatcher.cpp
 )
 

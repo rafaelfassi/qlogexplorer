@@ -55,6 +55,56 @@ bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::strin
         return false;
 }
 
+static std::string simplifyRegexPattern(std::string_view pattern)
+{
+    std::string str;
+    str.reserve(pattern.size());
+    bool inSpace = false;
+    for (auto i = 0; i < pattern.size(); ++i)
+    {
+        switch (pattern[i])
+        {
+            case ' ':
+                if (inSpace)
+                    break;
+                str += ' ';
+                inSpace = true;
+                break;
+            case '\\':
+                if (i + 1 < pattern.size())
+                {
+                    if (char nc = pattern[i + 1]; nc == 's' || nc == 'n' || nc == 'r' || nc == 't')
+                    {
+                        ++i;
+                        if ((i + 1 < pattern.size()) && (pattern[i + 1] == '+' || pattern[i + 1] == '*'))
+                        {
+                            ++i;
+                        }
+                        if (inSpace)
+                            break;
+                        str += ' ';
+                        inSpace = true;
+                        break;
+                    }
+                    else if (nc == '/')
+                    {
+                        str += nc;
+                        ++i;
+                        break;
+                    }
+                }
+                [[fallthrough]];
+            default:
+                str += pattern[i];
+                if (inSpace)
+                    inSpace = false;
+                break;
+        }
+    }
+
+    return str;
+}
+
 void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 {
     m_rawMatchnitiated = true;
@@ -68,6 +118,8 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
     {
         // For raw json it's required to apply some tweaks in the regex pattern to match the ways json can
         // escape some characters.
+
+        rawPattern = simplifyRegexPattern(rawPattern);
 
         utl::replaceStrIf(
             rawPattern,
@@ -89,25 +141,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
         utl::replaceStrIf(
             rawPattern,
-            "\\t",
-            utl::getRxReplacementForRawJson('\t'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
-
-        utl::replaceStrIf(
-            rawPattern,
-            "\\r",
-            utl::getRxReplacementForRawJson('\r'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
-
-        utl::replaceStrIf(
-            rawPattern,
-            "\\n",
-            utl::getRxReplacementForRawJson('\n'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
-
-        utl::replaceStrIf(
-            rawPattern,
-            "\\s",
+            " ",
             utl::getRxReplacementForRawJson(' '),
             [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
     }
@@ -126,8 +160,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
     if (rawPattern != m_param.pattern)
     {
-        // Must be case insensitive due to the hex for the unicode.
-        m_rawRx = RegexBuilder::build(rawPattern, RegexOption::DontCapture);
+        m_rawRx = RegexBuilder::build(rawPattern, getOpts());
         if (m_rawRx->hasError())
         {
             LOG_ERR("Invalid raw regex: {}", m_rawRx->getError());

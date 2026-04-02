@@ -14,17 +14,6 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-#include(${DBM_ROOT_DIR}/common/common.cmake)
-
-# set(DBM_TEST_COMMON_HEADERS
-#     ${DBM_COMMON_DIR}/tests/TestsCommon.hpp
-#     ${DBM_COMMON_DIR}/tests/TestUtils.hpp
-# )
-
-# set(DBM_TEST_COMMON_SRC
-#     ${DBM_COMMON_DIR}/tests/TestUtils.cpp
-# )
-
 set(TEST_COMMON_LIBS
     GTest::gtest
     GTest::gmock

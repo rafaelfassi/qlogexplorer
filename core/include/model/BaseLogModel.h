@@ -112,6 +112,9 @@ public:
     void reconfigure();
     bool isFollowing() const;
 
+    // Only for unit tests
+    bool loadForTesting();
+
 signals:
     void parsingProgressChanged(int progress);
     void searchingProgressChanged(int progress);
@@ -143,7 +146,7 @@ private:
     bool loadChunkDataByRow(tp::UInt row, ChunkRows &chunkRows) const;
     bool loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const;
     void keepWatching();
-    WatchingResult watchFile();
+    WatchingResult watchFile(bool once = false);
     void search();
     void tryConfigure();
     FileConf::Ptr m_conf;

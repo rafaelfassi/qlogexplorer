@@ -53,9 +53,6 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
             switch (ch)
             {
                 case ' ':
-                    rawPattern += utl::getRxReplacementForRawJson(ch);
-                    rawPattern += '+';
-                    break;
                 case '\"':
                 case '/':
                 case '\\':
@@ -84,8 +81,13 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
         if (rawPattern != m_param.pattern)
         {
-            // Must be case insensitive due to the hex for the unicode.
-            m_rawRx = RegexBuilder::build(rawPattern, RegexOption::DontCapture);
+            RegexFlags opts = RegexOption::DontCapture;
+            if (matchCase())
+            {
+                opts.set(RegexOption::CaseSensitive);
+            }
+
+            m_rawRx = RegexBuilder::build(rawPattern, opts);
             if (m_rawRx->hasError())
             {
                 LOG_ERR("Invalid raw regex for raw substring: {}", m_rawRx->getError());

@@ -154,19 +154,13 @@ std::string_view getRxReplacementForRawJson(char c)
     switch (c)
     {
         case '/':
-            return R"_(((/)|(\\u002F)))_";
+            return R"_(((\/)|(\\u002[Ff])))_";
         case '\\':
-            return R"_(((\\\\)|(\\u005C)))_";
+            return R"_(((\\\\)|(\\u005[Cc])))_";
         case '\"':
             return R"_(((\\")|(\\u0022)))_";
-        case '\t':
-            return R"_(((\\t)|(\\u0009)))_";
-        case '\r':
-            return R"_(((\\r)|(\\u000D)))_";
-        case '\n':
-            return R"_(((\\n)|(\\u000A)))_";
         case ' ':
-            return R"_(((\s)|(\\t)|(\\u0009)|(\\n)|(\\u000A)|(\\r)|(\\u000D)))_";
+            return R"_(((\s)|(\\t)|(\\n)|(\\r)|(\\u000[9ADad]))+)_";
         default:
             return "";
     }

@@ -1,0 +1,3 @@
+{"LogLevel":"TEST","DateTime":"28-12-2021 18:03:54.00274","ProcessId":51816,"ThreadId":-1810406312834604769,"FileName":"src/core/app/serverapp.cpp","LineNumber":307,"LogMessage":"Has \"quotes\" linebreak\nand tab\tfinished"}
+{"LogLevel":"TEST","DateTime":"28-12-2021 18:03:54.00274","ProcessId":51816,"ThreadId":-1810406312834604769,"FileName":"src/core/app/serverapp.cpp","LineNumber":307,"LogMessage":"Has \u0022quotes\u0022 win linebreak\r\nand tab\u0009finished"}
+{"LogLevel":"TEST","DateTime":"28-12-2021 18:03:54.00274","ProcessId":51816,"ThreadId":-1810406312834604769,"FileName":"src/core/app/serverapp.cpp","LineNumber":307,"LogMessage":"Has backslash \u005C return\r double whitespace  and slash\u002Ffinished"}
