@@ -58,6 +58,10 @@ jobs:
           --config ${{ steps.strings.outputs.build-type }}
           --prefix ${{ steps.strings.outputs.out-dir }}
 
+      - name: Run Tests
+        working-directory: ${{ steps.strings.outputs.build-dir }}/tests
+        run: ctest -C ${{ steps.strings.outputs.build-type }} --output-on-failure
+
       - name: Get Qt Dependency Libs
         run: windeployqt --release --no-translations ${{ steps.strings.outputs.bin-dir }}\qlogexplorer.exe
 

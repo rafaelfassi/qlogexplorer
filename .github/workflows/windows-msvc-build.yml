@@ -49,6 +49,10 @@ jobs:
           cmake --build ${{ steps.strings.outputs.build-dir }}
           --config ${{ steps.strings.outputs.build-type }}
 
+      - name: Run Tests
+        working-directory: ${{ steps.strings.outputs.build-dir }}/tests
+        run: ctest -C ${{ steps.strings.outputs.build-type }} --output-on-failure
+
       - name: CMake Install
         run: >
           cmake --install ${{ steps.strings.outputs.build-dir }}
