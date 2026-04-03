@@ -90,6 +90,16 @@ static std::string simplifyRegexPattern(std::string_view pattern)
                     {
                         str += nc;
                         ++i;
+                        if (inSpace)
+                            inSpace = false;
+                        break;
+                    }
+                    else if (nc == '\\')
+                    {
+                        str += "\\\\";
+                        ++i;
+                        if (inSpace)
+                            inSpace = false;
                         break;
                     }
                 }
@@ -120,6 +130,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
         // escape some characters.
 
         rawPattern = simplifyRegexPattern(rawPattern);
+        // LOG_DBG("simplified: '{}'", rawPattern);
 
         utl::replaceStrIf(
             rawPattern,
@@ -160,6 +171,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
     if (rawPattern != m_param.pattern)
     {
+        // LOG_DBG("rawPattern: '{}'", rawPattern);
         m_rawRx = RegexBuilder::build(rawPattern, getOpts());
         if (m_rawRx->hasError())
         {
