@@ -12,4 +12,4 @@ namespace tutl
 InFileStream::Ptr openTestFile(const std::string &fileName);
 void copyResourcesToCurrentDir();
 
-}
+} // namespace tutl

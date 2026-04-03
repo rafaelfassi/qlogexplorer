@@ -79,3 +79,31 @@ TEST(Test_RegexMatcher, JsonCaseSensitive_006)
     EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
+
+TEST(Test_RegexMatcher, JsonCaseSensitive_007)
+{
+    std::string_view rawData = R"_(\ntest backslash\u005Creturn\r.)_";
+    const auto parsedData = R"_( test backslash\return.)_";
+    tp::SearchParam param;
+    param.pattern = R"_(test backslash\\return.)_";
+    param.type = tp::SearchType::Regex;
+    param.flags.set(tp::SearchFlag::MatchCase);
+    RegexMatcher matcher(param);
+    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.match(parsedData));
+}
+
+TEST(Test_RegexMatcher, JsonCaseSensitive_008)
+{
+    std::string_view rawData = R"_(e\r.)_";
+    std::string_view parsedData = R"_(e .)_";
+    tp::SearchParam param;
+    param.pattern = R"_(e \.)_";
+    param.type = tp::SearchType::Regex;
+    param.flags.set(tp::SearchFlag::MatchCase);
+    RegexMatcher matcher(param);
+    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.match(parsedData));
+}

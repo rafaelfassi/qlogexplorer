@@ -47,6 +47,7 @@ tp::SInt BaseLogModel::getRow(tp::SInt row, tp::RowData &rowData) const
             }
         }
 
+        rowData.clear();
         if (parseRow(m_cachedChunkRows.get(row), rowData))
         {
             return row;

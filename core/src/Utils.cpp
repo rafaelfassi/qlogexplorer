@@ -132,12 +132,11 @@ void simplify(std::string &str)
             case ' ':
             case '\t':
             case '\n':
+            case '\r':
                 if (inSpace)
                     break;
                 sStr += ' ';
                 inSpace = true;
-                break;
-            case '\r':
                 break;
             default:
                 sStr += ch;
@@ -151,6 +150,15 @@ void simplify(std::string &str)
 
 std::string_view getRxReplacementForRawJson(char c)
 {
+    /*
+        (")   = (\") or (U+0022)
+        (\)   = (\\) or (U+005C)
+        (/)   = (\/) or (U+002F)
+        (\n)  = (\n) or (U+000A)
+        (\r)  = (\r) or (U+000D)
+        (\t)  = (\t) or (U+0009)
+    */
+
     switch (c)
     {
         case '/':
