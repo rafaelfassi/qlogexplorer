@@ -77,7 +77,7 @@ void BaseLogModel::startSearch(const tp::SearchParams &params, bool orOp)
     stopSearch();
     m_matcher.setParams(params, orOp);
     m_searching.store(true);
-    m_searchThread = std::thread(&BaseLogModel::search, this);
+    m_searchThread = std::thread(&BaseLogModel::search, this, true);
 }
 
 void BaseLogModel::stopSearch()
@@ -94,13 +94,24 @@ bool BaseLogModel::isSearching() const
     return m_searching.load();
 }
 
-void BaseLogModel::search()
+void BaseLogModel::searchFromCurrentThread(const tp::SearchParams &params, bool orOp)
+{
+    m_matcher.setParams(params, orOp);
+    search(false);
+}
+
+void BaseLogModel::search(bool keepSearching)
 {
     LOG_INF("Starting to search");
 
     ChunkRows chunkRows;
     tp::RowData rowData;
     tp::UInt row(0);
+
+    if (!keepSearching)
+    {
+        m_searching.store(true);
+    }
 
     while (m_searching.load())
     {
@@ -175,6 +186,12 @@ void BaseLogModel::search()
         if (row > startingRow)
         {
             LOG_INF("Searching finished after {} ms", searchTime);
+        }
+
+        if (!keepSearching)
+        {
+            m_searching.store(false);
+            return;
         }
 
         if (m_searching.load())
@@ -266,29 +283,23 @@ void BaseLogModel::setFollowing(bool following)
     m_following.store(following);
 }
 
-bool BaseLogModel::loadForTesting()
-{
-    m_watching.store(true);
-    return (watchFile(true) == WatchingResult::NormalExit);
-}
-
 void BaseLogModel::keepWatching()
 {
     while (m_watching.load())
     {
-        const auto result = watchFile();
+        const auto result = readFile(true);
 
         switch (result)
         {
-            case WatchingResult::NormalExit:
+            case ReadFileResult::NormalExit:
                 return;
-            case WatchingResult::FileNotFound:
-            case WatchingResult::FileClosed:
-            case WatchingResult::FileRecreated:
-            case WatchingResult::UnknownFailure:
+            case ReadFileResult::FileNotFound:
+            case ReadFileResult::FileClosed:
+            case ReadFileResult::FileRecreated:
+            case ReadFileResult::UnknownFailure:
                 break;
             default:
-                LOG_ERR("Unknown WatchingResult");
+                LOG_ERR("Unknown ReadFileResult");
                 break;
         }
 
@@ -318,12 +329,17 @@ void BaseLogModel::keepWatching()
     }
 }
 
-WatchingResult BaseLogModel::watchFile(bool once)
+ReadFileResult BaseLogModel::readFile(bool keepReading)
 {
     if (!m_ifs->isOpen())
     {
         LOG_WAR("File '{}' is not opened", m_fileName);
-        return WatchingResult::FileClosed;
+        return ReadFileResult::FileClosed;
+    }
+
+    if (!keepReading && !m_watching.load())
+    {
+        m_watching.store(true);
     }
 
     while (m_watching.load())
@@ -332,7 +348,7 @@ WatchingResult BaseLogModel::watchFile(bool once)
         if (!QFile::exists(utl::toQStr(m_fileName)))
         {
             LOG_WAR("File '{}' does not exist", m_fileName);
-            return WatchingResult::FileNotFound;
+            return ReadFileResult::FileNotFound;
         }
         else
         {
@@ -349,7 +365,7 @@ WatchingResult BaseLogModel::watchFile(bool once)
                 if (fileSize < m_lastParsedPos)
                 {
                     LOG_WAR("File '{}' was recreated", m_fileName);
-                    return WatchingResult::FileRecreated;
+                    return ReadFileResult::FileRecreated;
                 }
 
                 m_ifs->getStream().seekg(m_lastParsedPos, std::ios::beg);
@@ -357,7 +373,7 @@ WatchingResult BaseLogModel::watchFile(bool once)
                 if (m_ifs->getStream().fail())
                 {
                     LOG_ERR("File '{}' is on fail status", m_fileName);
-                    return WatchingResult::UnknownFailure;
+                    return ReadFileResult::UnknownFailure;
                 }
 
                 if ((m_lastParsedPos == 0) || m_following.load())
@@ -376,9 +392,10 @@ WatchingResult BaseLogModel::watchFile(bool once)
             loadChunks();
         }
 
-        if (once)
+        if (!keepReading)
         {
-            return WatchingResult::NormalExit;
+            m_watching.store(false);
+            return ReadFileResult::NormalExit;
         }
 
         if (m_watching.load())
@@ -387,7 +404,7 @@ WatchingResult BaseLogModel::watchFile(bool once)
         }
     }
 
-    return WatchingResult::NormalExit;
+    return ReadFileResult::NormalExit;
 }
 
 tp::SInt BaseLogModel::getFileSize(std::istream &is)

@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     Test_JsonLogModel.cpp
     Test_RegexMatcher.cpp
     Test_SubStringMatcher.cpp
+    Test_TextLogModel.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -145,7 +145,68 @@ void simplify(std::string &str)
                 break;
         }
     }
+
     str = std::move(sStr);
+}
+
+std::string reduceRxPatternForReplacement(std::string_view pattern)
+{
+    std::string reducedRx;
+    reducedRx.reserve(pattern.size());
+    bool inSpace = false;
+    for (auto i = 0; i < pattern.size(); ++i)
+    {
+        switch (pattern[i])
+        {
+            case ' ':
+                if (inSpace)
+                    break;
+                reducedRx += ' ';
+                inSpace = true;
+                break;
+            case '\\':
+                if (i + 1 < pattern.size())
+                {
+                    if (char nc = pattern[i + 1]; nc == 's' || nc == 'n' || nc == 'r' || nc == 't')
+                    {
+                        ++i;
+                        if ((i + 1 < pattern.size()) && (pattern[i + 1] == '+' || pattern[i + 1] == '*'))
+                        {
+                            ++i;
+                        }
+                        if (inSpace)
+                            break;
+                        reducedRx += ' ';
+                        inSpace = true;
+                        break;
+                    }
+                    else if (nc == '/')
+                    {
+                        reducedRx += nc;
+                        ++i;
+                        if (inSpace)
+                            inSpace = false;
+                        break;
+                    }
+                    else if (nc == '\\')
+                    {
+                        reducedRx += "\\\\";
+                        ++i;
+                        if (inSpace)
+                            inSpace = false;
+                        break;
+                    }
+                }
+                [[fallthrough]];
+            default:
+                reducedRx += pattern[i];
+                if (inSpace)
+                    inSpace = false;
+                break;
+        }
+    }
+
+    return reducedRx;
 }
 
 std::string_view getRxReplacementForRawJson(char c)
