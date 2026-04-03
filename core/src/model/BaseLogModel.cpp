@@ -265,6 +265,12 @@ void BaseLogModel::setFollowing(bool following)
     m_following.store(following);
 }
 
+bool BaseLogModel::loadForTesting()
+{
+    m_watching.store(true);
+    return (watchFile(true) == WatchingResult::NormalExit);
+}
+
 void BaseLogModel::keepWatching()
 {
     while (m_watching.load())
@@ -311,7 +317,7 @@ void BaseLogModel::keepWatching()
     }
 }
 
-WatchingResult BaseLogModel::watchFile()
+WatchingResult BaseLogModel::watchFile(bool once)
 {
     if (!m_ifs->isOpen())
     {
@@ -367,6 +373,11 @@ WatchingResult BaseLogModel::watchFile()
         if (mustLoadChunks)
         {
             loadChunks();
+        }
+
+        if (once)
+        {
+            return WatchingResult::NormalExit;
         }
 
         if (m_watching.load())

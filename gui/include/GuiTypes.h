@@ -22,6 +22,11 @@ struct SectionColor
 {
     SectionColor() = default;
     SectionColor(const QColor &_fg, const QColor &_bg) : fg(_fg), bg(_bg) {}
+    SectionColor(const tp::ColorParam &cParam)
+        : fg(utl::toQStr(cParam.fgColorName)),
+          bg(utl::toQStr(cParam.bgColorName))
+    {
+    }
     QColor fg;
     QColor bg;
 };

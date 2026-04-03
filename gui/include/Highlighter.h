@@ -9,10 +9,10 @@
 class Highlighter
 {
 public:
-    Highlighter(const tp::HighlighterParam& param);
+    Highlighter(const tp::HighlighterParam &param);
     bool matchInRow(const tp::RowData &rowData) const;
-    QColor getTextColor() const { return m_selColor.fg; }
-    QColor getBgColor() const { return m_selColor.bg; }
+    const QColor &getTextColor() const { return m_selColor.fg; }
+    const QColor &getBgColor() const { return m_selColor.bg; }
 
 private:
     tp::HighlighterParam m_param;

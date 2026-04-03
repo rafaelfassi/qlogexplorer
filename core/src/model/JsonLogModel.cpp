@@ -131,29 +131,32 @@ tp::UInt JsonLogModel::parseChunks(
 
 void JsonLogModel::loadChunkRows(ChunkRows &chunkRows) const
 {
-    const auto lastRow = chunkRows.getChunk()->getLastRow();
-    auto curentRow = chunkRows.getChunk()->getFistRow();
-    const auto chunkSize = chunkRows.getChunk()->getSize();
+    auto chunk = chunkRows.getChunk();
+    const auto lastRow = chunk->getLastRow();
+    auto curentRow = chunk->getFistRow();
+    const auto chunkSize = chunk->getSize();
 
     std::string &chunkData = chunkRows.data();
     std::stringstream iis(chunkData);
     rapidjson::IStreamWrapper isw(iis);
 
     chunkRows.reserveRows();
-
     size_t iniPos = 0;
-
     while (curentRow <= lastRow)
     {
         rapidjson::Document d;
         d.ParseStream<rapidjson::kParseStopWhenDoneFlag>(isw);
         if (!d.HasParseError())
         {
-            size_t lastParsedPos = isw.Tell();
-            chunkData.append(toString(d));
-            chunkRows.add(curentRow, std::string_view(chunkData.c_str() + iniPos, chunkData.size() - lastParsedPos));
+            const size_t lastParsedPos = isw.Tell();
+            const std::size_t rowSize = lastParsedPos - iniPos;
+            chunkRows.add(curentRow, std::string_view(chunkData.c_str() + iniPos, rowSize));
             iniPos = lastParsedPos + 1;
             ++curentRow;
+        }
+        else
+        {
+            break;
         }
     }
 }

@@ -4,9 +4,7 @@
 #include "Highlighter.h"
 #include "match/Matcher.h"
 
-Highlighter::Highlighter(const tp::HighlighterParam &param)
-    : m_param(param),
-      m_selColor(utl::toQStr(param.color.fgColorName), utl::toQStr(param.color.bgColorName))
+Highlighter::Highlighter(const tp::HighlighterParam &param) : m_param(param), m_selColor(param.color)
 {
     m_matcher.setParam(m_param.searchParam);
 }
