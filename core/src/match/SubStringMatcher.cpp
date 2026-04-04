@@ -21,7 +21,7 @@ bool SubStringMatcher::match(std::string_view text)
 
 bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
-    if (!m_rawMatchnitiated)
+    if (!m_rawMatcherInitiated)
     {
         initRawMatch(fileType, isBlock);
     }
@@ -39,16 +39,20 @@ bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::s
 
 void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 {
-    m_rawMatchnitiated = true;
+    m_rawMatcherInitiated = true;
 
     if (fileType == tp::FileType::Json && (m_param.pattern.find_first_of(" \"/\\") != std::string_view::npos))
     {
         // For raw json it's necessary to use regex to match the ways json can escape some characters.
 
-        std::string rawPattern;
-        rawPattern.reserve(2 * m_param.pattern.size());
+        // Simplify the substring pattern to normalize and remove duplicated whitespaces
+        std::string pattern(m_param.pattern);
+        utl::simplify(pattern);
 
-        for (auto ch : m_param.pattern)
+        std::string rawPattern;
+        rawPattern.reserve(2 * pattern.size());
+
+        for (auto ch : pattern)
         {
             switch (ch)
             {
