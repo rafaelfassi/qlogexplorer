@@ -43,6 +43,7 @@ public slots:
 private slots:
     void addSearchParam();
     void startSearch();
+    void stopSearch();
     void clearResults();
     void deleteParamWidget(QWidget *);
     void sourceModelConfigured();

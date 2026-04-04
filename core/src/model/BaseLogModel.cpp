@@ -380,7 +380,7 @@ ReadFileResult BaseLogModel::readFile(bool keepReading)
                 {
                     if (!m_ifs->getStream().eof())
                     {
-                        // mutex needs to be released belore starting to load chunks.
+                        // mutex needs to be released before starting to load chunks.
                         mustLoadChunks = true;
                     }
                 }
