@@ -254,6 +254,7 @@ void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
         m_proxyModel->addSourceRows(*rowsPtr.get());
         m_searchResults->updateView();
     }
+    m_sourceModel->resultsDigested();
 }
 
 void LogSearchWidget::clearResults()

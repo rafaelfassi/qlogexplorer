@@ -46,6 +46,11 @@ public slots:
         {
             m_rows.push_back(row);
         }
+
+        if (m_model.has_value())
+        {
+            m_model.value()->resultsDigested();
+        }
     }
 
     std::size_t m_pos = 0;

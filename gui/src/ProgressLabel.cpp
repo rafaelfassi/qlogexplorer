@@ -114,10 +114,7 @@ void ProgressLabel::setCanAbort(bool canAbort)
     if (m_canAbort != canAbort)
     {
         m_canAbort = canAbort;
-        if (inProgress())
-        {
-            updateProgress();
-        }
+        updateProgress();
     }
 }
 

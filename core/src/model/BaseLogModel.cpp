@@ -163,15 +163,35 @@ void BaseLogModel::search(bool keepSearching)
                 row = chunkRows.getChunk()->getLastRow() + 1;
             }
 
-            if (timer.hasExpired(1000))
+            const bool updateProgressExpired = timer.hasExpired(1000);
+            if (updateProgressExpired || (rowsPtr->size() > 10000))
             {
-                searchingProgressChanged((row * 100) / m_rowCount.load());
+                if (updateProgressExpired)
+                {
+                    searchingProgressChanged((row * 100) / m_rowCount.load());
+                    searchTime += timer.restart();
+                }
+
                 if (!rowsPtr->empty())
                 {
+                    const bool waitDigested = (rowsPtr->size() > 250);
+                    if (waitDigested)
+                    {
+                        m_resultsDigested.store(false);
+                    }
+
                     emit valueFound(rowsPtr);
                     rowsPtr = std::make_shared<tp::SIntList>();
+
+                    // Must wait for the UI to digest the results before producing more.
+                    // A normal search produces only few results, so there is no need to wait, but a bad
+                    // or wrong filter (like "a") in a big file can produce too many results for the UI
+                    // to handle, especially due to the proxy model that must merge the new and old results.
+                    while (waitDigested && !m_resultsDigested.load() && m_searching.load())
+                    {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    }
                 }
-                searchTime += timer.restart();
             }
         }
 
