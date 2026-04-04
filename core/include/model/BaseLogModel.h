@@ -11,7 +11,7 @@
 
 constexpr tp::UInt g_chunkSize = 1024 * 1024;
 
-enum class WatchingResult
+enum class ReadFileResult
 {
     NormalExit,
     FileClosed,
@@ -112,8 +112,13 @@ public:
     void reconfigure();
     bool isFollowing() const;
 
-    // Only for unit tests
-    bool loadForTesting();
+    // The following public functions should be externally called only for unit testing purposes:
+    // If not testing, call start() instead
+    ReadFileResult readFile(bool keepReading);
+    // If not testing, call startSearch() instead
+    void searchFromCurrentThread(const tp::SearchParams &params, bool orOp);
+    // Used for tests to get the number of chunks (don't use this if not testing)
+    std::size_t chunksCount() const { return m_chunks.size(); }
 
 signals:
     void parsingProgressChanged(int progress);
@@ -145,9 +150,8 @@ private:
     void loadChunks();
     bool loadChunkDataByRow(tp::UInt row, ChunkRows &chunkRows) const;
     bool loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const;
+    void search(bool keepSearching);
     void keepWatching();
-    WatchingResult watchFile(bool once = false);
-    void search();
     void tryConfigure();
     FileConf::Ptr m_conf;
     std::string m_fileName;

@@ -114,6 +114,14 @@ void replaceStrIf(
 
 void simplify(std::string &str);
 
+// This prepares the pattern to be used by getRxReplacementForRawJson
+// - Replace any whitespace sequence in the regex pattern with a single space.
+// - Remove escape backslash for slash and backslash.
+std::string reduceRxPatternForReplacement(std::string_view pattern);
+
+// Gets a replacement for the provided character in the regex pattern that can be used for
+// searching in a raw json file.
+// Fupported inputs are: [/,\," ]
 std::string_view getRxReplacementForRawJson(char c);
 
 QVariant toVariant(const tp::Column &column, const QString &text);

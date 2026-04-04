@@ -1,5 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/json_0001.json</file>
+        <file>resources/text_0001.log</file>
+        <file>resources/text_0001_tmpl.json</file>
+        <file>resources/Test_TextLogModel-DataReliability_001_tmpl.json</file>
     </qresource>
 </RCC>

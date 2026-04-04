@@ -1,0 +1,84 @@
+{
+    "configName": "System Xz",
+    "fileType": "TEXT",
+    "regexPattern": "^(?<Level>[A-Z]+)\\s+(?<DateTime>[0-9:.\\s-]+?)\\s+(?<Thread>0x[0-9A-F]+)\\s+(?<Message>.+)$",
+    "noMatchColumn": 3,
+    "columns": [
+        {
+            "pos": 0,
+            "key": "Level",
+            "name": "Level",
+            "type": "STR",
+            "format": "",
+            "width": 111
+        },
+        {
+            "pos": 1,
+            "key": "DateTime",
+            "name": "DateTime",
+            "type": "STR",
+            "format": "",
+            "width": 301
+        },
+        {
+            "pos": 2,
+            "key": "Thread",
+            "name": "Thread",
+            "type": "STR",
+            "format": "",
+            "width": 125
+        },
+        {
+            "pos": 3,
+            "key": "Message",
+            "name": "Message",
+            "type": "STR",
+            "format": "",
+            "width": 1602
+        }
+    ],
+    "highlighters": [
+        {
+            "textColor": "#e0e1e3",
+            "backColor": "#aa0000",
+            "type": "SUB_STR",
+            "options": "",
+            "pattern": "ERROR",
+            "column": 0
+        },
+        {
+            "textColor": "#ffffff",
+            "backColor": "#aa5500",
+            "type": "SUB_STR",
+            "options": "",
+            "pattern": "WARNING",
+            "column": 0
+        }
+    ],
+    "filters": [
+        {
+            "name": "@Error",
+            "type": "SUB_STR",
+            "options": "",
+            "pattern": "ERROR",
+            "column": 0,
+            "applyOnLoad": false
+        },
+        {
+            "name": "@Warning",
+            "type": "SUB_STR",
+            "options": "MATCH_CASE",
+            "pattern": "WARNING",
+            "column": 0,
+            "applyOnLoad": false
+        },
+        {
+            "name": "@Started",
+            "type": "SUB_STR",
+            "options": "MATCH_CASE",
+            "pattern": "System initialized",
+            "column": 3,
+            "applyOnLoad": false
+        }
+    ]
+}
