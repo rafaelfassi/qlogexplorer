@@ -37,8 +37,10 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Install RE2
-      run: sudo apt-get update && sudo apt-get install -y libre2-dev
+    # CMake will download and configure RE2 automatically
+    # To install RE2 from apt-get:
+    #   - name: Install RE2
+    #     run: sudo apt-get update && sudo apt-get install -y libre2-dev
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v3

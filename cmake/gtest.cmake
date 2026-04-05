@@ -14,7 +14,7 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-set(TEST_COMMON_LIBS
+set(GTEST_TARGETS
     GTest::gtest
     GTest::gmock
     GTest::gtest_main

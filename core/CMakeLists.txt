@@ -3,17 +3,6 @@ project(qlogexplorer_core LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(WIN32)
-    # vcpkg provides re2::re2 (CONFIG mode)
-    find_package(re2 CONFIG REQUIRED)
-    set(RE2_TARGET re2::re2)
-else()
-    # Linux uses pkg-config (libre2-dev)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(RE2 REQUIRED IMPORTED_TARGET re2)
-    set(RE2_TARGET PkgConfig::RE2)
-endif()
-
 add_library(${PROJECT_NAME} STATIC
     # Base
     # headers
@@ -78,7 +67,7 @@ target_include_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
-        ${RE2_TARGET}
+        ${RE2_TARGETS}
     PUBLIC
         Qt${QT_VERSION_MAJOR}::Core
         Threads::Threads   
@@ -90,7 +79,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR MINGW)
         add_definitions(-DNO_STD_PARALLEL_ALGORITHMS)
     elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0)
         # GCC 9 supports parallel algorithms, but it requires libtbb.
-        # FIXME: It should be applied for Clang as well, looking at libstdc++ version.
         target_link_libraries(${PROJECT_NAME} PRIVATE -ltbb)
     endif()
 endif()
