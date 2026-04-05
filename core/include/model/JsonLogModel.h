@@ -17,7 +17,7 @@ protected:
     bool configure(FileConf::Ptr conf, std::istream &is) override;
     virtual tp::UInt parseChunks(
         std::istream &is,
-        std::vector<Chunk> &chunks,
+        Chunks &chunks,
         tp::UInt fromPos,
         tp::UInt nextRow,
         tp::UInt fileSize) override;

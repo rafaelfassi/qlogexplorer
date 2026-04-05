@@ -70,16 +70,13 @@ bool JsonLogModel::configure(FileConf::Ptr conf, std::istream &is)
 
 tp::UInt JsonLogModel::parseChunks(
     std::istream &is,
-    std::vector<Chunk> &chunks,
+    Chunks &chunks,
     tp::UInt fromPos,
     tp::UInt nextRow,
     tp::UInt fileSize)
 {
     std::string buffer;
     buffer.resize(g_chunkSize);
-
-    const tp::UInt totalChunks(std::max<tp::UInt>((fileSize - fromPos) / g_chunkSize, 1));
-    chunks.reserve(totalChunks);
 
     tp::UInt nextFirstChunkRow(nextRow);
     tp::UInt currentRowCount(nextRow);
