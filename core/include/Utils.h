@@ -10,10 +10,7 @@
 #define PARALLEL_SORT(it_first, it_last) std::sort(it_first, it_last);
 #endif
 
-#define LOG_DBG(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Debug, fmt::format(__VA_ARGS__))
-#define LOG_INF(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Info, fmt::format(__VA_ARGS__))
-#define LOG_WAR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Warning, fmt::format(__VA_ARGS__))
-#define LOG_ERR(...) utl::log(utl::getSrcFile(__FILE__), __LINE__, tp::LogLevel::Error, fmt::format(__VA_ARGS__))
+#define FORMAT(_fmt, ...) fmt::format(FMT_COMPILE(_fmt), ##__VA_ARGS__)
 
 namespace utl
 {
@@ -42,8 +39,6 @@ inline bool compareCaseInsensitive(char l, char r)
 {
     return (utab[static_cast<unsigned char>(l)] == utab[static_cast<unsigned char>(r)]);
 }
-
-void log(const char *file, const std::uint32_t line, tp::LogLevel level, const std::string &msg);
 
 std::string toStr(const rapidjson::Value &json);
 

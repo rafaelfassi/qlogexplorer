@@ -124,13 +124,13 @@ void Style::loadStyleFromJson(const rapidjson::Value &jsonObj)
 
     const auto loadColorSection = [&jsonObj](const std::string &key, gtp::SectionColor &colorSec)
     {
-        const auto fg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Fg", key));
+        const auto fg = utl::GetValueOpt<std::string>(jsonObj, FORMAT("{}Fg", key));
         if (fg.has_value())
         {
             colorSec.fg = utl::toQStr(fg.value());
         }
 
-        const auto bg = utl::GetValueOpt<std::string>(jsonObj, fmt::format("{}Bg", key));
+        const auto bg = utl::GetValueOpt<std::string>(jsonObj, FORMAT("{}Bg", key));
         if (bg.has_value())
         {
             colorSec.bg = utl::toQStr(bg.value());

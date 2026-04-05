@@ -33,7 +33,7 @@ TEST(Test_TextLogModel, DataReliability_001)
         const size_t li = (i % lvls.size());
         const size_t mi = (i % msgs.size());
         logEntriesCount += msgs[mi].second.size();
-        outFile << fmt::format(R"_([{}] ({}): {})_", lvls[li], i, msgs[mi].first) << std::endl;
+        outFile << FORMAT(R"_([{}] ({}): {})_", lvls[li], i, msgs[mi].first) << std::endl;
     }
     outFile.close();
 

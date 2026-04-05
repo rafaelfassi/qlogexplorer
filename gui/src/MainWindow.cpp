@@ -13,6 +13,7 @@
 #include "HeaderView.h"
 #include "TemplatesConfigDlg.h"
 #include "SettingsDlg.h"
+#include <iostream>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -161,7 +162,8 @@ void MainWindow::createConnections()
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::configAsCurrentTab);
     connect(m_updateTimer, &QTimer::timeout, this, &MainWindow::updateCurrentTab);
-    connect(Notifier::instance(), &Notifier::raiseNotification, this, &MainWindow::nofifyUser);
+    connect(Notifier::instance(), &Notifier::notificationRaised, this, &MainWindow::notifyUser);
+    connect(Notifier::instance(), &Notifier::logMsgRaised, this, &MainWindow::logMsg);
 }
 
 void MainWindow::translateUi()
@@ -818,20 +820,26 @@ void MainWindow::dropEvent(QDropEvent *event)
     }
 }
 
-void MainWindow::nofifyUser(const QString &message, NotificationType type)
+void MainWindow::notifyUser(tp::NotifLevel level, const QString &message)
 {
-    switch (type)
+    switch (level)
     {
-        case NotificationType::INFO:
-            QMessageBox::information(this, QObject::tr("Information"), message);
+        case tp::NotifLevel::Error:
+            QMessageBox::critical(this, QObject::tr("Error"), message);
             break;
-        case NotificationType::WARNING:
+        case tp::NotifLevel::Warning:
             QMessageBox::warning(this, QObject::tr("Warning"), message);
             break;
-        case NotificationType::ERROR:
-            QMessageBox::critical(this, QObject::tr("Error"), message);
+        case tp::NotifLevel::Info:
+            QMessageBox::information(this, QObject::tr("Information"), message);
             break;
         default:
             break;
     }
+}
+
+void MainWindow::logMsg(const char *file, const std::uint32_t line, tp::NotifLevel level, const std::string &msg)
+{
+    const auto logMsg = FORMAT(R"_([{}] {}:{}: {})_", tp::toStr<tp::NotifLevel>(level), file, line, msg);
+    std::cout << logMsg << std::endl;
 }

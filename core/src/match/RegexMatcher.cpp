@@ -70,7 +70,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
         // escape some characters.
 
         rawPattern = utl::reduceRxPatternForReplacement(rawPattern);
-        // LOG_DBG("simplified: '{}'", rawPattern);
+        LOG_DBG("Simplified pattern: '{}'", rawPattern);
 
         utl::replaceStrIf(
             rawPattern,
@@ -111,11 +111,11 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
     if (rawPattern != m_param.pattern)
     {
-        // LOG_DBG("rawPattern: '{}'", rawPattern);
+        LOG_DBG("Raw pattern: '{}'", rawPattern);
         m_rawRx = RegexBuilder::build(rawPattern, getOpts());
         if (m_rawRx->hasError())
         {
-            LOG_ERR("Invalid raw regex: {}", m_rawRx->getError());
+            LOG_ERR("Invalid raw regex: '{}' - {}", rawPattern, m_rawRx->getError());
             m_rawRx.reset();
             m_canUseRawMatch = false;
         }

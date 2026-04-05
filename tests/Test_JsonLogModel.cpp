@@ -28,7 +28,7 @@ TEST(Test_JsonLogModel, DataReliability_001)
     {
         const size_t li = (i % lvls.size());
         const size_t mi = (i % msgs.size());
-        outFile << fmt::format(R"_({{"Level":"{}","Number": {},"Message":"{}"}})_", lvls[li], i, msgs[mi].first)
+        outFile << FORMAT(R"_({{"Level":"{}","Number": {},"Message":"{}"}})_", lvls[li], i, msgs[mi].first)
                 << std::endl;
     }
     outFile.close();
@@ -76,7 +76,7 @@ TEST(Test_JsonLogModel, BigRow_001)
     ASSERT_TRUE(outFile.is_open());
     for (std::size_t i = 0; i < rowCount; ++i)
     {
-        outFile << fmt::format(R"_({{"Message":"{}"}})_", rowText) << std::endl;
+        outFile << FORMAT(R"_({{"Message":"{}"}})_", rowText) << std::endl;
     }
     outFile.close();
 

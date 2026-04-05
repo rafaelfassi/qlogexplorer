@@ -132,12 +132,12 @@ public:
             const QString valueString = value.toString();
             auto &param = m_model->getRowData(toSrcIdx(index.row()));
 
-            LOG_INF("setData - param name {} pattern {}", param.name, param.searchParam.pattern);
+            LOG_DBG("setData - param name {} pattern {}", param.name, param.searchParam.pattern);
 
             if (m_model->matchRowData(valueString, param, ParamModelRoles::DisplayAndEditRoles))
                 return true;
 
-            LOG_INF("setData - config new param - name {}, srcIdx: {}", valueString.toStdString(), toSrcIdx(index.row()));
+            LOG_DBG("setData - config new param - name {}, srcIdx: {}", valueString.toStdString(), toSrcIdx(index.row()));
 
             //param.name = utl::toStr(valueString);
             param.searchParam = m_getParamFunc();

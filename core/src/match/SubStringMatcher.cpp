@@ -94,7 +94,7 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
             m_rawRx = RegexBuilder::build(rawPattern, opts);
             if (m_rawRx->hasError())
             {
-                LOG_ERR("Invalid raw regex for raw substring: {}", m_rawRx->getError());
+                LOG_ERR("Invalid raw regex pattern for raw substring: '{}', - {}", rawPattern, m_rawRx->getError());
                 m_rawRx.reset();
                 m_canUseRawMatch = false;
             }

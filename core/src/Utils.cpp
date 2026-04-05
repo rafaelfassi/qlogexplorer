@@ -2,15 +2,9 @@
 // This file is part of qlogexplorer project licensed under GPL-3.0
 
 #include "Utils.h"
-#include <iostream>
 
 namespace utl
 {
-
-void log(const char *file, const std::uint32_t line, tp::LogLevel level, const std::string &msg)
-{
-    std::cout << "[" << tp::toStr<tp::LogLevel>(level) << "] " << file << ":" << line << ": " << msg << std::endl;
-}
 
 std::string toStr(const rapidjson::Value &json)
 {

@@ -38,6 +38,7 @@
 // fmt
 #define FMT_HEADER_ONLY 1
 #include <fmt/core.h>
+#include <fmt/compile.h>
 
 // global includes
 #include "Types.h"
