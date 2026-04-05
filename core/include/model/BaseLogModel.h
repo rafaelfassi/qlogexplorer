@@ -44,6 +44,8 @@ private:
     std::pair<tp::UInt, tp::UInt> m_rowRange;
 };
 
+using Chunks = std::deque<Chunk>;
+
 class ChunkRows
 {
 public:
@@ -133,7 +135,7 @@ protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
     virtual tp::UInt parseChunks(
         std::istream &is,
-        std::vector<Chunk> &chunks,
+        Chunks &chunks,
         tp::UInt fromPos,
         tp::UInt nextRow,
         tp::UInt fileSize) = 0;
@@ -160,7 +162,7 @@ private:
     mutable InFileStream::Ptr m_ifs;
     mutable std::mutex m_ifsMutex;
     mutable ChunkRows m_cachedChunkRows;
-    std::vector<Chunk> m_chunks;
+    Chunks m_chunks;
     Matcher m_matcher;
     std::thread m_searchThread;
     std::thread m_watchThread;

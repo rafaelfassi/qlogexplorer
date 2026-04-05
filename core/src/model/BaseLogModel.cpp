@@ -506,7 +506,7 @@ void BaseLogModel::loadChunks()
         }
     }
 
-    std::vector<Chunk> chunks;
+    Chunks chunks;
     tp::SInt newLastParsedPos(0);
 
     do
@@ -519,7 +519,6 @@ void BaseLogModel::loadChunks()
         m_ifs = std::move(ifs);
         if (!chunks.empty())
         {
-            m_chunks.reserve(m_chunks.size() + chunks.size());
             std::move(std::begin(chunks), std::end(chunks), std::back_inserter(m_chunks));
             chunks.clear();
         }

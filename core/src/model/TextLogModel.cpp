@@ -39,7 +39,7 @@ bool TextLogModel::configure(FileConf::Ptr conf, std::istream &is)
 
 tp::UInt TextLogModel::parseChunks(
     std::istream &is,
-    std::vector<Chunk> &chunks,
+    Chunks &chunks,
     tp::UInt fromPos,
     tp::UInt nextRow,
     tp::UInt fileSize)
@@ -47,9 +47,6 @@ tp::UInt TextLogModel::parseChunks(
     tp::UInt chunkSize(g_chunkSize);
     std::string buffer;
     buffer.resize(g_chunkSize);
-
-    const tp::UInt totalChunks(std::max<tp::UInt>((fileSize - fromPos) / g_chunkSize, 1));
-    chunks.reserve(totalChunks);
 
     tp::UInt lastPos(0);
     tp::UInt lastLineBreakPos(fromPos);

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Rafael Fassi Lobao
 // This file is part of qlogexplorer project licensed under GPL-3.0
 
-#pragma onve
+#pragma once
 
 #include "gtest/gtest.h"
 #include "InFileStream.h"
