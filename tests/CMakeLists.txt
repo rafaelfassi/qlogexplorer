@@ -3,7 +3,7 @@ project(qlogexplorer_tests LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(${CMAKE_SOURCE_DIR}/cmake/gtest.cmake)
+include(${CMAKE_SOURCE_DIR}/3rdparty/gtest/gtest.cmake)
 
 add_executable(${PROJECT_NAME}
     qlogexplorer_test.qrc
