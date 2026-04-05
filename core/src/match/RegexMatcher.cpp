@@ -37,7 +37,7 @@ bool RegexMatcher::match(std::string_view text)
 
 bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
-    if (!m_rawMatchnitiated)
+    if (!m_rawMatcherInitiated)
     {
         initRawMatch(fileType, isBlock);
     }
@@ -57,7 +57,7 @@ bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::strin
 
 void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 {
-    m_rawMatchnitiated = true;
+    m_rawMatcherInitiated = true;
 
     if (!m_rx || m_param.pattern.empty())
         return;

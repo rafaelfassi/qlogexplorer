@@ -50,6 +50,7 @@ LogSearchWidget::LogSearchWidget(FileConf::Ptr conf, LogViewWidget *mainLog, Bas
     btnExec->setDefaultAction(m_actExec);
 
     m_prlSearching = new ProgressLabel(this);
+    m_prlSearching->setCanAbort(true);
 
     m_proxyModel = new ProxyModel(m_sourceModel);
 
@@ -189,6 +190,7 @@ void LogSearchWidget::createConnections()
     connect(m_sourceModel, &BaseLogModel::modelConfigured, this, &LogSearchWidget::sourceModelConfigured);
     connect(m_sourceModel, &BaseLogModel::valueFound, this, &LogSearchWidget::addSearchResult);
     connect(m_sourceModel, &BaseLogModel::searchingProgressChanged, m_prlSearching, &ProgressLabel::setProgress);
+    connect(m_prlSearching, &ProgressLabel::abortRequested, this, &LogSearchWidget::stopSearch);
     connect(m_searchResults, &LogViewWidget::rowSelected, m_mainLog, &LogViewWidget::goToRow);
     connect(m_searchResults, &LogViewWidget::textMarkUpdated, m_mainLog, QOverload<>::of(&LogViewWidget::update));
     connect(m_mainLog, &LogViewWidget::textMarkUpdated, m_searchResults, QOverload<>::of(&LogViewWidget::update));
@@ -239,6 +241,12 @@ void LogSearchWidget::startSearch()
     }
 }
 
+void LogSearchWidget::stopSearch()
+{
+    m_sourceModel->stopSearch();
+    m_prlSearching->setProgress(-1);
+}
+
 void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
 {
     if (m_sourceModel->isSearching())
@@ -246,6 +254,7 @@ void LogSearchWidget::addSearchResult(tp::SharedSIntList rowsPtr)
         m_proxyModel->addSourceRows(*rowsPtr.get());
         m_searchResults->updateView();
     }
+    m_sourceModel->resultsDigested();
 }
 
 void LogSearchWidget::clearResults()

@@ -16,7 +16,7 @@ private:
     void initRawMatch(tp::FileType fileType, bool isBlock);
 
 private:
-    bool m_rawMatchnitiated = false;
+    bool m_rawMatcherInitiated = false;
     bool m_canUseRawMatch = true;
     Regex::Uptr m_rawRx;
 };

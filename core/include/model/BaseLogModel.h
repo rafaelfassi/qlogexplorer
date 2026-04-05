@@ -111,6 +111,7 @@ public:
     void stop();
     void reconfigure();
     bool isFollowing() const;
+    void resultsDigested() { m_resultsDigested.store(true); }
 
     // The following public functions should be externally called only for unit testing purposes:
     // If not testing, call start() instead
@@ -168,6 +169,7 @@ private:
     std::atomic_bool m_watching = false;
     std::atomic_bool m_following = true;
     std::atomic_bool m_configured = false;
+    std::atomic_bool m_resultsDigested = true;
     // Set by m_watchThread and read by main and m_searchThread threads.
     std::atomic_size_t m_rowCount = 0;
     // Accessed only by m_watchThread.

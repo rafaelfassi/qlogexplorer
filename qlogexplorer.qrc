@@ -11,6 +11,7 @@
         <file>images/qlogexplorer.png</file>
 
         <file>images/default/add_icon.png</file>
+        <file>images/default/cancel_icon.png</file>
         <file>images/default/case_sensitive_icon.png</file>
         <file>images/default/clear_icon.png</file>
         <file>images/default/delete_icon.png</file>
@@ -32,6 +33,7 @@
         <file>images/default/up_icon.png</file>
 
         <file>images/dark/add_icon.png</file>
+        <file>images/dark/cancel_icon.png</file>
         <file>images/dark/case_sensitive_icon.png</file>
         <file>images/dark/clear_icon.png</file>
         <file>images/dark/delete_icon.png</file>

@@ -4,16 +4,26 @@
 #include "ProgressLabel.h"
 #include "Style.h"
 #include <QPainter>
+#include <QPushButton>
 
 ProgressLabel::ProgressLabel(QWidget *parent) : QLabel(parent)
 {
     m_oriPalette = palette();
+
     auto szPolicy = sizePolicy();
     szPolicy.setHorizontalPolicy(QSizePolicy::Expanding);
     setSizePolicy(szPolicy);
     setMinimumWidth(1);
     setTextInteractionFlags(Qt::TextSelectableByMouse);
     setMargin(Style::getTextPadding());
+
+    m_abortButton = new QPushButton(Style::getIcon("cancel_icon.png"), "", this);
+    m_abortButton->setToolTip(tr("Cancel"));
+    m_abortButton->setFlat(true);
+    m_abortButton->setVisible(false);
+    m_abortButton->setFocusPolicy(Qt::NoFocus);
+
+    connect(m_abortButton, &QPushButton::clicked, this, &ProgressLabel::abortRequested);
 }
 
 QString ProgressLabel::getDisplayText() const
@@ -35,7 +45,24 @@ QString ProgressLabel::getDisplayText() const
         text = m_text;
     }
 
-    return Style::getElidedText(text, width() - 2 * Style::getTextPadding(), Qt::ElideLeft);
+    // Reserve horizontal space for the abort button when it is visible.
+    const int reservedWidth = (m_abortButton && m_abortButton->isVisible()) ? m_abortButton->width() : 0;
+
+    return Style::getElidedText(text, width() - (2 * Style::getTextPadding()) - reservedWidth, Qt::ElideLeft);
+}
+
+void ProgressLabel::updateAbortButton()
+{
+    const bool show = m_canAbort && inProgress();
+    m_abortButton->setVisible(show);
+
+    if (show)
+    {
+        // Pin the button to the right edge, vertically centred.
+        int btnSz = std::max(m_abortButton->sizeHint().height(), m_abortButton->sizeHint().width());
+        btnSz = std::min(height(), btnSz);
+        m_abortButton->setGeometry(width() - btnSz - 1, (height() - btnSz) / 2, btnSz, btnSz);
+    }
 }
 
 void ProgressLabel::updateProgress()
@@ -43,6 +70,7 @@ void ProgressLabel::updateProgress()
     if (inProgress())
     {
         int xFact = width() * m_progress / 100;
+
         QLinearGradient linearGrad(xFact - 1, 0, xFact + 1, 0);
         linearGrad.setColorAt(0, m_oriPalette.color(QPalette::Highlight));
         linearGrad.setColorAt(1, m_oriPalette.color(QPalette::Window));
@@ -56,6 +84,7 @@ void ProgressLabel::updateProgress()
         setPalette(m_oriPalette);
     }
 
+    updateAbortButton();
     QLabel::setText(getDisplayText());
 }
 
@@ -80,8 +109,18 @@ void ProgressLabel::setProgress(int progress)
     }
 }
 
+void ProgressLabel::setCanAbort(bool canAbort)
+{
+    if (m_canAbort != canAbort)
+    {
+        m_canAbort = canAbort;
+        updateProgress();
+    }
+}
+
 void ProgressLabel::resizeEvent(QResizeEvent *event)
 {
+    updateAbortButton();
     QLabel::setText(getDisplayText());
     QLabel::resizeEvent(event);
 }
@@ -93,5 +132,6 @@ void ProgressLabel::paintEvent(QPaintEvent *paintEvent)
         QPainter painter(this);
         painter.fillRect(0, 0, width(), height(), palette().brush(backgroundRole()));
     }
+
     QLabel::paintEvent(paintEvent);
 }
