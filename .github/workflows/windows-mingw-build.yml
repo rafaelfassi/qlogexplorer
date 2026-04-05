@@ -34,16 +34,19 @@ jobs:
           arch: 'win64_mingw'
           tools: 'tools_mingw1310'
 
-      - name: Install RE2 on Windows
-        id: install-re2-mingw
-        run: vcpkg install re2:x64-mingw-static
+      # CMake will download and configure RE2 automatically
+      # To install RE2 from vcpkg
+      #   - name: Install RE2 on Windows
+      #     id: install-re2-mingw
+      #     run: vcpkg install re2:x64-mingw-static
+      # Also need to provide the following CMake parameters in "CMake Configure" step:
+      #   -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+      #   -DVCPKG_TARGET_TRIPLET=x64-mingw-static
 
       - name: CMake Configure
         run: >
           cmake -B ${{ steps.strings.outputs.build-dir }}
           -G "MinGW Makefiles"
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=x64-mingw-static
           -DCMAKE_BUILD_TYPE=${{ steps.strings.outputs.build-type }}
           -S ${{ github.workspace }}
 

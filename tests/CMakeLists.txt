@@ -3,7 +3,7 @@ project(qlogexplorer_tests LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-include(gtest.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/gtest.cmake)
 
 add_executable(${PROJECT_NAME}
     qlogexplorer_test.qrc
@@ -21,7 +21,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
         qlogexplorer_core
-        ${TEST_COMMON_LIBS}
+        ${GTEST_TARGETS}
 )
 
 include(GoogleTest)

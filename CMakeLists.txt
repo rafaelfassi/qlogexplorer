@@ -6,14 +6,20 @@ set(PROJ_URL "https://github.com/rafaelfassi/qlogexplorer")
 set(APP_URL "https://rafaelfassi.github.io/qlogexplorer/")
 set(WIKI_URL "https://github.com/rafaelfassi/qlogexplorer/wiki")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+
+option(USE_INSTALLED_RE2 "Use system-installed RE2 instead of downloading via FetchContent" OFF)
+option(DISABLE_TESTS "Disable tests to make gtest not required" OFF)
+
+# RE2 must be included before Qt and before AUTOMOC is set
+include(cmake/re2.cmake)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(THREADS_PREFER_PTHREAD_FLAG ON)
 
 add_definitions(-DAPP_VERSION="${CMAKE_PROJECT_VERSION}")
 add_definitions(-DAPP_VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR})
@@ -35,4 +41,7 @@ include(InstallRequiredSystemLibraries)
 add_subdirectory(core)
 add_subdirectory(gui)
 add_subdirectory(app)
-add_subdirectory(tests)
+
+if(NOT DISABLE_TESTS)
+    add_subdirectory(tests)
+endif()

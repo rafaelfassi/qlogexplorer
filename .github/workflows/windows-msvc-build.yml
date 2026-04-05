@@ -30,17 +30,20 @@ jobs:
           target: 'desktop'
           arch: 'win64_msvc2022_64'
 
-      - name: Install RE2 on Windows
-        run: vcpkg install re2:x64-windows-static-md
-        id: install-re2-windows
+      # CMake will download and configure RE2 automatically
+      # To install RE2 from vcpkg
+      #   - name: Install RE2 on Windows
+      #     id: install-re2-windows
+      #     run: vcpkg install re2:x64-windows-static-md
+      # Also need to provide the following CMake parameters in "CMake Configure" step:
+      #   -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+      #   -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
 
       - name: CMake Configure
         run: >
           cmake -B ${{ steps.strings.outputs.build-dir }}
           -DCMAKE_CXX_COMPILER=cl
           -DCMAKE_C_COMPILER=cl
-          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
-          -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
           -DCMAKE_BUILD_TYPE=${{ steps.strings.outputs.build-type }}
           -S ${{ github.workspace }}
 
