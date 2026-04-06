@@ -34,16 +34,16 @@ private:
     std::bitset<sizeof(UnderlyingTp) * CHAR_BIT> m_bits;
 };
 
-enum class LogLevel
+enum class NotifLevel
 {
     None,
-    Debug,
-    Info,
+    Error,
     Warning,
-    Error
+    Info,
+    Debug,
 };
-void toStr(const LogLevel &type, std::string &str);
-void fromStr(const std::string &str, LogLevel &type);
+void toStr(const NotifLevel &type, std::string &str);
+void fromStr(const std::string &str, NotifLevel &type);
 
 enum class FileType
 {

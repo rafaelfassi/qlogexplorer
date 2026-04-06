@@ -14,7 +14,7 @@ option(USE_INSTALLED_RE2 "Use system-installed RE2 instead of downloading via Fe
 option(DISABLE_TESTS "Disable tests to make gtest not required" OFF)
 
 # RE2 must be included before Qt and before AUTOMOC is set
-include(cmake/re2.cmake)
+include(3rdparty/re2/re2.cmake)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOUIC ON)

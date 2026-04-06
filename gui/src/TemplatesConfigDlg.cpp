@@ -576,7 +576,7 @@ void TemplatesConfigDlg::addColumn()
     if (conf->getFileType() == tp::FileType::Text)
         newCol.key = std::to_string(newColPos);
     else
-        newCol.key = fmt::format("key_{}", newColPos);
+        newCol.key = FORMAT("key_{}", newColPos);
 
     conf->addColumn(std::move(newCol));
     fillColumns(conf, conf->getColumns().size() - 1);

@@ -66,18 +66,19 @@ void flagsFromStr(const std::vector<std::pair<T, std::string>> &flagsMap, const 
     }
 }
 
-static const std::vector<std::pair<LogLevel, std::string>> g_logLevelMap = {
-    {LogLevel::Debug, "DEBUG"},
-    {LogLevel::Info, "INFO"},
-    {LogLevel::Warning, "WARN"},
-    {LogLevel::Error, "ERROR"}};
-void toStr(const LogLevel &type, std::string &str)
+static const std::vector<std::pair<NotifLevel, std::string>> g_notifLevelMap = {
+    {NotifLevel::None, "NONE"},
+    {NotifLevel::Error, "ERROR"},
+    {NotifLevel::Warning, "WARN"},
+    {NotifLevel::Info, "INFO"},
+    {NotifLevel::Debug, "DEBUG"}};
+void toStr(const NotifLevel &type, std::string &str)
 {
-    enumToStr<LogLevel>(g_logLevelMap, type, str);
+    enumToStr<NotifLevel>(g_notifLevelMap, type, str);
 }
-void fromStr(const std::string &str, LogLevel &type)
+void fromStr(const std::string &str, NotifLevel &type)
 {
-    enumFromStr<LogLevel>(g_logLevelMap, str, type);
+    enumFromStr<NotifLevel>(g_notifLevelMap, str, type);
 }
 
 static const std::vector<std::pair<FileType, std::string>> g_fileTypeMap = {
