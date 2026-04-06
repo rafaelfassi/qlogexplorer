@@ -57,7 +57,6 @@ __Minimum requirements__
 * C++ 17
 * CMake 3.10
 * Qt 6.4
-* RE2
 
 If not using Qt creator, make sure the Qt dir is in the PATH.  
 To build the project via command line:
@@ -69,8 +68,7 @@ make
 ```
 
 ### Build options
-Using the commands above is enough to build QLogExplorer because it will automatically download and configure the dependencies.  
-But in same cases you may want to use the dependencies already installed in the system, especially when creating a Linux package.  
-Here some available options to provide to cmake (must prepend `-D` in the cmake parameter name):
+The above commands are enough to build QLogExplorer, as it will automatically fetch and configure the dependencies.  
+In case you need different options for the dependencies, the project currently supports the following parameters:
 * `USE_INSTALLED_RE2` Use the system-installed RE2 lib instead of fetching it.
 * `DISABLE_TESTS` Does not build the tests, so the gtest libs are not required.

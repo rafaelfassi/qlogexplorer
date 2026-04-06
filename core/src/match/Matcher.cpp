@@ -34,9 +34,9 @@ bool Matcher::matchInRow(const tp::RowData &rowData) const
     return matchInRow(m_matchers, m_orOp, rowData);
 }
 
-bool Matcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) const
+bool Matcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText) const
 {
-    return quickRawMatch(m_matchers, m_orOp, fileType, isBlock, rawText);
+    return preMatchRawText(m_matchers, m_orOp, fileType, isBlock, rawText);
 }
 
 void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
@@ -137,7 +137,7 @@ bool Matcher::matchInRow(const Matchers &matchers, bool orOp, const tp::RowData 
     return false;
 }
 
-bool Matcher::quickRawMatch(
+bool Matcher::preMatchRawText(
     const Matchers &matchers,
     bool orOp,
     tp::FileType fileType,
@@ -162,7 +162,7 @@ bool Matcher::quickRawMatch(
         // The NOT operator can only be considered for row data without defined column
         const bool isNot = matcher->notOp();
         const bool ignore = (isNot && (isBlock || matcher->hasColumn()));
-        bool matched = ignore ? true : matcher->quickRawMatch(fileType, isBlock, rawText);
+        bool matched = ignore ? true : matcher->preMatchRawText(fileType, isBlock, rawText);
         if (isNot && !ignore)
             matched = !matched;
         if (matched)

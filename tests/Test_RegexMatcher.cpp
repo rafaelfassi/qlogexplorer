@@ -9,8 +9,8 @@ TEST(Test_RegexMatcher, JsonCaseInsensitive_001)
     param.pattern = R"_(Has "quotes" linebreak and tab end.)_";
     param.type = tp::SearchType::Regex;
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -22,8 +22,8 @@ TEST(Test_RegexMatcher, JsonCaseInsensitive_002)
     param.pattern = R"_(Has\s"quotes"\slinebreak\sand\stab\send.)_";
     param.type = tp::SearchType::Regex;
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -35,8 +35,8 @@ TEST(Test_RegexMatcher, JsonCaseInsensitive_003)
     param.pattern = R"_(Has "quotes" win linebreak and tab finished)_";
     param.type = tp::SearchType::Regex;
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -48,8 +48,8 @@ TEST(Test_RegexMatcher, JsonCaseInsensitive_004)
     param.pattern = R"_(Has\s"quotes"\swin\slinebreak\sand\stab\sfinished)_";
     param.type = tp::SearchType::Regex;
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -61,8 +61,8 @@ TEST(Test_RegexMatcher, JsonCaseInsensitive_005)
     param.pattern = R"_(Has backslash \\ return and slash/.)_";
     param.type = tp::SearchType::Regex;
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -75,8 +75,8 @@ TEST(Test_RegexMatcher, JsonCaseSensitive_006)
     param.type = tp::SearchType::Regex;
     param.flags.set(tp::SearchFlag::MatchCase);
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -89,8 +89,8 @@ TEST(Test_RegexMatcher, JsonCaseSensitive_007)
     param.type = tp::SearchType::Regex;
     param.flags.set(tp::SearchFlag::MatchCase);
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -103,7 +103,7 @@ TEST(Test_RegexMatcher, JsonCaseSensitive_008)
     param.type = tp::SearchType::Regex;
     param.flags.set(tp::SearchFlag::MatchCase);
     RegexMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }

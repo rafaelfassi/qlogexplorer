@@ -19,7 +19,7 @@ bool SubStringMatcher::match(std::string_view text)
     }
 }
 
-bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+bool SubStringMatcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     if (!m_rawMatcherInitiated)
     {

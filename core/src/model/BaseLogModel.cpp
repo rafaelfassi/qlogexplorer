@@ -134,13 +134,13 @@ void BaseLogModel::search(bool keepSearching)
             }
 
             // Only load the chunk rows if it passes the quick raw data match for block
-            if (m_matcher.quickRawMatch(m_fileType, true, chunkRows.data()))
+            if (m_matcher.preMatchRawText(m_fileType, true, chunkRows.data()))
             {
                 loadChunkRows(chunkRows);
                 for (const auto &[currRow, rawText] : chunkRows.rows())
                 {
                     // Only parse the row if it passes the quick raw data match for row
-                    if (m_matcher.quickRawMatch(m_fileType, false, rawText))
+                    if (m_matcher.preMatchRawText(m_fileType, false, rawText))
                     {
                         // Now we parse the row and do the
                         parseRow(rawText, rowData);

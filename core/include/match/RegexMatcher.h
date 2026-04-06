@@ -11,7 +11,7 @@ public:
     RegexMatcher(const tp::SearchParam &param);
     RegexFlags getOpts();
     bool match(std::string_view text) override;
-    bool quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
+    bool preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText) override;
 
 private:
     void initRawMatch(tp::FileType fileType, bool isBlock);

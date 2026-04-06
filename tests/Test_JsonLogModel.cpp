@@ -7,7 +7,7 @@
 namespace biglog
 {
 
-static const std::string logFileName{"JsonLogModel_BigLog.log"};
+static const std::string logFileName{"JsonLogModel_BigLog.json"};
 static const std::size_t logEntries = g_chunkSize / 2;
 static const std::vector<std::string> lvls{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG"};
 static const std::vector<std::pair<std::string, std::string>> msgs{

@@ -35,7 +35,7 @@ bool RegexMatcher::match(std::string_view text)
         return false;
 }
 
-bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+bool RegexMatcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     if (!m_rawMatcherInitiated)
     {

@@ -115,6 +115,7 @@ public:
     void reconfigure();
     bool isFollowing() const;
     void resultsDigested() { m_resultsDigested.store(true); }
+    tp::UInt getChunksPerParse() const { return m_chunksPerParse; }
 
     // The following public functions should be externally called only for unit testing purposes:
     // If not testing, call start() instead
@@ -125,7 +126,6 @@ public:
     std::size_t chunksCount() const { return m_chunks.size(); }
     // Use this to specify how many chunks are loaded on each parse
     void setChunksPerParse(tp::UInt chunksPerParse) { m_chunksPerParse = chunksPerParse; }
-    tp::UInt getChunksPerParse() const { return m_chunksPerParse; }
 
 signals:
     void parsingProgressChanged(int progress);
