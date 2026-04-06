@@ -4,8 +4,6 @@
 #include "model/JsonLogModel.h"
 #include "sstream"
 
-constexpr tp::UInt g_maxChunksPerParse(50);
-
 static std::string toString(const rapidjson::Value &json)
 {
     rapidjson::StringBuffer buffer;
@@ -87,8 +85,9 @@ tp::UInt JsonLogModel::parseChunks(
 
     tp::UInt chunkStartPos = getFilePos(is);
     tp::UInt last_pos = chunkStartPos;
+    const auto chunksPerParse = getChunksPerParse();
 
-    while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
+    while (!isEndOfFile(is) && (chunks.size() < chunksPerParse))
     {
         bool mustAddRowsToChunk(false);
         const auto res = reader.Parse<rapidjson::kParseStopWhenDoneFlag>(isw, handler);

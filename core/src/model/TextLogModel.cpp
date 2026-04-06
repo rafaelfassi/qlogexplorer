@@ -3,8 +3,6 @@
 
 #include "model/TextLogModel.h"
 
-constexpr tp::UInt g_maxChunksPerParse(500);
-
 TextLogModel::TextLogModel(FileConf::Ptr conf, QObject *parent) : BaseLogModel(conf, parent)
 {
 }
@@ -52,8 +50,9 @@ tp::UInt TextLogModel::parseChunks(
     tp::UInt lastLineBreakPos(fromPos);
     tp::UInt nextFirstChunkRow(nextRow);
     tp::UInt currentRowCount(nextRow);
+    const auto chunksPerParse = getChunksPerParse();
 
-    while (!isEndOfFile(is) && (chunks.size() < g_maxChunksPerParse))
+    while (!isEndOfFile(is) && (chunks.size() < chunksPerParse))
     {
         tp::UInt chunkStartPos = getFilePos(is);
         lastPos = chunkStartPos;

@@ -10,6 +10,7 @@
 #include <mutex>
 
 constexpr tp::UInt g_chunkSize = 1024 * 1024;
+constexpr tp::UInt g_defChunksPerParse = 500;
 
 enum class ReadFileResult
 {
@@ -122,6 +123,9 @@ public:
     void searchFromCurrentThread(const tp::SearchParams &params, bool orOp);
     // Used for tests to get the number of chunks (don't use this if not testing)
     std::size_t chunksCount() const { return m_chunks.size(); }
+    // Use this to specify how many chunks are loaded on each parse
+    void setChunksPerParse(tp::UInt chunksPerParse) { m_chunksPerParse = chunksPerParse; }
+    tp::UInt getChunksPerParse() const { return m_chunksPerParse; }
 
 signals:
     void parsingProgressChanged(int progress);
@@ -176,4 +180,5 @@ private:
     std::atomic_size_t m_rowCount = 0;
     // Accessed only by m_watchThread.
     tp::UInt m_lastParsedPos = 0;
+    tp::UInt m_chunksPerParse = g_defChunksPerParse;
 };
