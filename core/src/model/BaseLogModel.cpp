@@ -134,13 +134,13 @@ void BaseLogModel::search(bool keepSearching)
             }
 
             // Only load the chunk rows if it passes the quick raw data match for block
-            if (m_matcher.preMatchRawText(m_fileType, true, chunkRows.data()))
+            if (m_disableRawSearch || m_matcher.preMatchRawText(m_fileType, true, chunkRows.data()))
             {
                 loadChunkRows(chunkRows);
                 for (const auto &[currRow, rawText] : chunkRows.rows())
                 {
                     // Only parse the row if it passes the quick raw data match for row
-                    if (m_matcher.preMatchRawText(m_fileType, false, rawText))
+                    if (m_disableRawSearch || m_matcher.preMatchRawText(m_fileType, false, rawText))
                     {
                         // Now we parse the row and do the
                         parseRow(rawText, rowData);
@@ -547,7 +547,7 @@ void BaseLogModel::loadChunks()
 bool BaseLogModel::loadChunkDataByRow(tp::UInt row, ChunkRows &chunkRows) const
 {
     const auto chunk = std::lower_bound(m_chunks.begin(), m_chunks.end(), row, Chunk::compareRows);
-    if ((chunk != m_chunks.end()) && chunk->countainRow(row))
+    if ((chunk != m_chunks.end()) && chunk->containsRow(row))
     {
         const auto chunkSize = chunk->getSize();
         std::string &chunkData = chunkRows.data();

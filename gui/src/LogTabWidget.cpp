@@ -5,6 +5,7 @@
 #include "LogViewWidget.h"
 #include "LogSearchWidget.h"
 #include "Style.h"
+#include "Settings.h"
 #include "model/TextLogModel.h"
 #include "model/JsonLogModel.h"
 #include "LongScrollBar.h"
@@ -41,6 +42,11 @@ LogTabWidget::LogTabWidget(FileConf::Ptr conf, QWidget *parent) : QWidget(parent
         default:
             LOG_ERR("Invalid FileType {}", tp::toSInt(conf->getFileType()));
             m_logModel = new TextLogModel(conf, this);
+    }
+
+    if (Settings::getDisableOptimizations())
+    {
+        m_logModel->setDisableRawSearch(true);
     }
 
     QToolBar *toolbar = new QToolBar(tr("File ToolBar"), this);
