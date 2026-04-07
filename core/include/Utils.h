@@ -15,153 +15,163 @@
 namespace utl
 {
 
-static constexpr const char *getSrcFile(const char *const path)
-{
-    return path + sizeof(APP_BASE_SRC_DIR);
-}
-
-static constexpr std::array<char, 256> makeUpperArray()
-{
-    std::array<char, 256> table{};
-    for (int i = 0; i < 256; ++i)
+    static constexpr const char *getSrcFile(const char *const path)
     {
-        table[i] = static_cast<char>(i);
+        return path + sizeof(APP_BASE_SRC_DIR);
     }
-    for (int i = 'a'; i <= 'z'; ++i)
+
+    static constexpr std::array<char, 256> makeUpperArray()
     {
-        table[i] = (static_cast<char>(i) & ~0x20);
-    }
-    return table;
-}
-constexpr auto utab = utl::makeUpperArray();
-
-inline bool compareCaseInsensitive(char l, char r)
-{
-    return (utab[static_cast<unsigned char>(l)] == utab[static_cast<unsigned char>(r)]);
-}
-
-std::string toStr(const rapidjson::Value &json);
-
-std::string toStr(const QString &str);
-
-std::string toStr(const QColor &color);
-
-inline QString toQStr(std::string_view str)
-{
-    return QString::fromUtf8(str.data(), str.size());
-}
-
-std::string join(const std::vector<std::string> &strList, const std::string &delim);
-
-std::vector<std::string> split(const std::string &str, const std::string &delim);
-
-std::string toUpper(const std::string &text);
-
-QString elideLeft(const std::string &str, tp::UInt maxSize);
-
-bool startsWith(std::string_view str, std::string_view prefix);
-
-bool endsWith(std::string_view str, std::string_view suffix);
-
-inline bool contains(std::string_view str, std::string_view sub)
-{
-    return (str.find(sub) != std::string::npos);
-}
-
-inline bool containsICase(std::string_view text, std::string_view sub)
-{
-    // std::search with predicate to compare insensitive case is too slow.
-    // In the same test (10GB of text data) std::search took ~12s this took ~4s.
-    // Can't tell this will perform in the same way for every compiler and CPU,
-    // because the performance rely on compiler optimizations and branch prediction.
-    if (sub.empty() || (text.size() < sub.size()))
-        return false;
-
-    bool found;
-    const size_t cnt = text.size() - sub.size() + 1;
-    for (size_t i = 0; i < cnt; ++i)
-    {
-        if (compareCaseInsensitive(text[i], sub[0]))
+        std::array<char, 256> table{};
+        for (int i = 0; i < 256; ++i)
         {
-            found = true;
-            for (size_t j = 1; j < sub.size(); ++j)
+            table[i] = static_cast<char>(i);
+        }
+        for (int i = 'a'; i <= 'z'; ++i)
+        {
+            table[i] = (static_cast<char>(i) & ~0x20);
+        }
+        return table;
+    }
+
+    constexpr auto utab = utl::makeUpperArray();
+
+    inline bool compareCaseInsensitive(char l, char r)
+    {
+        return (utab[static_cast<unsigned char>(l)] == utab[static_cast<unsigned char>(r)]);
+    }
+
+    std::string toStr(const rapidjson::Value &json);
+
+    std::string toStr(const QString &str);
+
+    std::string toStr(const QColor &color);
+
+    inline QString toQStr(std::string_view str)
+    {
+        return QString::fromUtf8(str.data(), str.size());
+    }
+
+    std::string join(const std::vector<std::string> &strList, const std::string &delim);
+
+    std::vector<std::string> split(const std::string &str, const std::string &delim);
+
+    std::string toUpper(const std::string &text);
+
+    QString elideLeft(const std::string &str, tp::UInt maxSize);
+
+    bool startsWith(std::string_view str, std::string_view prefix);
+
+    bool endsWith(std::string_view str, std::string_view suffix);
+
+    inline bool contains(std::string_view str, char ch)
+    {
+        return (str.find(ch) != std::string::npos);
+    }
+
+    inline bool contains(std::string_view str, std::string_view sub)
+    {
+        return (str.find(sub) != std::string::npos);
+    }
+
+    inline bool containsICase(std::string_view text, std::string_view sub)
+    {
+        // std::search with predicate to compare insensitive case is too slow.
+        // In the same test (10GB of text data) std::search took ~12s this took ~4s.
+        // Can't tell this will perform in the same way for every compiler and CPU,
+        // because the performance rely on compiler optimizations and branch prediction.
+        if (sub.empty() || (text.size() < sub.size()))
+            return false;
+
+        bool found;
+        const size_t cnt = text.size() - sub.size() + 1;
+        for (size_t i = 0; i < cnt; ++i)
+        {
+            if (compareCaseInsensitive(text[i], sub[0]))
             {
-                if (!compareCaseInsensitive(text[i + j], sub[j]))
+                found = true;
+                for (size_t j = 1; j < sub.size(); ++j)
                 {
-                    found = false;
-                    break;
+                    if (!compareCaseInsensitive(text[i + j], sub[j]))
+                    {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith);
+
+    void replaceStrIf(
+        std::string &str,
+        const std::string &toSearch,
+        std::string_view replacement,
+        std::function<bool(std::string_view, std::size_t)> pred
+    );
+
+    void simplify(std::string &str);
+
+    // This prepares the pattern to be used by getRxReplacementForRawJson
+    // - Replace any whitespace sequence in the regex pattern with a single space.
+    // - Remove escape backslash for slash and backslash.
+    std::string reduceRxPatternForReplacement(std::string_view pattern);
+
+    // Gets a replacement for the provided character in the regex pattern that can be used for
+    // searching in a raw json file.
+    // Fupported inputs are: [/,\," ]
+    std::string_view getRxReplacementForRawJson(char c);
+
+    bool removeRegexAnchors(std::string &pattern);
+
+    QVariant toVariant(const tp::Column &column, const QString &text);
+
+    template <typename T>
+    std::optional<T> GetValueOpt(const rapidjson::Value &jsonObj, const std::string &key)
+    {
+        std::optional<T> val;
+
+        if (const auto &it = jsonObj.FindMember(key); it != jsonObj.MemberEnd() && !it->value.IsNull())
+        {
+            if constexpr (std::is_enum_v<T> || std::is_base_of<tp::BaseFlags, T>::value)
+            {
+                const auto s = it->value.GetString();
+                val = tp::fromStr<T>(s);
+            }
+            else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
+            {
+                val = it->value.GetString();
+            }
+            else if constexpr (std::is_same_v<T, QString>)
+            {
+                val = toQStr(it->value.GetString());
+            }
+            else if constexpr (std::is_integral<T>::value)
+            {
+                if constexpr (std::is_same<T, bool>::value)
+                {
+                    val = it->value.GetBool();
+                }
+                else if constexpr (std::is_signed<T>::value)
+                {
+                    val = it->value.GetInt64();
+                }
+                else
+                {
+                    val = it->value.GetUint64();
                 }
             }
-            if (found)
-                return true;
+            else if constexpr (std::is_floating_point<T>::value)
+            {
+                val = it->value.GetDouble();
+            }
         }
+
+        return val;
     }
-    return false;
-}
-
-void replaceAll(std::string &str, const std::string &toSearch, const std::string &replaceWith);
-
-void replaceStrIf(
-    std::string &str,
-    const std::string &toSearch,
-    std::string_view replacement,
-    std::function<bool(std::string_view, std::size_t)> pred);
-
-void simplify(std::string &str);
-
-// This prepares the pattern to be used by getRxReplacementForRawJson
-// - Replace any whitespace sequence in the regex pattern with a single space.
-// - Remove escape backslash for slash and backslash.
-std::string reduceRxPatternForReplacement(std::string_view pattern);
-
-// Gets a replacement for the provided character in the regex pattern that can be used for
-// searching in a raw json file.
-// Fupported inputs are: [/,\," ]
-std::string_view getRxReplacementForRawJson(char c);
-
-QVariant toVariant(const tp::Column &column, const QString &text);
-
-template <typename T> std::optional<T> GetValueOpt(const rapidjson::Value &jsonObj, const std::string &key)
-{
-    std::optional<T> val;
-
-    if (const auto &it = jsonObj.FindMember(key); it != jsonObj.MemberEnd() && !it->value.IsNull())
-    {
-        if constexpr (std::is_enum_v<T> || std::is_base_of<tp::BaseFlags, T>::value)
-        {
-            const auto s = it->value.GetString();
-            val = tp::fromStr<T>(s);
-        }
-        else if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>)
-        {
-            val = it->value.GetString();
-        }
-        else if constexpr (std::is_same_v<T, QString>)
-        {
-            val = toQStr(it->value.GetString());
-        }
-        else if constexpr (std::is_integral<T>::value)
-        {
-            if constexpr (std::is_same<T, bool>::value)
-            {
-                val = it->value.GetBool();
-            }
-            else if constexpr (std::is_signed<T>::value)
-            {
-                val = it->value.GetInt64();
-            }
-            else
-            {
-                val = it->value.GetUint64();
-            }
-        }
-        else if constexpr (std::is_floating_point<T>::value)
-        {
-            val = it->value.GetDouble();
-        }
-    }
-
-    return val;
-}
 
 } // namespace utl

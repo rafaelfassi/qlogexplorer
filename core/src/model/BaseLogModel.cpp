@@ -16,7 +16,7 @@ BaseLogModel::~BaseLogModel()
 {
     if (m_watching.load())
     {
-        LOG_ERR("stop() must be called on the derivated class destructor");
+        LOG_ERR("stop() must be called on the derived class destructor");
         stop();
     }
 
@@ -571,7 +571,8 @@ bool BaseLogModel::loadChunkRowsByRow(tp::UInt row, ChunkRows &chunkRows) const
             LOG_ERR(
                 "The cached chunk rows {} does not match the chunk info {}",
                 chunkRows.rowCount(),
-                chunkRows.getChunk()->getRowCount());
+                chunkRows.getChunk()->getRowCount()
+            );
         }
         return true;
     }
