@@ -149,7 +149,7 @@ SearchParamControl::SearchParamControl(
 
 void SearchParamControl::cmbSearchCurrentIndexChanged(int idx)
 {
-    LOG_INF("cmbSearch - IndexChanged {}", idx);
+    LOG_DBG("cmbSearch - IndexChanged {}", idx);
     if (m_proxyModel != nullptr)
     {
         if (m_proxyModel->isReady())
@@ -162,7 +162,7 @@ void SearchParamControl::cmbSearchCurrentIndexChanged(int idx)
         }
         else if ((m_cmbSearch != nullptr) && (m_cmbSearch->currentIndex() != -1))
         {
-            LOG_INF("cmbSearch - Model is not ready yet");
+            LOG_DBG("cmbSearch - Model is not ready yet");
             m_cmbSearch->setCurrentIndex(-1);
         }
     }

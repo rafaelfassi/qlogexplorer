@@ -88,7 +88,7 @@ bool SearchParamModel::insertRows(int row, int count, const QModelIndex &parent)
     if (count < 1 || row < 0 || row > rowCount(parent))
         return false;
 
-    LOG_INF("insertRows - row: {}, count: {}", row, count);
+    LOG_DBG("insertRows - row: {}, count: {}", row, count);
     beginInsertRows(QModelIndex(), row, row + count - 1);
     m_data.insert(m_data.begin() + row, count, tp::FilterParam());
     endInsertRows();
@@ -100,7 +100,7 @@ bool SearchParamModel::removeRows(int row, int count, const QModelIndex &parent)
     if (count <= 0 || row < 0 || (row + count) > rowCount(parent))
         return false;
 
-    LOG_INF("removeRows - row: {}, count: {}", row, count);
+    LOG_DBG("removeRows - row: {}, count: {}", row, count);
     beginRemoveRows(QModelIndex(), row, row + count - 1);
     const auto it = m_data.begin() + row;
     m_data.erase(it, it + count);
@@ -139,7 +139,6 @@ bool SearchParamModel::moveRows(
     const QModelIndex &destinationParent,
     int destinationChild)
 {
-    LOG_INF("moveRows");
     if (sourceRow < 0 || sourceRow + count - 1 >= rowCount(sourceParent) || destinationChild < 0 ||
         destinationChild > rowCount(destinationParent) || sourceRow == destinationChild || count <= 0 ||
         sourceParent.isValid() || destinationParent.isValid())
@@ -165,12 +164,12 @@ QModelIndex SearchParamModel::sibling(int row, int column, const QModelIndex &id
 
 void SearchParamModel::loadParams(const tp::FilterParams &params)
 {
-    LOG_INF("loadParams - count: {}", params.size());
+    LOG_DBG("loadParams - count: {}", params.size());
     if (!params.empty())
     {
         const auto fromRow = rowCount();
         const auto toRow = fromRow + params.size() - 1;
-        LOG_INF("loadParams - inserting fromRow: {}, toRow: {}", fromRow, toRow);
+        LOG_DBG("loadParams - inserting fromRow: {}, toRow: {}", fromRow, toRow);
         beginInsertRows(QModelIndex(), fromRow, toRow);
         for (const auto &param : params)
         {
@@ -183,13 +182,13 @@ void SearchParamModel::loadParams(const tp::FilterParams &params)
 
 void SearchParamModel::updateParams(const tp::FilterParams &params)
 {
-    LOG_INF("Updating parameters...");
+    LOG_DBG("Updating parameters...");
     for (const auto &param : params)
     {
         const auto idx = findByItemName(param.name);
         if (idx == -1)
         {
-            LOG_INF("updateParams - insert - name {}, pattern {}", param.name, param.searchParam.pattern);
+            LOG_DBG("updateParams - insert - name {}, pattern {}", param.name, param.searchParam.pattern);
             beginInsertRows(QModelIndex(), m_data.size(), m_data.size());
             m_data.emplace_back(param);
             endInsertRows();

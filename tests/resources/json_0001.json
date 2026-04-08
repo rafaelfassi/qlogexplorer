@@ -16,3 +16,4 @@
 {"LogLevel":"WARNING","DateTime":"19-02-2022 15:18:26.643","ProcessId":24961,"ThreadId":"0xAC05","FileName":"services/UpstreamManager.py","LineNumber":16,"LogMessage":"Could not stop \"UpstreamUpdater service\". killing it."}
 {"LogLevel":"ERROR","DateTime":"19-02-2022 15:18:26.644","ProcessId":51816,"ThreadId":"0xDB05","FileName":"src/net/sc.rs","LineNumber":17,"LogMessage":"An unexpected error has occurred. What:Network socket ptr is null."}
 {"LogLevel":"INFO","DateTime":"18-02-2022 15:19:02.472","ProcessId":3692,"ThreadId":"0x3F22","FileName":"src/server.cpp","LineNumber":18,"LogMessage":"System starting..."}
+{"LogLevel":"ERROR","DateTime":"18-02-2022 16:01:13.000","ProcessId":3692,"ThreadId":"0x3F22","FileName":"src/server.cpp","LineNumber":19,"LogMessage":"Checking:C:\\Abacus\\zetrum\\inode"}

@@ -85,6 +85,8 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
         if (rawPattern != m_param.pattern)
         {
+            LOG_DBG("Raw pattern: '{}'", rawPattern);
+
             RegexFlags opts = RegexOption::DontCapture;
             if (matchCase())
             {

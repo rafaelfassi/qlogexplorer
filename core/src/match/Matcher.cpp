@@ -6,11 +6,6 @@
 #include "match/SubStringMatcher.h"
 #include "match/RangeMatcher.h"
 
-static bool hasRegexPattern(const tp::SearchParam &param)
-{
-    return (param.pattern.find_first_of(".*+?^$|()[]{}\\") != std::string::npos);
-}
-
 void Matcher::setParam(const tp::SearchParam &param)
 {
     m_matchers.clear();
@@ -44,10 +39,7 @@ void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
     switch (param.type)
     {
         case tp::SearchType::Regex:
-            if (hasRegexPattern(param))
-                matchers.emplace_back(std::make_unique<RegexMatcher>(param));
-            else
-                matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
+            matchers.emplace_back(std::make_unique<RegexMatcher>(param));
             break;
         case tp::SearchType::SubString:
             matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
@@ -137,12 +129,7 @@ bool Matcher::matchInRow(const Matchers &matchers, bool orOp, const tp::RowData 
     return false;
 }
 
-bool Matcher::preMatchRawText(
-    const Matchers &matchers,
-    bool orOp,
-    tp::FileType fileType,
-    bool isBlock,
-    std::string_view rawText)
+bool Matcher::preMatchRawText(const Matchers &matchers, bool orOp, tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     std::uint32_t cnt(0);
 
