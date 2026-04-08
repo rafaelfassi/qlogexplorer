@@ -115,6 +115,7 @@ namespace utl
     );
 
     void simplify(std::string &str);
+    void trim(std::string &str);
 
     // This prepares the pattern to be used by getRxReplacementForRawJson
     // - Replace any whitespace sequence in the regex pattern with a single space.

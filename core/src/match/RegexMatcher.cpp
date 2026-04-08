@@ -69,7 +69,7 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
         // escape some characters.
 
         rawPattern = utl::reduceRxPatternForReplacement(rawPattern);
-        LOG_DBG("Simplified pattern: '{}'", rawPattern);
+        LOG_DBG("Reduced pattern: '{}'", rawPattern);
 
         utl::replaceStrIf(
             rawPattern,

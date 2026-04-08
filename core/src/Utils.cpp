@@ -144,6 +144,26 @@ namespace utl
         str = std::move(sStr);
     }
 
+    void trim(std::string &str)
+    {
+        if (!str.empty() && (str.front() == ' ' || str.back() == ' '))
+        {
+
+            std::string_view sv{str};
+            while (!sv.empty() && sv.front() == ' ')
+            {
+                sv.remove_prefix(1);
+            }
+
+            while (!sv.empty() && sv.back() == ' ')
+            {
+                sv.remove_suffix(1);
+            }
+
+            str = std::string(sv);
+        }
+    }
+
     std::string reduceRxPatternForReplacement(std::string_view pattern)
     {
         std::string reducedRx;
