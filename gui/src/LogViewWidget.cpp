@@ -448,7 +448,8 @@ void LogViewWidget::mousePressEvent(QMouseEvent *event)
                 const auto it = std::find_if(
                     m_markedTexts.begin(),
                     m_markedTexts.end(),
-                    [&mark](const gtp::TextSelection &sel) { return sel.color.bg == mark.bg; });
+                    [&mark](const gtp::TextSelection &sel) { return sel.color.bg == mark.bg; }
+                );
                 if (it != m_markedTexts.end())
                 {
                     auto actUnmark = unmarkAllMenu->addAction(icon, QString("Style %1").arg(markCnt));
@@ -542,8 +543,7 @@ void LogViewWidget::mouseDoubleClickEvent(QMouseEvent *event)
 
         const int textXPos = xPos - col.can.rect.left();
         const int chPos = getStrStartPos(textXPos);
-        const auto wS =
-            std::find_if(col.can.text.rbegin() + col.can.text.size() - chPos, col.can.text.rend(), isSeparator);
+        const auto wS = std::find_if(col.can.text.rbegin() + col.can.text.size() - chPos, col.can.text.rend(), isSeparator);
         const auto wE = std::find_if(col.can.text.begin() + chPos, col.can.text.end(), isSeparator);
         const auto sPos = std::distance(col.can.text.begin(), wS.base());
         const auto ePos = std::distance(col.can.text.begin(), wE);
@@ -592,15 +592,12 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
         {
             // Draw Line Number
             {
-                const auto &lineNumColor =
-                    hasBookmark(vrData.row) ? Style::getBookmarkColor() : Style::getHeaderColor();
+                const auto &lineNumColor = hasBookmark(vrData.row) ? Style::getBookmarkColor() : Style::getHeaderColor();
                 painter.setClipping(false);
                 painter.setPen(lineNumColor.fg);
                 painter.fillRect(vrData.numberAreaRect, lineNumColor.bg);
-                painter.drawText(
-                    vrData.numberRect,
-                    Qt::AlignTop | Qt::AlignRight,
-                    utl::toQStr(std::to_string(vrData.number + 1)));
+                painter
+                    .drawText(vrData.numberRect, Qt::AlignTop | Qt::AlignRight, utl::toQStr(std::to_string(vrData.number + 1)));
             }
 
             QColor rowTextColor(Style::getTextAreaColor().fg);
@@ -649,7 +646,8 @@ void LogViewWidget::paintEvent(QPaintEvent *event)
                 }
             }
             return true;
-        });
+        }
+    );
 
     m_stabilizedUpdateTimer->start();
 }
@@ -668,8 +666,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
     rect.translate(-hOffset, 0);
 
     vrData.numberAreaRect = QRect(0, yOffset, m_textAreaRect.left(), m_rowHeight);
-    vrData.numberRect =
-        QRect(Style::getTextPadding(), yOffset, m_textAreaRect.left() - Style::getTextPadding() * 2, m_rowHeight);
+    vrData.numberRect = QRect(Style::getTextPadding(), yOffset, m_textAreaRect.left() - Style::getTextPadding() * 2, m_rowHeight);
 
     for (const auto &highlighter : m_highlightersRows)
     {
@@ -721,7 +718,7 @@ void LogViewWidget::getVisualRowData(tp::SInt row, tp::SInt rowOffset, tp::SInt 
             if (idx < rowData.size())
             {
                 const QString colText = utl::toQStr(rowData[idx]);
-                vcData.can.text = getElidedText(colText, colWidth - Style::getColumnMargin(), true);
+                vcData.can.text = getElidedText(colText, colWidth - Style::getColumnMargin());
                 if (selectText.has_value() && rect.contains(selectText.value()))
                 {
                     const auto &can = makeSelCanFromSelRect(vcData.can, selectText.value());
@@ -791,11 +788,11 @@ tp::SInt LogViewWidget::getMaxRowWidth()
         {
             for (const auto &col : vrData.columns)
             {
-                maxRowWidth =
-                    std::max<tp::SInt>(maxRowWidth, col.can.rect.right() - vrData.numberAreaRect.right() + offset);
+                maxRowWidth = std::max<tp::SInt>(maxRowWidth, col.can.rect.right() - vrData.numberAreaRect.right() + offset);
             }
             return true;
-        });
+        }
+    );
     return maxRowWidth;
 }
 
@@ -896,8 +893,8 @@ void LogViewWidget::getColumnsSizeToContent(tp::ColumnsRef &columnsRef)
         for (auto &headerColumn : columnsRef)
         {
             auto &column(headerColumn.get());
-            const tp::SInt textWidth = getTextWidth(rowData[column.idx], true) + Style::getTextPadding() + elideWith +
-                                       Style::getColumnMargin();
+            const tp::SInt textWidth =
+                getTextWidth(rowData[column.idx]) + Style::getTextPadding() + elideWith + Style::getColumnMargin();
             column.width = std::max<tp::SInt>(column.width, std::min<tp::SInt>(textWidth, m_header->maximumSectionSize()));
         }
     }
@@ -1012,6 +1009,7 @@ std::vector<gtp::TextSelection> LogViewWidget::findMarkedText(const gtp::TextCan
 
     return resVec;
 }
+
 gtp::TextCan LogViewWidget::makeSelCanFromStrPos(const gtp::TextCan &can, int fromPos, int len)
 {
     int sX = getStrWidthUntilPos(fromPos);
@@ -1025,9 +1023,10 @@ gtp::TextCan LogViewWidget::makeSelCanFromStrPos(const gtp::TextCan &can, int fr
 
     return selCan;
 }
+
 gtp::TextCan LogViewWidget::makeSelCanFromSelRect(const gtp::TextCan &can, const QRect &selRect)
 {
-   gtp::TextCan selCan;
+    gtp::TextCan selCan;
 
     if (can.text.isEmpty() || selRect.isNull() || !selRect.isValid())
     {
@@ -1346,8 +1345,10 @@ void LogViewWidget::removeTextMarks(const gtp::SectionColor &selColor)
         std::remove_if(
             m_markedTexts.begin(),
             m_markedTexts.end(),
-            [&selColor](const gtp::TextSelection &mark) { return (mark.color.bg == selColor.bg); }),
-        m_markedTexts.end());
+            [&selColor](const gtp::TextSelection &mark) { return (mark.color.bg == selColor.bg); }
+        ),
+        m_markedTexts.end()
+    );
     update();
     emit textMarkUpdated();
 }
