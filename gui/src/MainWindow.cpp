@@ -93,6 +93,7 @@ void MainWindow::createActions()
     m_actSettings = new QAction(this);
 
     m_actOpenWiki = new QAction(this);
+    m_actOpenIssues = new QAction(this);
     m_actAbout = new QAction(this);
 }
 
@@ -134,6 +135,7 @@ void MainWindow::createMenus()
 
     m_helpMenu = menuBar()->addMenu("Help");
     m_helpMenu->addAction(m_actOpenWiki);
+    m_helpMenu->addAction(m_actOpenIssues);
     m_helpMenu->addAction(m_actAbout);
 }
 
@@ -158,6 +160,7 @@ void MainWindow::createConnections()
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
     connect(m_actSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(m_actOpenWiki, &QAction::triggered, this, &MainWindow::openWiki);
+    connect(m_actOpenIssues, &QAction::triggered, this, &MainWindow::openIssues);
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::openAbout);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
     connect(m_tabViews, &QTabWidget::currentChanged, this, &MainWindow::configAsCurrentTab);
@@ -183,6 +186,7 @@ void MainWindow::translateUi()
 
     m_helpMenu->setTitle(tr("&Help"));
     m_actOpenWiki->setText(tr("&Wiki"));
+    m_actOpenIssues->setText(tr("Report &Issue"));
     m_actAbout->setText(tr("&About"));
 }
 
@@ -406,6 +410,11 @@ void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 void MainWindow::openWiki()
 {
     QDesktopServices::openUrl(QUrl(WIKI_URL, QUrl::TolerantMode));
+}
+
+void MainWindow::openIssues()
+{
+    QDesktopServices::openUrl(QUrl(ISSUES_URL, QUrl::TolerantMode));
 }
 
 void MainWindow::openAbout()

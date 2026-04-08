@@ -53,6 +53,7 @@ public slots:
     void openSettings();
     void setRecentFile(const FileConf::Ptr &conf);
     void openWiki();
+    void openIssues();
     void openAbout();
     void updateCurrentTabConf(FileConf::Ptr conf);
     void updateOpenedConf(FileConf::Ptr conf);
@@ -92,6 +93,7 @@ private:
     QAction *m_actTemplatesConfig;
     QAction *m_actSettings;
     QAction *m_actOpenWiki;
+    QAction *m_actOpenIssues;
     QAction *m_actAbout;
     QAction *m_actOpenAsSep;
     QMenu *m_fileMenu;

@@ -251,7 +251,8 @@ void SettingsDlg::buildLayout()
     auto grAdvanced = new QGroupBox(tr("Advanced"), this);
     auto vAdvanced = new QVBoxLayout(grAdvanced);
 
-    m_chkDisableOptimization = new QCheckBox(tr("Disable search optimizations"), grAdvanced);
+    m_chkDisableOptimization = new QCheckBox(tr("Disable experimental search optimizations"), grAdvanced);
+    m_chkDisableOptimization->setToolTip(tr("You can try to disable this if the results don't match the search criteria"));
     vAdvanced->addWidget(m_chkDisableOptimization);
 
     vLayoutMain->addWidget(grAdvanced);
