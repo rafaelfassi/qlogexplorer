@@ -6,8 +6,8 @@
 
 namespace biglog
 {
-    static const std::string logFileName{"TextLogMode_BigLog.log"};
-    static const std::string templateFileName{"TextLogMode_BigLog_tmpl.json"};
+    static const std::string logFileName{"TextLogModel_BigLog.log"};
+    static const std::string templateFileName{"TextLogModel_BigLog_tmpl.json"};
     static const std::size_t logEntries = g_chunkSize / 2;
     static const std::vector<std::string> lvls{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG"};
     static const std::vector<std::pair<std::string, std::vector<std::string>>> msgs{
@@ -32,7 +32,7 @@ namespace biglog
             return rowCount;
         }
 
-        std::ofstream outFile(logFileName, std::ios::trunc);
+        std::ofstream outFile(logFileName, std::ios::binary | std::ios::trunc);
         if (!outFile.is_open())
         {
             return std::string::npos;
@@ -52,8 +52,8 @@ namespace biglog
 
 namespace log01
 {
-    static const std::string logFileName{"TextLogMode_Log01.log"};
-    static const std::string templateFileName{"TextLogMode_Log01_tmpl.json"};
+    static const std::string logFileName{"TextLogModel_Log01.log"};
+    static const std::string templateFileName{"TextLogModel_Log01_tmpl.json"};
     static std::string_view logContent{
         "INFO    2022-02-18 15:37:10.354 0xBF32 System starting...\n"
         "WARNING 2022-02-19 15:37:13.427 0xBF32 Not in UTC timezone\n"
@@ -82,7 +82,7 @@ namespace log01
             return true;
         }
 
-        std::ofstream outFile(logFileName, std::ios::trunc);
+        std::ofstream outFile(logFileName, std::ios::binary | std::ios::trunc);
         if (!outFile.is_open())
         {
             return false;
@@ -199,7 +199,7 @@ TEST(Test_TextLogModel, BigRow_001)
         rowText.append(rowSeed);
     }
 
-    std::ofstream outFile(logFileName, std::ios::trunc);
+    std::ofstream outFile(logFileName, std::ios::binary | std::ios::trunc);
     ASSERT_TRUE(outFile.is_open());
     for (std::size_t i = 0; i < rowCount; ++i)
     {
