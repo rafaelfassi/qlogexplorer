@@ -66,7 +66,7 @@ bool RangeMatcher::match(std::string_view text)
     return false;
 }
 
-bool RangeMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+bool RangeMatcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     // Range match can only be performed on column, so it requires the row to be parsed
     return true;

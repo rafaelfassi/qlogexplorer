@@ -58,6 +58,8 @@ void SettingsDlg::load()
 
     m_chkOrOpAsDefault->setChecked(Settings::getUseOrAsDefaultOperator());
 
+    m_chkDisableOptimization->setChecked(Settings::getDisableOptimizations());
+
     m_edtSettingsPath->setText(Settings::getSettingsDir().absolutePath());
     m_edtTemplatesPath->setText(Settings::gettemplatesDir().absolutePath());
 }
@@ -138,6 +140,12 @@ void SettingsDlg::save()
     if (Settings::getUseOrAsDefaultOperator() != orOpAsDefault)
     {
         Settings::setUseOrAsDefaultOperator(orOpAsDefault);
+    }
+
+    const bool disableOptimization = m_chkDisableOptimization->isChecked();
+    if (Settings::getDisableOptimizations() != disableOptimization)
+    {
+        Settings::setDisableOptimizations(disableOptimization);
     }
 
     QDialog::accept();
@@ -238,6 +246,17 @@ void SettingsDlg::buildLayout()
 
     vLayoutMain->addWidget(grPaths);
     // Paths ---------------------------------------------------------------------------- (End)
+
+    // Advanced ------------------------------------------------------------------------- (Start)
+    auto grAdvanced = new QGroupBox(tr("Advanced"), this);
+    auto vAdvanced = new QVBoxLayout(grAdvanced);
+
+    m_chkDisableOptimization = new QCheckBox(tr("Disable experimental search optimizations"), grAdvanced);
+    m_chkDisableOptimization->setToolTip(tr("You can try to disable this if the results don't match the search criteria"));
+    vAdvanced->addWidget(m_chkDisableOptimization);
+
+    vLayoutMain->addWidget(grAdvanced);
+    // Advanced ------------------------------------------------------------------------- (End)
 
     auto vSpacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
     vLayoutMain->addItem(vSpacer);

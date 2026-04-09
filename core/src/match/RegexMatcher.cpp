@@ -11,8 +11,7 @@ RegexMatcher::RegexMatcher(const tp::SearchParam &param) : BaseMatcher(param)
     m_rx = RegexBuilder::build(param.pattern, getOpts());
     if (m_rx->hasError())
     {
-        Notifier::notifyError(
-            QObject::tr("The regular expression is not valid:\n%1").arg(utl::toQStr(m_rx->getError())));
+        Notifier::notifyError(QObject::tr("The regular expression is not valid:\n%1").arg(utl::toQStr(m_rx->getError())));
         m_rx.reset();
     }
 }
@@ -35,7 +34,7 @@ bool RegexMatcher::match(std::string_view text)
         return false;
 }
 
-bool RegexMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+bool RegexMatcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     if (!m_rawMatcherInitiated)
     {
@@ -70,43 +69,44 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
         // escape some characters.
 
         rawPattern = utl::reduceRxPatternForReplacement(rawPattern);
-        LOG_DBG("Simplified pattern: '{}'", rawPattern);
+        LOG_DBG("Reduced pattern: '{}'", rawPattern);
 
         utl::replaceStrIf(
             rawPattern,
             "\\\\",
             utl::getRxReplacementForRawJson('\\'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); }
+        );
 
         utl::replaceStrIf(
             rawPattern,
             "/",
             utl::getRxReplacementForRawJson('/'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); }
+        );
 
         utl::replaceStrIf(
             rawPattern,
             "\"",
             utl::getRxReplacementForRawJson('\"'),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); }
+        );
 
         utl::replaceStrIf(
             rawPattern,
             " ",
             utl::getRxReplacementForRawJson(' '),
-            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); });
+            [](std::string_view s, std::size_t p) -> bool { return (p == 0 || s[p - 1] != '\\'); }
+        );
     }
 
     // When parsing raw text the anchors need to be removed, because it runs on full block(many rows) and full
     // row(text is not split into columns)
-    if ((rawPattern.front() == '^') || ((rawPattern.back() == '$') && !utl::endsWith(rawPattern, "\\$")))
+
+    if (!utl::removeRegexAnchors(rawPattern))
     {
-        std::string_view sv = rawPattern;
-        if (sv.front() == '^')
-            sv.remove_prefix(1);
-        if (sv.back() == '$')
-            sv.remove_suffix(1);
-        rawPattern = std::string(sv);
+        LOG_INF("Could not remove regex anchors from: {}", rawPattern);
+        return;
     }
 
     if (rawPattern != m_param.pattern)
@@ -117,7 +117,9 @@ void RegexMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
         {
             LOG_ERR("Invalid raw regex: '{}' - {}", rawPattern, m_rawRx->getError());
             m_rawRx.reset();
-            m_canUseRawMatch = false;
+            return;
         }
     }
+
+    m_canUseRawMatch = true;
 }

@@ -6,11 +6,6 @@
 #include "match/SubStringMatcher.h"
 #include "match/RangeMatcher.h"
 
-static bool hasRegexPattern(const tp::SearchParam &param)
-{
-    return (param.pattern.find_first_of(".*+?^$|()[]{}\\") != std::string::npos);
-}
-
 void Matcher::setParam(const tp::SearchParam &param)
 {
     m_matchers.clear();
@@ -34,9 +29,9 @@ bool Matcher::matchInRow(const tp::RowData &rowData) const
     return matchInRow(m_matchers, m_orOp, rowData);
 }
 
-bool Matcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText) const
+bool Matcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText) const
 {
-    return quickRawMatch(m_matchers, m_orOp, fileType, isBlock, rawText);
+    return preMatchRawText(m_matchers, m_orOp, fileType, isBlock, rawText);
 }
 
 void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
@@ -44,10 +39,7 @@ void Matcher::makeMatcher(const tp::SearchParam &param, Matchers &matchers)
     switch (param.type)
     {
         case tp::SearchType::Regex:
-            if (hasRegexPattern(param))
-                matchers.emplace_back(std::make_unique<RegexMatcher>(param));
-            else
-                matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
+            matchers.emplace_back(std::make_unique<RegexMatcher>(param));
             break;
         case tp::SearchType::SubString:
             matchers.emplace_back(std::make_unique<SubStringMatcher>(param));
@@ -137,12 +129,7 @@ bool Matcher::matchInRow(const Matchers &matchers, bool orOp, const tp::RowData 
     return false;
 }
 
-bool Matcher::quickRawMatch(
-    const Matchers &matchers,
-    bool orOp,
-    tp::FileType fileType,
-    bool isBlock,
-    std::string_view rawText)
+bool Matcher::preMatchRawText(const Matchers &matchers, bool orOp, tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     std::uint32_t cnt(0);
 
@@ -162,7 +149,7 @@ bool Matcher::quickRawMatch(
         // The NOT operator can only be considered for row data without defined column
         const bool isNot = matcher->notOp();
         const bool ignore = (isNot && (isBlock || matcher->hasColumn()));
-        bool matched = ignore ? true : matcher->quickRawMatch(fileType, isBlock, rawText);
+        bool matched = ignore ? true : matcher->preMatchRawText(fileType, isBlock, rawText);
         if (isNot && !ignore)
             matched = !matched;
         if (matched)

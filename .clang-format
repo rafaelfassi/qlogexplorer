@@ -1,10 +1,12 @@
 ﻿---
+Standard: c++17
 SortIncludes: false
-BreakBeforeBraces: Allman
-ColumnLimit: 120
+BreakBeforeBraces: Custom
+ColumnLimit: 130
 IndentCaseLabels: true
 IndentWidth: 4
 UseTab: Never
+SeparateDefinitionBlocks: Always
 AllowShortFunctionsOnASingleLine: InlineOnly
 AllowShortLoopsOnASingleLine: false
 PointerAlignment: Right
@@ -16,6 +18,33 @@ BinPackArguments: false
 AllowAllParametersOfDeclarationOnNextLine: false
 BreakConstructorInitializers: BeforeColon
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-AlignAfterOpenBracket: AlwaysBreak
+# BlockIndent not working as expected for lambda, but AlwaysBreak works
+AlignAfterOpenBracket: BlockIndent
+BracedInitializerIndentWidth: 4
 PenaltyReturnTypeOnItsOwnLine: 1000
+NamespaceIndentation: All
+BreakBinaryOperations: OnePerLine
+BreakBeforeBinaryOperators: NonAssignment
+InsertNewlineAtEOF: true
+AlwaysBreakTemplateDeclarations: true
+AllowShortLambdasOnASingleLine: All
+LambdaBodyIndentation: Signature
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+  BeforeLambdaBody: true
 ...

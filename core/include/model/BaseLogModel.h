@@ -29,15 +29,21 @@ public:
           m_rowRange(std::make_pair(firstRow, lastRow))
     {
     }
+
     tp::UInt getSize() const { return m_posRange.second - m_posRange.first + 1; }
+
     tp::UInt getStartPos() const { return m_posRange.first; }
+
     tp::UInt getEndPos() const { return m_posRange.second; }
 
     tp::UInt getRowCount() const { return m_rowRange.second - m_rowRange.first + 1; }
+
     tp::UInt getFistRow() const { return m_rowRange.first; }
+
     tp::UInt getLastRow() const { return m_rowRange.second; }
 
-    bool countainRow(const tp::UInt &row) const { return ((row >= getFistRow()) && (row <= getLastRow())); }
+    bool containsRow(const tp::UInt &row) const { return ((row >= getFistRow()) && (row <= getLastRow())); }
+
     static bool compareRows(const Chunk &c, const tp::UInt &row) { return (c.getLastRow() < row); }
 
 private:
@@ -53,6 +59,7 @@ public:
     using ChunkRowsData = std::pair<tp::UInt, std::string_view>;
 
     ChunkRows(const Chunk &chunk) { reset(chunk); }
+
     ChunkRows() = default;
 
     void reset(const Chunk &chunk)
@@ -65,6 +72,7 @@ public:
     void reserveRows() { m_rows.reserve(m_chunk->getRowCount()); }
 
     void add(tp::UInt row, std::string_view content) { m_rows.emplace_back(row, content); }
+
     std::string_view get(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
@@ -72,14 +80,19 @@ public:
             return it->second;
         throw std::runtime_error("Row not found");
     }
+
     bool contains(tp::UInt row) const
     {
         const auto it = std::lower_bound(m_rows.begin(), m_rows.end(), row, compareRows);
         return (it != m_rows.end() && row == it->first);
     }
+
     tp::UInt rowCount() const { return m_rows.size(); }
+
     const Chunk *getChunk() { return m_chunk; }
+
     const std::vector<ChunkRowsData> &rows() { return m_rows; }
+
     std::string &data() { return m_data; }
 
     static bool compareRows(const ChunkRowsData &rowData, const tp::UInt &row) { return (rowData.first < row); }
@@ -114,18 +127,24 @@ public:
     void stop();
     void reconfigure();
     bool isFollowing() const;
+
     void resultsDigested() { m_resultsDigested.store(true); }
+
+    void setDisableRawSearch(bool disable) { m_disableRawSearch = disable; }
+
+    tp::UInt getChunksPerParse() const { return m_chunksPerParse; }
 
     // The following public functions should be externally called only for unit testing purposes:
     // If not testing, call start() instead
     ReadFileResult readFile(bool keepReading);
     // If not testing, call startSearch() instead
     void searchFromCurrentThread(const tp::SearchParams &params, bool orOp);
+
     // Used for tests to get the number of chunks (don't use this if not testing)
     std::size_t chunksCount() const { return m_chunks.size(); }
+
     // Use this to specify how many chunks are loaded on each parse
     void setChunksPerParse(tp::UInt chunksPerParse) { m_chunksPerParse = chunksPerParse; }
-    tp::UInt getChunksPerParse() const { return m_chunksPerParse; }
 
 signals:
     void parsingProgressChanged(int progress);
@@ -137,12 +156,7 @@ public slots:
 
 protected:
     virtual bool configure(FileConf::Ptr conf, std::istream &is) = 0;
-    virtual tp::UInt parseChunks(
-        std::istream &is,
-        Chunks &chunks,
-        tp::UInt fromPos,
-        tp::UInt nextRow,
-        tp::UInt fileSize) = 0;
+    virtual tp::UInt parseChunks(std::istream &is, Chunks &chunks, tp::UInt fromPos, tp::UInt nextRow, tp::UInt fileSize) = 0;
     virtual void loadChunkRows(ChunkRows &chunkRows) const = 0;
     virtual bool parseRow(std::string_view rawText, tp::RowData &rowData) const = 0;
 
@@ -181,4 +195,5 @@ private:
     // Accessed only by m_watchThread.
     tp::UInt m_lastParsedPos = 0;
     tp::UInt m_chunksPerParse = g_defChunksPerParse;
+    bool m_disableRawSearch = false;
 };

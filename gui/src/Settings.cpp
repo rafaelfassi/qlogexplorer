@@ -200,7 +200,8 @@ FileConf::Ptr Settings::findConfByTemplateFileName(const std::string &templateFi
     const auto it = std::find_if(
         templates.begin(),
         templates.end(),
-        [&templateFileName](const FileConf::Ptr &conf) { return (conf->getConfFileName() == templateFileName); });
+        [&templateFileName](const FileConf::Ptr &conf) { return (conf->getConfFileName() == templateFileName); }
+    );
 
     if (it != templates.end())
     {
@@ -217,7 +218,8 @@ FileConf::Ptr Settings::findConfByTemplateName(const std::string &name)
     const auto it = std::find_if(
         templates.begin(),
         templates.end(),
-        [&name](const FileConf::Ptr &conf) { return (conf->getConfigName() == name); });
+        [&name](const FileConf::Ptr &conf) { return (conf->getConfigName() == name); }
+    );
 
     if (it != templates.end())
     {
@@ -302,8 +304,10 @@ void Settings::deleteTemplate(FileConf::Ptr conf)
             std::remove_if(
                 confTemplates.begin(),
                 confTemplates.end(),
-                [&conf](const FileConf::Ptr &c) { return c->isSameType(conf); }),
-            confTemplates.end());
+                [&conf](const FileConf::Ptr &c) { return c->isSameType(conf); }
+            ),
+            confTemplates.end()
+        );
     }
 }
 
@@ -402,4 +406,20 @@ void Settings::setUseOrAsDefaultOperator(bool useOr)
 bool Settings::getUseOrAsDefaultOperator()
 {
     return inst().m_useOsAsDefOp;
+}
+
+void Settings::loadDisableOptimizations()
+{
+    m_disableOptimizations = inst().m_settings->value("disableOptimizations", false).toBool();
+}
+
+void Settings::setDisableOptimizations(bool disable)
+{
+    inst().m_settings->setValue("disableOptimizations", disable);
+    inst().loadDisableOptimizations();
+}
+
+bool Settings::getDisableOptimizations()
+{
+    return inst().m_disableOptimizations;
 }

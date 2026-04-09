@@ -19,7 +19,7 @@ bool SubStringMatcher::match(std::string_view text)
     }
 }
 
-bool SubStringMatcher::quickRawMatch(tp::FileType fileType, bool isBlock, std::string_view rawText)
+bool SubStringMatcher::preMatchRawText(tp::FileType fileType, bool isBlock, std::string_view rawText)
 {
     if (!m_rawMatcherInitiated)
     {
@@ -85,6 +85,8 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
 
         if (rawPattern != m_param.pattern)
         {
+            LOG_DBG("Raw pattern: '{}'", rawPattern);
+
             RegexFlags opts = RegexOption::DontCapture;
             if (matchCase())
             {
@@ -96,8 +98,10 @@ void SubStringMatcher::initRawMatch(tp::FileType fileType, bool isBlock)
             {
                 LOG_ERR("Invalid raw regex pattern for raw substring: '{}', - {}", rawPattern, m_rawRx->getError());
                 m_rawRx.reset();
-                m_canUseRawMatch = false;
+                return;
             }
         }
     }
+
+    m_canUseRawMatch = true;
 }

@@ -7,8 +7,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_001)
     param.pattern = "cde";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_TRUE(matcher.match("abcdef"));
 }
 
@@ -18,8 +18,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_002)
     param.pattern = "cdf";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_FALSE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_FALSE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_FALSE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_FALSE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_FALSE(matcher.match("abcdef"));
 }
 
@@ -29,8 +29,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_003)
     param.pattern = "abc";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_TRUE(matcher.match("abcdef"));
 }
 
@@ -40,8 +40,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_004)
     param.pattern = "a";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_TRUE(matcher.match("abcdef"));
 }
 
@@ -51,8 +51,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_005)
     param.pattern = "f";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_TRUE(matcher.match("abcdef"));
 }
 
@@ -62,8 +62,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_006)
     param.pattern = "Ef";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abcdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abcdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abcdef"));
     EXPECT_TRUE(matcher.match("abcdef"));
 }
 
@@ -73,8 +73,8 @@ TEST(Test_SubStringMatcher, TextCaseInsensitive_007)
     param.pattern = "aBc";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, true, "abCdef"));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Text, false, "abCdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, true, "abCdef"));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Text, false, "abCdef"));
     EXPECT_TRUE(matcher.match("abCdef"));
 }
 
@@ -86,8 +86,8 @@ TEST(Test_SubStringMatcher, JsonCaseInsensitive_001)
     param.pattern = "HAS \"quotes\" linebreak And taB end.";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -99,8 +99,8 @@ TEST(Test_SubStringMatcher, JsonCaseInsensitive_002)
     param.pattern = "Has \"quotes\" win linebreak and tab finished";
     param.type = tp::SearchType::SubString;
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }
 
@@ -113,7 +113,7 @@ TEST(Test_SubStringMatcher, JsonCaseSensitive_001)
     param.type = tp::SearchType::SubString;
     param.flags.set(tp::SearchFlag::MatchCase);
     SubStringMatcher matcher(param);
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, true, rawData));
-    EXPECT_TRUE(matcher.quickRawMatch(tp::FileType::Json, false, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, true, rawData));
+    EXPECT_TRUE(matcher.preMatchRawText(tp::FileType::Json, false, rawData));
     EXPECT_TRUE(matcher.match(parsedData));
 }

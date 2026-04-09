@@ -36,6 +36,7 @@ public:
     static QString getStyle();
 
     static void setFont(const QString &family, int size);
+
     static const QFont &getFont() { return inst().m_font; }
 
     static void setSingleInstance(bool singleInstance);
@@ -50,6 +51,9 @@ public:
     static void setUseOrAsDefaultOperator(bool useOr);
     static bool getUseOrAsDefaultOperator();
 
+    static void setDisableOptimizations(bool disable);
+    static bool getDisableOptimizations();
+
 private:
     Settings() = default;
     static Settings &inst();
@@ -59,6 +63,7 @@ private:
     void loadHideUniqueTab();
     void loadDefaultSearchType();
     void loadUseOrAsDefaultOperator();
+    void loadDisableOptimizations();
 
     QFont m_font;
     QDir m_settingsDir;
@@ -69,6 +74,7 @@ private:
     bool m_singleInstance;
     bool m_hideUniqueTab;
     bool m_useOsAsDefOp;
+    bool m_disableOptimizations;
     tp::SearchType m_searchType;
     std::vector<FileConf::Ptr> m_templates;
 };

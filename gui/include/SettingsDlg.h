@@ -34,6 +34,7 @@ private:
     QCheckBox *m_chkAllowMultiInst;
     QCheckBox *m_chkRegexAsDefault;
     QCheckBox *m_chkOrOpAsDefault;
+    QCheckBox *m_chkDisableOptimization;
     QLineEdit *m_edtSettingsPath;
     QLineEdit *m_edtTemplatesPath;
     QDialogButtonBox *m_buttonBox;

@@ -7,44 +7,45 @@
 namespace biglog
 {
 
-static const std::string logFileName{"JsonLogModel_BigLog.log"};
-static const std::size_t logEntries = g_chunkSize / 2;
-static const std::vector<std::string> lvls{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG"};
-static const std::vector<std::pair<std::string, std::string>> msgs{
-    {R"_(Some\tlog\u0009with\ttabs)_", R"_(Some log with tabs)_"},
-    {R"_(This\nlog\u000Ahas\r\nnewline\n)_", R"_(This log has newline )_"},
-    {R"_(\ntest backslash\u005Creturn\r.)_", R"_( test backslash\return .)_"},
-    {R"_(\"quotes\" with many spaces \t\r\n.)_", R"_("quotes" with many spaces .)_"}};
+    static const std::string logFileName{"JsonLogModel_BigLog.json"};
+    static const std::size_t logEntries = g_chunkSize / 2;
+    static const std::vector<std::string> lvls{"FATAL", "ERROR", "WARNING", "INFO", "DEBUG"};
+    static const std::vector<std::pair<std::string, std::string>> msgs{
+        {R"_(Some\tlog\u0009with\ttabs)_", R"_(Some log with tabs)_"},
+        {R"_(This\nlog\u000Ahas\r\nnewline\n)_", R"_(This log has newline )_"},
+        {R"_(\ntest backslash\u005Creturn\r.)_", R"_( test backslash\return .)_"},
+        {R"_(\"quotes\" with many spaces \t\r\n.)_", R"_("quotes" with many spaces .)_"}
+    };
 
-// Creates log data for testing that occupies many chunks.
-// Retuns: true on success and false otherwise.
-static bool createLog()
-{
-    static bool created = false;
-
-    if (created)
+    // Creates log data for testing that occupies many chunks.
+    // Retuns: true on success and false otherwise.
+    static bool createLog()
     {
+        static bool created = false;
+
+        if (created)
+        {
+            return true;
+        }
+
+        std::ofstream outFile(biglog::logFileName, std::ios::binary | std::ios::trunc);
+        if (!outFile.is_open())
+        {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < biglog::logEntries; ++i)
+        {
+            const size_t li = (i % biglog::lvls.size());
+            const size_t mi = (i % biglog::msgs.size());
+            outFile
+                << FORMAT(R"_({{"Level":"{}","Number": {},"Message":"{}"}})_", biglog::lvls[li], i, biglog::msgs[mi].first)
+                << std::endl;
+        }
+        outFile.close();
+        created = true;
         return true;
     }
-
-    std::ofstream outFile(biglog::logFileName, std::ios::trunc);
-    if (!outFile.is_open())
-    {
-        return false;
-    }
-
-    for (std::size_t i = 0; i < biglog::logEntries; ++i)
-    {
-        const size_t li = (i % biglog::lvls.size());
-        const size_t mi = (i % biglog::msgs.size());
-        outFile
-            << FORMAT(R"_({{"Level":"{}","Number": {},"Message":"{}"}})_", biglog::lvls[li], i, biglog::msgs[mi].first)
-            << std::endl;
-    }
-    outFile.close();
-    created = true;
-    return true;
-}
 
 } // namespace biglog
 
@@ -137,7 +138,7 @@ TEST(Test_JsonLogModel, BigRow_001)
         rowText.append(rowSeed);
     }
 
-    std::ofstream outFile(logFileName, std::ios::trunc);
+    std::ofstream outFile(logFileName, std::ios::binary | std::ios::trunc);
     ASSERT_TRUE(outFile.is_open());
     for (std::size_t i = 0; i < rowCount; ++i)
     {
