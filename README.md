@@ -1,7 +1,9 @@
 # QLogExplorer
 
-**QLogExplorer** is an advanced and high-performance log analyzer, designed to handle massive files, while providing powerful search capabilities and customizations for log data visualization.  
-[Install QLogExplorer](#installing-qlogexplorer)
+**QLogExplorer** is an advanced and high-performance log analyzer, designed to handle massive files, while providing powerful search capabilities and customizations for log data visualization.
+- [Main features](#main-features)
+- [Quick Introduction](#quick-introduction)
+- [Install QLogExplorer](#installing-qlogexplorer)
 
 ![image](screenshots/main.png?raw=true)
 
@@ -67,6 +69,10 @@ Each parameter can:
 * Use the negation operator to filter out noise.
 
 [See wiki for further information](https://github.com/rafaelfassi/qlogexplorer/wiki/Searching)
+
+## Quick Introduction
+
+[![introduction](screenshots/intro-thumbnail.png?raw=true)](https://github.com/user-attachments/assets/a0fc2089-4eaa-4347-aa2c-bf3169a32f4f)
 
 ## Installing QLogExplorer
 

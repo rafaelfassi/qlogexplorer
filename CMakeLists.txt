@@ -6,13 +6,14 @@ set(PROJ_URL "https://github.com/rafaelfassi/qlogexplorer")
 set(APP_URL "https://rafaelfassi.github.io/qlogexplorer/")
 set(WIKI_URL "https://github.com/rafaelfassi/qlogexplorer/wiki")
 set(ISSUES_URL "https://github.com/rafaelfassi/qlogexplorer/issues")
+set(INTRO_URL "https://github.com/user-attachments/assets/a0fc2089-4eaa-4347-aa2c-bf3169a32f4f")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
-option(USE_INSTALLED_RE2 "Use system-installed RE2 instead of downloading via FetchContent" OFF)
-option(DISABLE_TESTS "Disable tests to make gtest not required" OFF)
+option(USE_INSTALLED_RE2 "Use system-installed RE2" OFF)
+option(DISABLE_TESTS "Disable the build of the tests" OFF)
 
 # RE2 must be included before Qt and before AUTOMOC is set
 include(3rdparty/re2/re2.cmake)
@@ -31,6 +32,7 @@ add_definitions(-DPROJ_URL="${PROJ_URL}")
 add_definitions(-DAPP_URL="${APP_URL}")
 add_definitions(-DWIKI_URL="${WIKI_URL}")
 add_definitions(-DISSUES_URL="${ISSUES_URL}")
+add_definitions(-DINTRO_URL="${INTRO_URL}")
 add_definitions(-DAPP_BASE_SRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
