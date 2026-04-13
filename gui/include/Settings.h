@@ -54,6 +54,8 @@ public:
     static void setDisableOptimizations(bool disable);
     static bool getDisableOptimizations();
 
+    static bool getFirstTimeOpened();
+
 private:
     Settings() = default;
     static Settings &inst();

@@ -423,3 +423,15 @@ bool Settings::getDisableOptimizations()
 {
     return inst().m_disableOptimizations;
 }
+
+bool Settings::getFirstTimeOpened()
+{
+    static bool firstTime = inst().m_settings->value("firstTime", true).toBool();
+    if (firstTime)
+    {
+        inst().m_settings->setValue("firstTimeOpened", false);
+        firstTime = false;
+        return true;
+    }
+    return false;
+}

@@ -53,8 +53,10 @@ public slots:
     void openSettings();
     void setRecentFile(const FileConf::Ptr &conf);
     void openWiki();
+    void openIntroduction();
     void openIssues();
     void openAbout();
+    void openGreetings();
     void updateCurrentTabConf(FileConf::Ptr conf);
     void updateOpenedConf(FileConf::Ptr conf);
     void updateAllOpenedConfs();
@@ -71,6 +73,7 @@ protected:
     void dragMoveEvent(QDragMoveEvent *event) override;
     void dragLeaveEvent(QDragLeaveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
 private:
     void createActions();
@@ -93,6 +96,7 @@ private:
     QAction *m_actTemplatesConfig;
     QAction *m_actSettings;
     QAction *m_actOpenWiki;
+    QAction *m_actOpenIntro;
     QAction *m_actOpenIssues;
     QAction *m_actAbout;
     QAction *m_actOpenAsSep;

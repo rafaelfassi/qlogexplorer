@@ -93,6 +93,7 @@ void MainWindow::createActions()
     m_actSettings = new QAction(this);
 
     m_actOpenWiki = new QAction(this);
+    m_actOpenIntro = new QAction(this);
     m_actOpenIssues = new QAction(this);
     m_actAbout = new QAction(this);
 }
@@ -135,6 +136,7 @@ void MainWindow::createMenus()
 
     m_helpMenu = menuBar()->addMenu("Help");
     m_helpMenu->addAction(m_actOpenWiki);
+    m_helpMenu->addAction(m_actOpenIntro);
     m_helpMenu->addAction(m_actOpenIssues);
     m_helpMenu->addAction(m_actAbout);
 }
@@ -160,6 +162,7 @@ void MainWindow::createConnections()
     connect(m_actTemplatesConfig, &QAction::triggered, this, &MainWindow::openTemplatesConfig);
     connect(m_actSettings, &QAction::triggered, this, &MainWindow::openSettings);
     connect(m_actOpenWiki, &QAction::triggered, this, &MainWindow::openWiki);
+    connect(m_actOpenIntro, &QAction::triggered, this, &MainWindow::openIntroduction);
     connect(m_actOpenIssues, &QAction::triggered, this, &MainWindow::openIssues);
     connect(m_actAbout, &QAction::triggered, this, &MainWindow::openAbout);
     connect(m_tabViews, &QTabWidget::tabCloseRequested, this, &MainWindow::closeTab);
@@ -186,6 +189,7 @@ void MainWindow::translateUi()
 
     m_helpMenu->setTitle(tr("&Help"));
     m_actOpenWiki->setText(tr("&Wiki"));
+    m_actOpenIntro->setText(tr("Quick Introduction &Video"));
     m_actOpenIssues->setText(tr("Report &Issue"));
     m_actAbout->setText(tr("&About"));
 }
@@ -410,6 +414,26 @@ void MainWindow::setRecentFile(const FileConf::Ptr &conf)
 void MainWindow::openWiki()
 {
     QDesktopServices::openUrl(QUrl(WIKI_URL, QUrl::TolerantMode));
+}
+
+void MainWindow::openIntroduction()
+{
+    QDesktopServices::openUrl(QUrl(INTRO_URL, QUrl::TolerantMode));
+}
+
+void MainWindow::openGreetings()
+{
+    if (QMessageBox::Yes
+        == QMessageBox::information(
+            this,
+            tr("QLogExplorer"),
+            tr("Welcome to QLogExplorer!") + "\n" + tr("Would you like to watch a quick introduction video?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::Yes
+        ))
+    {
+        openIntroduction();
+    }
 }
 
 void MainWindow::openIssues()
@@ -777,8 +801,7 @@ void MainWindow::saveConfAs()
 
     auto conf = tab->getConf();
     bool ok;
-    QString confName =
-        QInputDialog::getText(this, tr("Save template"), tr("Template name"), QLineEdit::Normal, QString(), &ok);
+    QString confName = QInputDialog::getText(this, tr("Save template"), tr("Template name"), QLineEdit::Normal, QString(), &ok);
     if (ok && !confName.isEmpty())
     {
         Settings::saveTemplateAs(conf, confName);
@@ -826,6 +849,15 @@ void MainWindow::dropEvent(QDropEvent *event)
         if (m_fileOpenAsMenu->exec(mapToGlobal(event->position().toPoint())) != nullptr)
             event->acceptProposedAction();
         clearFilesToOpen();
+    }
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if (Settings::getFirstTimeOpened())
+    {
+        QTimer::singleShot(1000, this, &MainWindow::openGreetings);
     }
 }
 
