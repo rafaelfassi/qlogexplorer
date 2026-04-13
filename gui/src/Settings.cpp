@@ -426,7 +426,7 @@ bool Settings::getDisableOptimizations()
 
 bool Settings::getFirstTimeOpened()
 {
-    static bool firstTime = inst().m_settings->value("firstTime", true).toBool();
+    static bool firstTime = inst().m_settings->value("firstTimeOpened", true).toBool();
     if (firstTime)
     {
         inst().m_settings->setValue("firstTimeOpened", false);
