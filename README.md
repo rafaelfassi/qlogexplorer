@@ -25,9 +25,9 @@ The system can rotate, move, compress, or delete log files without triggering OS
 Because no two systems log data in exactly the same format, QLogExplorer allows you to write a regex with capture groups that will split any raw, unstructured log format into a clean, filterable grid.  
 As an example, consider the following simple log:
 ```
-[INFO] 2022-02-18 15:37:10.354 0xBF32 System starting...
-[WARNING] 2022-02-19 15:37:13.427 0xBF32 Not in UTC timezone
-[INFO] 2022-02-18 15:37:12.137 0xBF32 System initialized
+[INFO] 2022-02-18T15:37:10.354 0xBF32 System starting...
+[WARNING] 2022-02-19T15:37:13.427 0xBF32 Not in UTC timezone
+[INFO] 2022-02-18T15:37:12.137 0xBF32 System initialized
 ```
 A regex to split those log entries into columns would look like:
 ```regexp
@@ -44,7 +44,7 @@ Modern backend architectures can output logs where each entry is a single JSON o
 {"LogLevel":"WARNING","DateTime":"28-12-2021 18:03:54.00301","LogMessage":"Not in UTC"}
 {"LogLevel":"ERROR","DateTime":"28-12-2021 18:03:56.00885","LogMessage":"Exception caught"}
 ```
-This is a very common format used by **Kibana/Elasticsearch**, and other aggregating tools.  
+This is a very common format used by **Elasticsearch** and other aggregating tools.  
 QLogExplorer fully supports this kind of log format.  
 For this format there is no need to use a regex to split the log entries into columns because the data is already well structured, but you can still hide columns or change their order.
 
