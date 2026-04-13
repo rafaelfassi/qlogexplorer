@@ -4,42 +4,42 @@
 <context>
     <name>HeaderView</name>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="71"/>
+        <location filename="../gui/src/HeaderView.cpp" line="70"/>
         <source>Hide</source>
         <translation>Ocultar</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="72"/>
+        <location filename="../gui/src/HeaderView.cpp" line="71"/>
         <source>Move Left</source>
         <translation>Mover para Esquerda</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="73"/>
+        <location filename="../gui/src/HeaderView.cpp" line="72"/>
         <source>Move Right</source>
         <translation>Mover para Direita</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="74"/>
+        <location filename="../gui/src/HeaderView.cpp" line="73"/>
         <source>Expand</source>
         <translation>Expandir</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="75"/>
+        <location filename="../gui/src/HeaderView.cpp" line="74"/>
         <source>Expand All</source>
         <translation>Expandir Tudo</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="76"/>
+        <location filename="../gui/src/HeaderView.cpp" line="75"/>
         <source>Fit the Screen</source>
         <translation>Ajustar para Tela</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="282"/>
+        <location filename="../gui/src/HeaderView.cpp" line="281"/>
         <source>Show</source>
         <translation>Ver</translation>
     </message>
     <message>
-        <location filename="../src/gui/HeaderView.cpp" line="300"/>
+        <location filename="../gui/src/HeaderView.cpp" line="299"/>
         <source>Move</source>
         <translation>Mover</translation>
     </message>
@@ -47,37 +47,37 @@
 <context>
     <name>LogSearchWidget</name>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="126"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="145"/>
         <source>Add Search Parameter</source>
         <translation>Adicionar parâmetro de busca</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="129"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="148"/>
         <source>Merge Results</source>
         <translation>Mesclar Resultados</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="132"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="151"/>
         <source>Use OR operator</source>
         <translation>Usar operator OR</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="135"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="154"/>
         <source>Clear Results</source>
         <translation>Limpar Resultados</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="138"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="157"/>
         <source>Sync Bookmarks</source>
         <translation>Sincronizar Marcadores</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="141"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="160"/>
         <source>Search</source>
         <translation>Procurar</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogSearchWidget.cpp" line="144"/>
+        <location filename="../gui/src/LogSearchWidget.cpp" line="163"/>
         <source>Searching</source>
         <translation>Procurando</translation>
     </message>
@@ -85,22 +85,22 @@
 <context>
     <name>LogTabWidget</name>
     <message>
-        <location filename="../src/gui/LogTabWidget.cpp" line="47"/>
+        <location filename="../gui/src/LogTabWidget.cpp" line="52"/>
         <source>File ToolBar</source>
         <translation>File ToolBar</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogTabWidget.cpp" line="113"/>
+        <location filename="../gui/src/LogTabWidget.cpp" line="119"/>
         <source>Indexing</source>
         <translation>Indexando</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogTabWidget.cpp" line="107"/>
+        <location filename="../gui/src/LogTabWidget.cpp" line="113"/>
         <source>Track File</source>
         <translation>Seguir Arquivo</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogTabWidget.cpp" line="110"/>
+        <location filename="../gui/src/LogTabWidget.cpp" line="116"/>
         <source>Auto Scrolling</source>
         <translation>Auto Scroll</translation>
     </message>
@@ -108,82 +108,82 @@
 <context>
     <name>LogViewWidget</name>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="214"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="213"/>
         <source>Up</source>
         <translation>Para cima</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="216"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="215"/>
         <source>Down</source>
         <translation>Para baixo</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="218"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="217"/>
         <source>Previous Page</source>
         <translation>Página Anterior</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="220"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="219"/>
         <source>Next Page</source>
         <translation>Próxima Página</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="222"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="221"/>
         <source>First Row</source>
         <translation>Ir Para Primeira Linha</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="224"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="223"/>
         <source>Last Row</source>
         <translation>Ir Para Última Linha</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="226"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="225"/>
         <source>Left</source>
         <translation>Ir Para Esquerda</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="228"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="227"/>
         <source>Right</source>
         <translation>Ir Para Direita</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="230"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="229"/>
         <source>Start of Line</source>
         <translation>Ir Para Início da Linha</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="232"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="231"/>
         <source>End of Line</source>
         <translation>Ir Para Final da Linha</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="234"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="233"/>
         <source>Copy</source>
         <translation>Copiar</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="236"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="235"/>
         <source>Toggle Bookmark</source>
         <translation>Comutar Marcador</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="238"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="237"/>
         <source>Previous Bookmark</source>
         <translation>Marcador Anterior</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="240"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="239"/>
         <source>Next Bookmark</source>
         <translation>Próximo Marcador</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="242"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="241"/>
         <source>Expand All Columns</source>
         <translation>Expandir Colunas</translation>
     </message>
     <message>
-        <location filename="../src/gui/LogViewWidget.cpp" line="245"/>
+        <location filename="../gui/src/LogViewWidget.cpp" line="244"/>
         <source>Adjust Columns to Fit</source>
         <translation>Ajustar Colunas</translation>
     </message>
@@ -191,137 +191,162 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="170"/>
+        <location filename="../gui/src/MainWindow.cpp" line="177"/>
         <source>&amp;File</source>
         <translation>&amp;Arquivo</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="171"/>
+        <location filename="../gui/src/MainWindow.cpp" line="178"/>
         <source>&amp;Open As...</source>
         <translation>Abrir &amp;Como...</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="172"/>
+        <location filename="../gui/src/MainWindow.cpp" line="179"/>
         <source>Open &amp;Recent</source>
         <translation>Abrir &amp;Recente</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="173"/>
+        <location filename="../gui/src/MainWindow.cpp" line="180"/>
         <source>Reopen &amp;As...</source>
         <translation>R&amp;eabrir Como...</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="174"/>
+        <location filename="../gui/src/MainWindow.cpp" line="181"/>
         <source>&amp;Close File</source>
         <translation>&amp;Fechar Arquivo</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="175"/>
+        <location filename="../gui/src/MainWindow.cpp" line="182"/>
         <source>&amp;Quit</source>
         <translation>&amp;Sair</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="177"/>
+        <location filename="../gui/src/MainWindow.cpp" line="184"/>
         <source>&amp;Templates</source>
         <translation>&amp;Modelos</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="178"/>
+        <location filename="../gui/src/MainWindow.cpp" line="185"/>
         <source>&amp;Configure Templates</source>
         <translation>Configurar &amp;Modelos</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="180"/>
+        <location filename="../gui/src/MainWindow.cpp" line="187"/>
         <source>&amp;Utilities</source>
         <translation>&amp;Utilidates</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="181"/>
+        <location filename="../gui/src/MainWindow.cpp" line="188"/>
         <source>&amp;Settings</source>
         <translation>&amp;Configurações</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="183"/>
+        <location filename="../gui/src/MainWindow.cpp" line="190"/>
         <source>&amp;Help</source>
         <translation>Aju&amp;da</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="184"/>
+        <location filename="../gui/src/MainWindow.cpp" line="191"/>
         <source>&amp;Wiki</source>
         <translation>&amp;Wiki</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="185"/>
+        <location filename="../gui/src/MainWindow.cpp" line="192"/>
+        <source>Quick Introduction &amp;Video</source>
+        <translation>&amp;Vídeo de Introdução Rápida</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="193"/>
+        <source>Report &amp;Issue</source>
+        <translation>Reportar &amp;Problema</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="194"/>
         <source>&amp;About</source>
         <translation>&amp;Sobre</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="313"/>
+        <location filename="../gui/src/MainWindow.cpp" line="322"/>
         <source>Open File</source>
         <translation>Abrir Arquivo</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="414"/>
+        <location filename="../gui/src/MainWindow.cpp" line="429"/>
+        <source>QLogExplorer</source>
+        <translation>QLogExplorer</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="430"/>
+        <source>Welcome to QLogExplorer!</source>
+        <translation>Bem-vindo ao QLogExplorer!</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="430"/>
+        <source>Would you like to watch a quick introduction video?</source>
+        <translation>Você gostaria de assistir a um rápido vídeo introdutório?</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="448"/>
         <source>project</source>
         <translation>projeto</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="419"/>
+        <location filename="../gui/src/MainWindow.cpp" line="453"/>
         <source>About %1</source>
         <translation>Sobre %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="421"/>
+        <location filename="../gui/src/MainWindow.cpp" line="455"/>
         <source>Advanced tool for exploring log files</source>
         <translation>Ferramenta avançada para explorar arquivos de log</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="422"/>
+        <location filename="../gui/src/MainWindow.cpp" line="456"/>
         <source>Copyright %1</source>
         <translation>Copyright %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="423"/>
+        <location filename="../gui/src/MainWindow.cpp" line="457"/>
         <source>This software is licensed under %1</source>
         <translation>Este software está licenciado sob %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="424"/>
+        <location filename="../gui/src/MainWindow.cpp" line="458"/>
         <source>Using Qt version %1</source>
         <translation>Usando Qt versão %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="425"/>
+        <location filename="../gui/src/MainWindow.cpp" line="459"/>
         <source>Visit the %1</source>
         <translation>Visite o %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="435"/>
+        <location filename="../gui/src/MainWindow.cpp" line="470"/>
         <source>Credits</source>
         <translation>Créditos</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="485"/>
+        <location filename="../gui/src/MainWindow.cpp" line="520"/>
         <source>%1 As [%2]</source>
         <translation>%1 Como [%2]</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="689"/>
+        <location filename="../gui/src/MainWindow.cpp" line="724"/>
         <source>&amp;Save [%1]</source>
         <translation>&amp;Salvar [%1]</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="691"/>
+        <location filename="../gui/src/MainWindow.cpp" line="726"/>
         <source>Save [%1] &amp;As...</source>
         <translation>Salvar [%1] &amp;Como...</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="770"/>
+        <location filename="../gui/src/MainWindow.cpp" line="804"/>
         <source>Save template</source>
         <translation>Salvar Modelo</translation>
     </message>
     <message>
-        <location filename="../src/gui/MainWindow.cpp" line="770"/>
+        <location filename="../gui/src/MainWindow.cpp" line="804"/>
         <source>Template name</source>
         <translation>Nome do Modelo</translation>
     </message>
@@ -329,15 +354,45 @@
 <context>
     <name>ProgressLabel</name>
     <message>
-        <location filename="../src/gui/ProgressLabel.cpp" line="32"/>
+        <location filename="../gui/src/ProgressLabel.cpp" line="21"/>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/ProgressLabel.cpp" line="41"/>
         <source>%1%</source>
         <translation>%1%</translation>
     </message>
 </context>
 <context>
+    <name>QObject</name>
+    <message>
+        <location filename="../core/src/match/RegexMatcher.cpp" line="14"/>
+        <source>The regular expression is not valid:
+%1</source>
+        <translation>A expressão regular não é válida:
+%1</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="869"/>
+        <source>Error</source>
+        <translation>Erro</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="872"/>
+        <source>Warning</source>
+        <translation>Atenção</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/MainWindow.cpp" line="875"/>
+        <source>Information</source>
+        <translation>Informação</translation>
+    </message>
+</context>
+<context>
     <name>SearchLineEdit</name>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="34"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="33"/>
         <source>Add to Template</source>
         <translation>Adicionar ao Modelo</translation>
     </message>
@@ -345,32 +400,32 @@
 <context>
     <name>SearchParamControl</name>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="255"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="273"/>
         <source>Regular Expression</source>
         <translation>Expressão Regular</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="258"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="276"/>
         <source>Range match (from -&gt; to)</source>
         <translation>Busca por intervalo (de -&gt; até)</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="261"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="279"/>
         <source>Match Case</source>
         <translation>Distinguir Maiúsculas e Minúsculas</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="264"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="282"/>
         <source>Not (invert the match)</source>
         <translation>Negação (inverte o resultado)</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="267"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="285"/>
         <source>Pattern</source>
         <translation>Expressão</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamControl.cpp" line="302"/>
+        <location filename="../gui/src/SearchParamControl.cpp" line="320"/>
         <source>All Columns</source>
         <translation>Todas as Colunas</translation>
     </message>
@@ -378,12 +433,12 @@
 <context>
     <name>SearchParamWidget</name>
     <message>
-        <location filename="../src/gui/SearchParamWidget.cpp" line="69"/>
+        <location filename="../gui/src/SearchParamWidget.cpp" line="69"/>
         <source>Disable Parameter</source>
         <translation>Desabilitar Parâmetro</translation>
     </message>
     <message>
-        <location filename="../src/gui/SearchParamWidget.cpp" line="72"/>
+        <location filename="../gui/src/SearchParamWidget.cpp" line="72"/>
         <source>Remove Parameter</source>
         <translation>Remover Parâmetro</translation>
     </message>
@@ -391,316 +446,341 @@
 <context>
     <name>SettingsDlg</name>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="20"/>
-        <location filename="../src/gui/SettingsDlg.cpp" line="223"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="19"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="241"/>
         <source>Settings</source>
         <translation>Configurações</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="162"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="177"/>
         <source>Locale</source>
         <translation>Localidade</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="165"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="180"/>
         <source>Language</source>
         <translation>Idioma</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="170"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="185"/>
         <source>Font</source>
         <translation>Fonte</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="181"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="196"/>
         <source>Family</source>
         <translation>Família</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="187"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="202"/>
         <source>Size</source>
         <translation>Tamanho</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="194"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="209"/>
         <source>Appearance</source>
         <translation>Aparência</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="197"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="212"/>
         <source>Theme</source>
         <translation>Tema</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="202"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="217"/>
         <source>Behavior</source>
         <translation>Comportamento</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="205"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="220"/>
         <source>Hide tabs when only one file</source>
         <translation>Esconder guia quando somente um aquivo</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="208"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="223"/>
         <source>Allow more than one instance</source>
         <translation>Permitir mais de uma instância</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="211"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="226"/>
         <source>Use regex as default search</source>
         <translation>Usar expressão regular como padrão</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="218"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="229"/>
+        <source>Use &apos;OR&apos; as default search operator</source>
+        <translation>Usar &apos;OU&apos; como operador de pesquisa padrão</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/SettingsDlg.cpp" line="236"/>
         <source>Paths</source>
         <translation>Caminhos</translation>
     </message>
     <message>
-        <location filename="../src/gui/SettingsDlg.cpp" line="227"/>
+        <location filename="../gui/src/SettingsDlg.cpp" line="245"/>
         <source>Templates</source>
         <translation>Modelos</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/SettingsDlg.cpp" line="251"/>
+        <source>Advanced</source>
+        <translation>Avançado</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/SettingsDlg.cpp" line="254"/>
+        <source>Disable experimental search optimizations</source>
+        <translation>Desativar otimizações de pesquisa experimentais</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/SettingsDlg.cpp" line="255"/>
+        <source>You can try to disable this if the results don&apos;t match the search criteria</source>
+        <translation>Você pode tentar desativar esta opção se os resultados não corresponderem aos critérios de pesquisa</translation>
     </message>
 </context>
 <context>
     <name>TemplatesConfigDlg</name>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="43"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="42"/>
         <source>Templates Configuration</source>
         <translation>Configuração dos Modelos</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="373"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="372"/>
         <source>Warning</source>
         <translation>Atenção</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="374"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="373"/>
         <source>All columns will be deleted and recreated.</source>
         <translation>Todas as colunas vão ser deletadas e recriadas.</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="374"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="373"/>
         <source>Do you want to continue?</source>
         <translation>Deseja continuar?</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="383"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="385"/>
         <source>The regular expression is not valid.
 %1</source>
         <translation>A expressão regular não é válida.
 %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="383"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="384"/>
         <source>Error</source>
         <translation>Erro</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="521"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="523"/>
         <source>Date Time Format</source>
         <translation>Formato de Data e Hora</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="572"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="574"/>
         <source>New Column %1</source>
         <translation>Nova Coluna %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="725"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="731"/>
         <source>New Highlighter %1</source>
         <translation>Novo Marcador %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="881"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="890"/>
         <source>New Filter %1</source>
         <translation>Novo Filtro %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="883"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="892"/>
         <source>Pattern Filter %1</source>
         <translation>Expressão Filtro %1</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="937"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="946"/>
         <source>Delete template</source>
         <translation>Excluir Modelo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="938"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="947"/>
         <source>Create columns from regex</source>
         <translation>Criar colunas à partir da expressão regular</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="941"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="950"/>
         <source>Add column</source>
         <translation>Adicionar coluna</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="942"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="951"/>
         <source>Remove column</source>
         <translation>Remover coluna</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="945"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="954"/>
         <source>Add Highlighter</source>
         <translation>Adicionar Marcador</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="946"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="955"/>
         <source>Remove Highlighter</source>
         <translation>Remover Marcador</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="947"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="955"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="956"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="964"/>
         <source>Move Up</source>
         <translation>Mover para cima</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="948"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="956"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="957"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="965"/>
         <source>Move Down</source>
         <translation>Mover para baixo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="949"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="958"/>
         <source>Color of the text</source>
         <translation>Cor do texto</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="950"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="959"/>
         <source>Color of the background</source>
         <translation>Cor do fundo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="953"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="962"/>
         <source>Add Filter</source>
         <translation>Adicionar Filtro</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="954"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="963"/>
         <source>Remove Filter</source>
         <translation>Remover Filtro</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1036"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1046"/>
         <source>Group</source>
         <translation>Grupo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1037"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1047"/>
         <source>Regex capturing group</source>
         <translation>Grupo da expressão regular</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1052"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1062"/>
         <source>Key</source>
         <translation>Atributo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1053"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1063"/>
         <source>Json Key</source>
         <translation>Atributo do elemento json</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1094"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1159"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1104"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1169"/>
         <source>Type</source>
         <translation>Tipo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1098"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1108"/>
         <source>Template name</source>
         <translation>Nome do Modelo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1099"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1149"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1273"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1109"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1159"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1283"/>
         <source>Name</source>
         <translation>Nome</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1103"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1113"/>
         <source>Regex</source>
         <translation>Regex</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1106"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1116"/>
         <source>Regular expression to define the columns</source>
         <translation>Expressão regular para definir as colunas</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1148"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1158"/>
         <source>Column display name</source>
         <translation>Nome de exibição da coluna</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1162"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1172"/>
         <source>Format</source>
         <translation>Formato</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1165"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1175"/>
         <source>Use this column for no matches</source>
         <translation>Usar esta coluna quando a expressão não casar</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1171"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1181"/>
         <source>Columns</source>
         <translation>Colunas</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1214"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1279"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1224"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1289"/>
         <source>Column</source>
         <translation>Coluna</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1217"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1282"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1227"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1292"/>
         <source>Pattern</source>
         <translation>Expressão</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1220"/>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1285"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1230"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1295"/>
         <source>Options</source>
         <translation>Opções</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1224"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1234"/>
         <source>Fore Color</source>
         <translation>Cor do Texto</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1228"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1238"/>
         <source>Back Color</source>
         <translation>Cor do Fundo</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1233"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1243"/>
         <source>Highlighters</source>
         <translation>Marcadores</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1290"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1297"/>
+        <source>Apply on load</source>
+        <translation>Aplicar ao carregar</translation>
+    </message>
+    <message>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1303"/>
         <source>Filters</source>
         <translation>Filtros</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1300"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1313"/>
         <source>&amp;Apply</source>
         <translation>&amp;Applicar</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1304"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1317"/>
         <source>&amp;Save</source>
         <translation>&amp;Salvar</translation>
     </message>
     <message>
-        <location filename="../src/gui/TemplatesConfigDlg.cpp" line="1310"/>
+        <location filename="../gui/src/TemplatesConfigDlg.cpp" line="1323"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancelar</translation>
     </message>
@@ -708,7 +788,7 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../src/main.cpp" line="28"/>
+        <location filename="../app/src/main.cpp" line="27"/>
         <source>Opens as &lt;FileTypeOrTemplateName&gt;</source>
         <translation>Abrir como &lt;FileTypeOrTemplateName&gt;</translation>
     </message>
