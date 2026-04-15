@@ -46,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     m_tabViews = new QTabWidget(this);
     m_tabViews->setTabsClosable(true);
+    m_tabViews->setMovable(true);
     setCentralWidget(m_tabViews);
 
     m_updateTimer = new QTimer(this);
