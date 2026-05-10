@@ -6,7 +6,7 @@ set(PROJ_URL "https://github.com/rafaelfassi/qlogexplorer")
 set(APP_URL "https://rafaelfassi.github.io/qlogexplorer/")
 set(WIKI_URL "https://github.com/rafaelfassi/qlogexplorer/wiki")
 set(ISSUES_URL "https://github.com/rafaelfassi/qlogexplorer/issues")
-set(INTRO_URL "https://github.com/user-attachments/assets/a0fc2089-4eaa-4347-aa2c-bf3169a32f4f")
+set(INTRO_URL "https://rafaelfassi.github.io/qlogexplorer/assets/QLogExplorerIntro.mp4")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

@@ -72,7 +72,7 @@ Each parameter can:
 
 ## Quick Introduction
 
-[![introduction](screenshots/intro-thumbnail.png?raw=true)](https://github.com/user-attachments/assets/a0fc2089-4eaa-4347-aa2c-bf3169a32f4f)
+[![introduction](https://rafaelfassi.github.io/qlogexplorer/assets/QLogExplorerIntroThumbnail.png?raw=true)](https://rafaelfassi.github.io/qlogexplorer/assets/QLogExplorerIntro.mp4)
 
 ## Installing QLogExplorer
 
